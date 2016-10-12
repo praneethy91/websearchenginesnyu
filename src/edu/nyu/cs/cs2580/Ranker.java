@@ -61,9 +61,9 @@ public abstract class Ranker {
       case QL:
         return new RankerQl(options, arguments, indexer);
       case PHRASE:
-        return new RankerNumviews(options, arguments, indexer);
-      case NUMVIEWS:
         return new RankerPhrase(options, arguments, indexer);
+      case NUMVIEWS:
+        return new RankerNumviews(options, arguments, indexer);
       case LINEAR:
         return new RankerLinear(options, arguments, indexer);
       case NONE:
