@@ -49,7 +49,8 @@ class Evaluator {
 
     //precision(5, judgments);
     //fMeasure(1,judgements);
-    averagePrecision(judgements);
+    //averagePrecision(judgements);
+    reciprocalRank(judgements);
   }
 
   public static void readRelevanceJudgments(
@@ -136,16 +137,60 @@ class Evaluator {
     System.out.println(query + "\t" + Double.toString(R / N));
   }
 
+  public static void reciprocalRank(Map<String, DocumentRelevances> judgements ) throws IOException{
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+    BufferedReader reader = null;
+    String line = null;
+    int resultNumber = 0;
+
+    String currentQuery = "bing";
+    //TODO: remove  hardcoded query
+    DocumentRelevances relevances = judgements.get(currentQuery);
+
+    try {
+      reader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+    }catch (FileNotFoundException e){
+      System.out.println("File not found");
+    }
+
+    int totalRelevantDocuments = getRelevantDocumentsCount(judgements.get(currentQuery));
+    int relevantDocuments = 0;
+
+    while ((line = reader.readLine()) != null ) {
+      resultNumber++;
+      Scanner s = new Scanner(line).useDelimiter("\t");
+      final String query = s.next();
+      if(query.equals(currentQuery)){
+
+        if (relevances == null) {
+          System.out.println("Query [" + currentQuery + "] not found!");
+        } else {
+          int docId =  Integer.parseInt(s.next());
+          if(relevances.hasRelevanceForDoc(docId) && relevances.getRelevanceForDoc(docId) == 1.0) {
+            System.out.println((float) 1 / resultNumber);
+            return;
+          }
+        }
+      }
+    }
+
+    System.out.println(0);
+
+
+
+  }
   public static void averagePrecision( Map<String, DocumentRelevances> judgements  ) throws IOException{
     //TODO: remove  hardcoded file. How will prof enter the file name ?
     String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
     BufferedReader reader = null;
     String line = null;
-    String currentQuery = "bing";
     int lineNumber = 0; //TO know current result number
     float recall = 0;
     int avgCount = 0;
     float sum = 0;
+    String currentQuery = "bing";
     //TODO: remove  hardcoded query
     DocumentRelevances relevances = judgements.get(currentQuery);
 
