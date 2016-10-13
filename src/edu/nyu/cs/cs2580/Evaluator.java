@@ -48,7 +48,7 @@ class Evaluator {
     //evaluateStdin(Integer.parseInt(args[1]), judgments);
 
     //precision(5, judgments);
-    recall(3,judgements);
+    fMeasure(1,judgements);
   }
 
   public static void readRelevanceJudgments(
@@ -135,8 +135,14 @@ class Evaluator {
     System.out.println(query + "\t" + Double.toString(R / N));
   }
 
+  public static void fMeasure(int at, Map<String, DocumentRelevances> judgements  ) throws IOException{
+    float precision = precision(at,judgements);
+    float recall = recall(at, judgements);
+    float fMeasure = (2*precision*recall)/(precision+recall);
+    System.out.println("FMeasure "+ fMeasure);
+  }
 
-  public static void precision(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
+  public static float precision(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
 
     //TODO: remove  hardcoded file. How will prof enter the file name ?
     String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
@@ -172,10 +178,12 @@ class Evaluator {
         }
       }
     }
-    System.out.println((float)relevantDocuments/at);
+    float precision = (float)relevantDocuments/at;
+    System.out.println("Precision "+precision);
+    return precision;
   }
 
-  public static void recall(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
+  public static float recall(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
 
     //TODO: remove  hardcoded file. How will prof enter the file name ?
     String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
@@ -213,7 +221,10 @@ class Evaluator {
         }
       }
     }
-    System.out.println((float)relevantDocuments/totalRelevantDocuments);
+
+    float recall = (float)relevantDocuments/totalRelevantDocuments;
+    System.out.println("Recall " + recall);
+    return recall;
   }
 
   public static int getRelevantDocumentsCount( DocumentRelevances documentRelevances){
