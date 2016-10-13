@@ -48,7 +48,8 @@ class Evaluator {
     //evaluateStdin(Integer.parseInt(args[1]), judgments);
 
     //precision(5, judgments);
-    fMeasure(1,judgements);
+    //fMeasure(1,judgements);
+    averagePrecision(judgements);
   }
 
   public static void readRelevanceJudgments(
@@ -133,6 +134,55 @@ class Evaluator {
       }
     }
     System.out.println(query + "\t" + Double.toString(R / N));
+  }
+
+  public static void averagePrecision( Map<String, DocumentRelevances> judgements  ) throws IOException{
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+    BufferedReader reader = null;
+    String line = null;
+    String currentQuery = "bing";
+    int lineNumber = 0; //TO know current result number
+    float recall = 0;
+    int avgCount = 0;
+    float sum = 0;
+    //TODO: remove  hardcoded query
+    DocumentRelevances relevances = judgements.get(currentQuery);
+
+    try {
+      reader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+    }catch (FileNotFoundException e){
+      System.out.println("File not found");
+    }
+
+    int totalRelevantDocuments = getRelevantDocumentsCount(judgements.get(currentQuery));
+    int relevantDocuments = 0;
+
+    while ((line = reader.readLine()) != null ) {
+      lineNumber++;
+      Scanner s = new Scanner(line).useDelimiter("\t");
+      final String query = s.next();
+      if(query.equals(currentQuery)){
+
+        if (relevances == null) {
+          System.out.println("Query [" + currentQuery + "] not found!");
+        } else {
+          int docId =  Integer.parseInt(s.next());
+          float currentRecall = recall(lineNumber,judgements);
+          if(currentRecall > recall){
+            recall = currentRecall;
+            sum += precision(lineNumber,judgements);
+            avgCount++;
+          }
+        }
+      }
+    }
+
+    float avgPrecision = sum/avgCount;
+    System.out.println("Average Precision "+avgPrecision);
+
+
   }
 
   public static void fMeasure(int at, Map<String, DocumentRelevances> judgements  ) throws IOException{
@@ -237,4 +287,5 @@ class Evaluator {
     }
     return relevantDocuments;
   }
+
 }
