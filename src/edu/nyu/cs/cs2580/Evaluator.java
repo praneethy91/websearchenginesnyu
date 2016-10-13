@@ -1,14 +1,7 @@
 package edu.nyu.cs.cs2580;
 
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Scanner;
+import java.io.*;
+import java.util.*;
 
 /**
  * Evaluator for HW1.
@@ -48,11 +41,14 @@ class Evaluator {
    * Usage: java -cp src edu.nyu.cs.cs2580.Evaluator [labels] [metric_id]
    */
   public static void main(String[] args) throws IOException {
-    Map<String, DocumentRelevances> judgments =
+    Map<String, DocumentRelevances> judgements =
         new HashMap<String, DocumentRelevances>();
     SearchEngine.Check(args.length == 2, "Must provide labels and metric_id!");
-    readRelevanceJudgments(args[0], judgments);
-    evaluateStdin(Integer.parseInt(args[1]), judgments);
+    readRelevanceJudgments(args[0], judgements);
+    //evaluateStdin(Integer.parseInt(args[1]), judgments);
+
+    //precision(5, judgments);
+    recall(3,judgements);
   }
 
   public static void readRelevanceJudgments(
@@ -79,11 +75,12 @@ class Evaluator {
   public static void evaluateStdin(
       int metric, Map<String, DocumentRelevances> judgments)
           throws IOException {
+
     BufferedReader reader =
         new BufferedReader(new InputStreamReader(System.in));
     List<Integer> results = new ArrayList<Integer>();
+    String currentQuery = "bing";
     String line = null;
-    String currentQuery = "";
     while ((line = reader.readLine()) != null) {
       Scanner s = new Scanner(line).useDelimiter("\t");
       final String query = s.next();
@@ -94,6 +91,7 @@ class Evaluator {
             evaluateQueryInstructor(currentQuery, results, judgments);
             break;
           case 0:
+            break;
           case 1:
           case 2:
           case 3:
@@ -135,5 +133,97 @@ class Evaluator {
       }
     }
     System.out.println(query + "\t" + Double.toString(R / N));
+  }
+
+
+  public static void precision(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
+
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+    BufferedReader reader = null;
+    String line = null;
+    String currentQuery = "bing";
+    int documentsConsidered = at;
+
+    //TODO: remove  hardcoded query
+    DocumentRelevances relevances = judgements.get(currentQuery);
+
+    try {
+       reader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+    }catch (FileNotFoundException e){
+      System.out.println("File not found");
+    }
+
+    int relevantDocuments = 0;
+    while ((line = reader.readLine()) != null && documentsConsidered > 0) {
+      documentsConsidered--;
+      Scanner s = new Scanner(line).useDelimiter("\t");
+      final String query = s.next();
+      if(query.equals(currentQuery)){
+
+        if (relevances == null) {
+          System.out.println("Query [" + currentQuery + "] not found!");
+        } else {
+          int docId =  Integer.parseInt(s.next());
+          if (relevances.hasRelevanceForDoc(docId) && relevances.getRelevanceForDoc(docId) == 1.0 ) {
+            relevantDocuments++;
+          }
+        }
+      }
+    }
+    System.out.println((float)relevantDocuments/at);
+  }
+
+  public static void recall(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
+
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+    BufferedReader reader = null;
+    String line = null;
+    String currentQuery = "bing";
+    int documentsConsidered = at;
+
+    //TODO: remove  hardcoded query
+    DocumentRelevances relevances = judgements.get(currentQuery);
+
+    try {
+      reader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+    }catch (FileNotFoundException e){
+      System.out.println("File not found");
+    }
+
+    int totalRelevantDocuments = getRelevantDocumentsCount(judgements.get(currentQuery));
+    int relevantDocuments = 0;
+
+    while ((line = reader.readLine()) != null && documentsConsidered > 0) {
+      documentsConsidered--;
+      Scanner s = new Scanner(line).useDelimiter("\t");
+      final String query = s.next();
+      if(query.equals(currentQuery)){
+
+        if (relevances == null) {
+          System.out.println("Query [" + currentQuery + "] not found!");
+        } else {
+          int docId =  Integer.parseInt(s.next());
+          if (relevances.hasRelevanceForDoc(docId) && relevances.getRelevanceForDoc(docId) == 1.0 ) {
+            relevantDocuments++;
+          }
+        }
+      }
+    }
+    System.out.println((float)relevantDocuments/totalRelevantDocuments);
+  }
+
+  public static int getRelevantDocumentsCount( DocumentRelevances documentRelevances){
+    int relevantDocuments = 0;
+    Iterator it = documentRelevances.relevances.entrySet().iterator();
+    while (it.hasNext()) {
+      Map.Entry pair = (Map.Entry)it.next();
+      if((Double)pair.getValue() == 1.0)
+        relevantDocuments++;
+    }
+    return relevantDocuments;
   }
 }
