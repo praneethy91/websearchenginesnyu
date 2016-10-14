@@ -11,6 +11,12 @@ import java.util.*;
  */
 class Evaluator {
 
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    static String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+
+    //TODO: remove  hardcoded query
+    static String currentQuery = "bing";
+
   public static class DocumentRelevances {
     private Map<Integer, Double> relevances = new HashMap<Integer, Double>();
     private Map<Integer, Double> gains = new HashMap<Integer, Double>();
@@ -164,22 +170,11 @@ class Evaluator {
 
     float discountedGainTotal = 0;
     int resultNumber = 0;
-    //TODO: remove  hardcoded file. How will prof enter the file name ?
-    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
-    BufferedReader reader = null;
+    BufferedReader reader = getBufferReader(resultsFile);
     String line = null;
 
-    String currentQuery = "bing";
-    //TODO: remove  hardcoded query
+
     DocumentRelevances relevances = judgements.get(currentQuery);
-
-    try {
-      reader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
-    }catch (FileNotFoundException e){
-      System.out.println("File not found");
-    }
-
 
     while ((line = reader.readLine()) != null ) {
       resultNumber++;
@@ -206,24 +201,15 @@ class Evaluator {
 
     float discountedGainTotal = 0;
     int resultNumber = 0;
-    //TODO: remove  hardcoded file. How will prof enter the file name ?
-    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
-    BufferedReader reader = null;
+
+
+    BufferedReader reader = getBufferReader(resultsFile);
     String line = null;
 
     Map<Integer, Double> idealGains = new HashMap<>();
 
-
-    String currentQuery = "bing";
-    //TODO: remove  hardcoded query
     DocumentRelevances relevances = judgements.get(currentQuery);
 
-    try {
-      reader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
-    }catch (FileNotFoundException e){
-      System.out.println("File not found");
-    }
 
 
     while ((line = reader.readLine()) != null && at > 0) {
@@ -263,14 +249,12 @@ class Evaluator {
 
 
   public static void reciprocalRank(Map<String, DocumentRelevances> judgements ) throws IOException{
-    //TODO: remove  hardcoded file. How will prof enter the file name ?
-    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
-    BufferedReader reader = null;
-    String line = null;
-    int resultNumber = 0;
 
-    String currentQuery = "bing";
-    //TODO: remove  hardcoded query
+      BufferedReader reader = getBufferReader(resultsFile);
+      String line = null;
+      int resultNumber = 0;
+
+
     DocumentRelevances relevances = judgements.get(currentQuery);
 
     try {
@@ -305,24 +289,16 @@ class Evaluator {
   }
 
   public static void averagePrecision( Map<String, DocumentRelevances> judgements  ) throws IOException{
-    //TODO: remove  hardcoded file. How will prof enter the file name ?
-    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
-    BufferedReader reader = null;
+
+
+      BufferedReader reader = getBufferReader(resultsFile);
     String line = null;
     int lineNumber = 0; //TO know current result number
     float recall = 0;
     int avgCount = 0;
     float sum = 0;
-    String currentQuery = "bing";
-    //TODO: remove  hardcoded query
-    DocumentRelevances relevances = judgements.get(currentQuery);
 
-    try {
-      reader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
-    }catch (FileNotFoundException e){
-      System.out.println("File not found");
-    }
+    DocumentRelevances relevances = judgements.get(currentQuery);
 
     int totalRelevantDocuments = getRelevantDocumentsCount(judgements.get(currentQuery));
     int relevantDocuments = 0;
@@ -362,22 +338,15 @@ class Evaluator {
 
   public static float precision(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
 
-    //TODO: remove  hardcoded file. How will prof enter the file name ?
-    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
-    BufferedReader reader = null;
-    String line = null;
-    String currentQuery = "bing";
-    int documentsConsidered = at;
 
-    //TODO: remove  hardcoded query
+    String line = null;
+
+    int documentsConsidered = at;
+      BufferedReader reader = getBufferReader(resultsFile);
+
     DocumentRelevances relevances = judgements.get(currentQuery);
 
-    try {
-       reader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
-    }catch (FileNotFoundException e){
-      System.out.println("File not found");
-    }
+
 
     int relevantDocuments = 0;
     while ((line = reader.readLine()) != null && documentsConsidered > 0) {
@@ -403,22 +372,12 @@ class Evaluator {
 
   public static float recall(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
 
-    //TODO: remove  hardcoded file. How will prof enter the file name ?
-    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
-    BufferedReader reader = null;
+
     String line = null;
-    String currentQuery = "bing";
     int documentsConsidered = at;
 
-    //TODO: remove  hardcoded query
+      BufferedReader reader = getBufferReader(resultsFile);
     DocumentRelevances relevances = judgements.get(currentQuery);
-
-    try {
-      reader =
-              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
-    }catch (FileNotFoundException e){
-      System.out.println("File not found");
-    }
 
     int totalRelevantDocuments = getRelevantDocumentsCount(judgements.get(currentQuery));
     int relevantDocuments = 0;
@@ -444,6 +403,20 @@ class Evaluator {
     System.out.println("Recall " + recall);
     return recall;
   }
+
+  public static BufferedReader getBufferReader(String resultsFile){
+      BufferedReader reader = null;
+
+      try {
+          reader =
+                  new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+      }catch (FileNotFoundException e){
+          System.out.println("File not found");
+      }
+
+      return reader;
+  }
+
 
   public static int getRelevantDocumentsCount( DocumentRelevances documentRelevances){
     int relevantDocuments = 0;
