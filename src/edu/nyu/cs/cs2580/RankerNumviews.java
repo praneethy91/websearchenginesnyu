@@ -1,5 +1,7 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
@@ -22,7 +24,23 @@ public class RankerNumviews extends Ranker {
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
     Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-    // @CS2580: fill in your code here.
-    return all;
+    for (int i = 0; i < _indexer.numDocs(); ++i) {
+      double totalTermFrequencyInCorpus = _indexer.totalTermFrequency();
+      all.add(scoreDocument(query, i));
+    }
+    Collections.sort(all, Collections.reverseOrder());
+    Vector<ScoredDocument> results = new Vector<ScoredDocument>();
+    for (int i = 0; i < all.size() && i < numResults; ++i) {
+      results.add(all.get(i));
+    }
+    return results;
+  }
+
+  private ScoredDocument scoreDocument(Query query, int did) {
+    DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
+
+    double score = docFull.getNumViews();
+
+    return new ScoredDocument(query._query, docFull, score);
   }
 }
