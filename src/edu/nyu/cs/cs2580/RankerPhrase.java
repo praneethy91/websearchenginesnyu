@@ -47,9 +47,9 @@ public class RankerPhrase extends Ranker {
                   i++;
                   if (i == Query.length) {
                       phrasefreq++;
-                      i = 0;
+                      i = 0; // query phrase over
                   } else
-                      i = 0;
+                      i = 0; //so that the query checking always starts with the first word in query phrase
               }
           }
 
