@@ -29,10 +29,10 @@ public class RankerQl extends Ranker {
 
   public double Rank(int docID, String[] Query) {
     double lambda = (float) 0.5;
-    double p = (float) 0.0;
+    double p = (float) 1.0;
     double c = 100;
     for (int i = 0; i < Query.length; i++) {
-      p = p + ((1 - lambda) * getfreq(docID, Query[i]) / docwordcount(docID)) + (lambda * getfreqcoll(Query[i]) / c);
+      p = p * ((1 - lambda) * getfreq(docID, Query[i]) / docwordcount(docID)) + (lambda * getfreqcoll(Query[i]) / c);
     }
 
     return p;
