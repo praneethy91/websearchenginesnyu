@@ -46,13 +46,6 @@ public abstract class Indexer {
    */
   public abstract Document getDoc(int docid);
 
-  /*
-  * Gets the ID associated with a term, used in quick lookups
-  * in document where information regarding terms is stored in the
-  * form of a Vector.
-  * */
-  public abstract int getTermID(String term);
-
   /**
    * Iterator access to documents, used in HW2 for retrieving terms features for
    * the query matching the documents.

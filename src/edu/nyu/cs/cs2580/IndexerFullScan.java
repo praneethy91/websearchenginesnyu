@@ -73,7 +73,7 @@ class IndexerFullScan extends Indexer implements Serializable {
       reader.close();
     }
 
-    postProcessDocuments();
+    computeTfIdfNormalizationFactorsForDocuments();
 
     System.out.println(
         "Indexed " + Integer.toString(_numDocs) + " docs with " +
@@ -115,6 +115,8 @@ class IndexerFullScan extends Indexer implements Serializable {
     doc.setNumViews(numViews);
     doc.setTitleTokens(titleTokens);
     doc.setBodyTokens(bodyTokens);
+
+    //We store the token frequency map in the document for fast term frequency lookups
     doc.setTokenCountMap(tokenCountMap);
     _documents.add(doc);
     ++_numDocs;
@@ -127,7 +129,11 @@ class IndexerFullScan extends Indexer implements Serializable {
     }
   }
 
-  private void postProcessDocuments() {
+  /**
+   * Process and store the normalization factor for TfIDf in each document
+   * so that we don't need to compute it again and again for each query
+   */
+  private void computeTfIdfNormalizationFactorsForDocuments() {
     int numdocs = this.numDocs();
     for(Document document : _documents) {
       DocumentFull docFull = (DocumentFull) document;
@@ -157,6 +163,8 @@ class IndexerFullScan extends Indexer implements Serializable {
     while (s.hasNext()) {
       String token = s.next();
       int idx = -1;
+
+      //Additionally computes a term frequency HashMap for the document
       if(tokenCountMap != null) {
         if (tokenCountMap.containsKey(token)) {
           tokenCountMap.put(token, tokenCountMap.get(token) + 1.0);
@@ -235,11 +243,6 @@ class IndexerFullScan extends Indexer implements Serializable {
   @Override
   public Document getDoc(int did) {
     return (did >= _documents.size() || did < 0) ? null : _documents.get(did);
-  }
-
-  @Override
-  public int getTermID(String term) {
-    return _dictionary.get(term);
   }
 
   @Override

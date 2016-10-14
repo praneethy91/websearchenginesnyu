@@ -37,6 +37,14 @@ public class RankerCosine extends Ranker {
     return results;
   }
 
+  /**
+    *The frequency of terms in a document is within the document itself in a frequency map
+    * so lookups are fast. Also each document has its tfidf normalization factors
+    * so we don't need to compute, we can load it of the document from the index
+    * @param query
+    * @param did
+    * @param numdocs
+    */
   private ScoredDocument scoreDocument(Query query, int did, int numdocs) {
 
     // Get the document tokens.
@@ -44,7 +52,6 @@ public class RankerCosine extends Ranker {
     HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
 
     double score = 0.0;
-    int totalQueryTerms = query._tokens.size();
     double queryTfNormalizationFactor = 0.0;
     for (Map.Entry<String, Integer> queryTermWithCount : query._tokenCountMap.entrySet()) {
       String queryTerm = queryTermWithCount.getKey();
