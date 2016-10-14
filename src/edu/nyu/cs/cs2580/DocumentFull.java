@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -18,9 +19,19 @@ public class DocumentFull extends Document {
   private Vector<Integer> _titleTokens = new Vector<Integer>();
   private Vector<Integer> _bodyTokens = new Vector<Integer>();
 
+  public HashMap<String, Double> _tfIdfRepresentation = new HashMap<>();
+
   public DocumentFull(int docid, IndexerFullScan indexer) {
     super(docid);
     _indexer = indexer;
+  }
+
+  public void setTfIdfRepresentation(HashMap<String, Double> tokenCountMap) {
+    this._tfIdfRepresentation = tokenCountMap;
+  }
+
+  public HashMap<String, Double> getTfIdfRepresentation() {
+    return this._tfIdfRepresentation;
   }
 
   public void setTitleTokens(Vector<Integer> titleTokens) {

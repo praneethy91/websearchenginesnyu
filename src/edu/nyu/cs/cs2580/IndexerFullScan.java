@@ -63,7 +63,6 @@ class IndexerFullScan extends Indexer implements Serializable {
   public void constructIndex() throws IOException {
     String corpusFile = _options._corpusPrefix + "/corpus.tsv";
     System.out.println("Construct index from: " + corpusFile);
-
     BufferedReader reader = new BufferedReader(new FileReader(corpusFile));
     try {
       String line = null;
@@ -73,6 +72,35 @@ class IndexerFullScan extends Indexer implements Serializable {
     } finally {
       reader.close();
     }
+
+    // We store in the index the tfidf representation for a document as well for all unique terms in the dictionary.
+
+    int numDocs = this.numDocs();
+    for(Document doc : _documents) {
+      DocumentFull document = (DocumentFull) doc;
+      HashMap<String, Double> tfidfRepresentation = document.getTfIdfRepresentation();
+      double normalizationFactor = 0.0;
+
+      for(String term : _terms) {
+        if(tfidfRepresentation.containsKey(term)) {
+          Double frequencyOfTermInDoc = tfidfRepresentation.get(term);
+          int docFrequencyOfTerm = this.corpusDocFrequencyByTerm(term);
+          double tfIdfTermWithoutNormalization = (Math.log(frequencyOfTermInDoc) + 1.0)*Math.log(numDocs/docFrequencyOfTerm);
+          tfidfRepresentation.put(term, tfIdfTermWithoutNormalization);
+          normalizationFactor += Math.pow(tfIdfTermWithoutNormalization, 2);
+        }
+      }
+
+      normalizationFactor = Math.sqrt(normalizationFactor);
+
+      //Normalizing the tfidf vector with the normalization factor
+      for(Map.Entry<String, Double> termTfIdf : tfidfRepresentation.entrySet()) {
+        tfidfRepresentation.put(termTfIdf.getKey(), termTfIdf.getValue()/normalizationFactor);
+      }
+
+      document.setTfIdfRepresentation(tfidfRepresentation);
+    }
+
     System.out.println(
         "Indexed " + Integer.toString(_numDocs) + " docs with " +
         Long.toString(_totalTermFrequency) + " terms.");
@@ -95,10 +123,15 @@ class IndexerFullScan extends Indexer implements Serializable {
 
     String title = s.next();
     Vector<Integer> titleTokens = new Vector<Integer>();
-    readTermVector(title, titleTokens);
+    HashMap<String, Double> tokenCountMap = new HashMap<>();
+
+    // We do not put title tokens in token count map of document
+    readTermVector(title, titleTokens, null);
 
     Vector<Integer> bodyTokens = new Vector<Integer>();
-    readTermVector(s.next(), bodyTokens);
+
+    //We put body tokens in token count map for the document
+    readTermVector(s.next(), bodyTokens, tokenCountMap);
 
     int numViews = Integer.parseInt(s.next());
     s.close();
@@ -108,6 +141,7 @@ class IndexerFullScan extends Indexer implements Serializable {
     doc.setNumViews(numViews);
     doc.setTitleTokens(titleTokens);
     doc.setBodyTokens(bodyTokens);
+    doc.setTfIdfRepresentation(tokenCountMap);
     _documents.add(doc);
     ++_numDocs;
 
@@ -125,11 +159,19 @@ class IndexerFullScan extends Indexer implements Serializable {
    * @param content
    * @param tokens
    */
-  private void readTermVector(String content, Vector<Integer> tokens) {
+  private void readTermVector(String content, Vector<Integer> tokens, HashMap<String, Double> tokenCountMap) {
     Scanner s = new Scanner(content);  // Uses white space by default.
     while (s.hasNext()) {
       String token = s.next();
       int idx = -1;
+      if(tokenCountMap != null) {
+        if (tokenCountMap.containsKey(token)) {
+          tokenCountMap.put(token, tokenCountMap.get(token) + 1.0);
+        } else {
+          tokenCountMap.put(token, 1.0);
+        }
+      }
+
       if (_dictionary.containsKey(token)) {
         idx = _dictionary.get(token);
       } else {
@@ -200,6 +242,11 @@ class IndexerFullScan extends Indexer implements Serializable {
   @Override
   public Document getDoc(int did) {
     return (did >= _documents.size() || did < 0) ? null : _documents.get(did);
+  }
+
+  @Override
+  public int getTermID(String term) {
+    return _dictionary.get(term);
   }
 
   @Override
