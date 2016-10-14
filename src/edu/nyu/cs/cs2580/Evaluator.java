@@ -166,10 +166,10 @@ class Evaluator {
     System.out.println(NDCG);
   }
 
-  public static float DGC(int at, Map<String, DocumentRelevances> judgements ) throws IOException{
+  public static float DGC(int rankAt, Map<String, DocumentRelevances> judgements ) throws IOException{
 
     float discountedGainTotal = 0;
-    int resultNumber = 0;
+    int rank = 0;
     BufferedReader reader = getBufferReader(resultsFile);
     String line = null;
 
@@ -177,7 +177,7 @@ class Evaluator {
     DocumentRelevances relevances = judgements.get(currentQuery);
 
     while ((line = reader.readLine()) != null ) {
-      resultNumber++;
+      rank++;
       Scanner s = new Scanner(line).useDelimiter("\t");
       final String query = s.next();
       if(query.equals(currentQuery)){
@@ -187,7 +187,7 @@ class Evaluator {
         } else {
           int docId =  Integer.parseInt(s.next());
           if(relevances.hasGainForDoc(docId))
-            discountedGainTotal += ((relevances.getGainForDoc(docId)*Math.log(2))/Math.log(resultNumber+1));
+            discountedGainTotal += ((relevances.getGainForDoc(docId)*Math.log(2))/Math.log(rank+1));
         }
       }
     }
@@ -197,10 +197,10 @@ class Evaluator {
 
   }
 
-  public static float IDGC(int at, Map<String, DocumentRelevances> judgements ) throws IOException{
+  public static float IDGC(int rankAt, Map<String, DocumentRelevances> judgements ) throws IOException{
 
     float discountedGainTotal = 0;
-    int resultNumber = 0;
+    int rank = 0;
 
 
     BufferedReader reader = getBufferReader(resultsFile);
@@ -212,8 +212,8 @@ class Evaluator {
 
 
 
-    while ((line = reader.readLine()) != null && at > 0) {
-      at--;
+    while ((line = reader.readLine()) != null && rankAt > 0) {
+      rankAt--;
       Scanner s = new Scanner(line).useDelimiter("\t");
       final String query = s.next();
       if(query.equals(currentQuery)){
@@ -233,10 +233,10 @@ class Evaluator {
     Iterator it = idealGains.entrySet().iterator();
 
     while (it.hasNext()) {
-      resultNumber++;
+      rank++;
       Map.Entry pair = (Map.Entry)it.next();
 
-      discountedGainTotal += (((Double) pair.getValue()*Math.log(2))/Math.log(resultNumber+1));
+      discountedGainTotal += (((Double) pair.getValue()*Math.log(2))/Math.log(rank+1));
 
     }
 
@@ -252,7 +252,7 @@ class Evaluator {
 
       BufferedReader reader = getBufferReader(resultsFile);
       String line = null;
-      int resultNumber = 0;
+      int rank = 0;
 
 
     DocumentRelevances relevances = judgements.get(currentQuery);
@@ -268,7 +268,7 @@ class Evaluator {
     int relevantDocuments = 0;
 
     while ((line = reader.readLine()) != null ) {
-      resultNumber++;
+      rank++;
       Scanner s = new Scanner(line).useDelimiter("\t");
       final String query = s.next();
       if(query.equals(currentQuery)){
@@ -278,7 +278,7 @@ class Evaluator {
         } else {
           int docId =  Integer.parseInt(s.next());
           if(relevances.hasRelevanceForDoc(docId) && relevances.getRelevanceForDoc(docId) == 1.0) {
-            System.out.println((float) 1 / resultNumber);
+            System.out.println((float) 1 / rank);
             return;
           }
         }
@@ -293,7 +293,7 @@ class Evaluator {
 
       BufferedReader reader = getBufferReader(resultsFile);
     String line = null;
-    int lineNumber = 0; //TO know current result number
+    int rank = 0; //TO know current result number
     float recall = 0;
     int avgCount = 0;
     float sum = 0;
@@ -304,7 +304,7 @@ class Evaluator {
     int relevantDocuments = 0;
 
     while ((line = reader.readLine()) != null ) {
-      lineNumber++;
+      rank++;
       Scanner s = new Scanner(line).useDelimiter("\t");
       final String query = s.next();
       if(query.equals(currentQuery)){
@@ -313,10 +313,10 @@ class Evaluator {
           System.out.println("Query [" + currentQuery + "] not found!");
         } else {
           int docId =  Integer.parseInt(s.next());
-          float currentRecall = recall(lineNumber,judgements);
+          float currentRecall = recall(rank,judgements);
           if(currentRecall > recall){
             recall = currentRecall;
-            sum += precision(lineNumber,judgements);
+            sum += precision(rank,judgements);
             avgCount++;
           }
         }
@@ -329,19 +329,19 @@ class Evaluator {
 
   }
 
-  public static void fMeasure(int at, Map<String, DocumentRelevances> judgements  ) throws IOException{
-    float precision = precision(at,judgements);
-    float recall = recall(at, judgements);
+  public static void fMeasure(int rankAt, Map<String, DocumentRelevances> judgements  ) throws IOException{
+    float precision = precision(rankAt,judgements);
+    float recall = recall(rankAt, judgements);
     float fMeasure = (2*precision*recall)/(precision+recall);
     System.out.println("FMeasure "+ fMeasure);
   }
 
-  public static float precision(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
+  public static float precision(int rankAt,  Map<String, DocumentRelevances> judgements ) throws IOException{
 
 
     String line = null;
 
-    int documentsConsidered = at;
+    int documentsConsidered = rankAt;
       BufferedReader reader = getBufferReader(resultsFile);
 
     DocumentRelevances relevances = judgements.get(currentQuery);
@@ -365,16 +365,16 @@ class Evaluator {
         }
       }
     }
-    float precision = (float)relevantDocuments/at;
+    float precision = (float)relevantDocuments/rankAt;
     System.out.println("Precision "+precision);
     return precision;
   }
 
-  public static float recall(int at,  Map<String, DocumentRelevances> judgements ) throws IOException{
+  public static float recall(int rankAt,  Map<String, DocumentRelevances> judgements ) throws IOException{
 
 
     String line = null;
-    int documentsConsidered = at;
+    int documentsConsidered = rankAt;
 
       BufferedReader reader = getBufferReader(resultsFile);
     DocumentRelevances relevances = judgements.get(currentQuery);
