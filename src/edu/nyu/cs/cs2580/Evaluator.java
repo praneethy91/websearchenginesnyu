@@ -63,11 +63,11 @@ class Evaluator {
     readRelevanceJudgments(args[0], judgements);
     //evaluateStdin(Integer.parseInt(args[1]), judgments);
 
-    //precision(5, judgments);
+    precision(3, judgements);
     //fMeasure(1,judgements);
     //averagePrecision(judgements);
     //reciprocalRank(judgements);
-    NDCG(3,judgements);
+    //NDCG(3,judgements);
   }
 
   public static void readRelevanceJudgments(
@@ -196,7 +196,6 @@ class Evaluator {
         }
       }
     }
-
     System.out.println("DCG "+ discountedGainTotal);
 
     return discountedGainTotal;
