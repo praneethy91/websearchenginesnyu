@@ -34,27 +34,40 @@ public class RankerPhrase extends Ranker {
 
       double score = 0.0;
       int i = 0;
-      int phrasefreq = 0;
+      int bigramfreq = 0;
+      int ctr=0;
 
       if (Query.length == 1)
-          phrasefreq = getfreq(docID);
+          bigramfreq = getfreq(docID);
 
       else {
 
           for (int j = 0; j < docwords.size(); j++) {
 
-              if (docwords.get(j).equals(Query[i])) {
-                  i++;
-                  if (i == Query.length) {
-                      phrasefreq++;
-                      i = 0; // query phrase over
-                  } else
-                      i = 0; //so that the query checking always starts with the first word in query phrase
+              
+              while(i!=Query.length-1){
+
+                  if(Query[i]==docwords.get(j)){
+
+                      if(Query[i+1]==docwords.get(j+1)){
+
+                          bigramfreq++;
+                          i++;
+                          j++;
+                      }
+                      else
+                          i++;
+                  }
+                  else
+                      i++;
               }
+
+              i=0;
+
           }
 
       }
-      return phrasefreq;
+      return bigramfreq;
   }
 
 int getfreq(int docID){
