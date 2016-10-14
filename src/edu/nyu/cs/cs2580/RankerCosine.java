@@ -25,7 +25,7 @@ public class RankerCosine extends Ranker {
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
     Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-    int numDocs = _indexer.numDocs();
+    double numDocs = _indexer.numDocs();
     for (int i = 0; i < _indexer.numDocs(); ++i) {
       all.add(scoreDocument(query, i, numDocs));
     }
@@ -40,12 +40,14 @@ public class RankerCosine extends Ranker {
   /**
     *The frequency of terms in a document is within the document itself in a frequency map
     * so lookups are fast. Also each document has its tfidf normalization factors
-    * so we don't need to compute, we can load it of the document from the index
+    * so we don't need to compute, we can load it of the document from the index.
+    * We are using tf normalized query vector and tf-idf normalized document vector
+    * for the cosine similarity ranking model
     * @param query
     * @param did
     * @param numdocs
     */
-  private ScoredDocument scoreDocument(Query query, int did, int numdocs) {
+  private ScoredDocument scoreDocument(Query query, int did, double numdocs) {
 
     // Get the document tokens.
     DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
@@ -55,7 +57,7 @@ public class RankerCosine extends Ranker {
     double queryTfNormalizationFactor = 0.0;
     for (Map.Entry<String, Integer> queryTermWithCount : query._tokenCountMap.entrySet()) {
       String queryTerm = queryTermWithCount.getKey();
-      int queryTermCount = queryTermWithCount.getValue();
+      double queryTermCount = queryTermWithCount.getValue();
       if(!docTokenCountMap.containsKey(queryTerm))
       {
         continue;
