@@ -25,8 +25,9 @@ public class RankerCosine extends Ranker {
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
     Vector<ScoredDocument> all = new Vector<ScoredDocument>();
+    int numDocs = _indexer.numDocs();
     for (int i = 0; i < _indexer.numDocs(); ++i) {
-      all.add(scoreDocument(query, i));
+      all.add(scoreDocument(query, i, numDocs));
     }
     Collections.sort(all, Collections.reverseOrder());
     Vector<ScoredDocument> results = new Vector<ScoredDocument>();
@@ -36,16 +37,15 @@ public class RankerCosine extends Ranker {
     return results;
   }
 
-  private ScoredDocument scoreDocument(Query query, int did) {
+  private ScoredDocument scoreDocument(Query query, int did, int numdocs) {
 
     // Get the document tokens.
-    DocumentFull doc = (DocumentFull) _indexer.getDoc(did);
-    HashMap<String, Double> docTokenCountMap = doc.getTfIdfRepresentation();
+    DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
+    HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
 
-    // Score the document. Here we have provided a very simple ranking model,
-    // where a document is scored 1.0 if it gets hit by at least one query term.
     double score = 0.0;
     int totalQueryTerms = query._tokens.size();
+    double queryTfNormalizationFactor = 0.0;
     for (Map.Entry<String, Integer> queryTermWithCount : query._tokenCountMap.entrySet()) {
       String queryTerm = queryTermWithCount.getKey();
       int queryTermCount = queryTermWithCount.getValue();
@@ -54,14 +54,19 @@ public class RankerCosine extends Ranker {
         continue;
       }
 
-      // We are not normalizing the queryTf. Just dividing by the summation
-      // of all frequencies of the terms in the query vector (total token count)
-      double queryTf = (queryTermCount*1.0/totalQueryTerms);
-
-      double documentNormalizedTfIdf = docTokenCountMap.get(queryTerm);
-      score += queryTf*documentNormalizedTfIdf;
+      double queryTermFrequency = docTokenCountMap.get(queryTerm);
+      double docFrequencyOfTerm = _indexer.corpusDocFrequencyByTerm(queryTerm)*1.0;
+      double tfIdfTermWithoutNormalization = (Math.log(queryTermFrequency) + 1.0)*Math.log((numdocs*1.0)/docFrequencyOfTerm);
+      score += queryTermCount*tfIdfTermWithoutNormalization;
+      queryTfNormalizationFactor += Math.pow(queryTermCount, 2);
     }
 
-    return new ScoredDocument(query._query, doc, score);
+    if(score != 0) {
+      queryTfNormalizationFactor = Math.sqrt(queryTfNormalizationFactor);
+      score /= docFull.getNormalizationFactorTfIdf();
+      score /= queryTfNormalizationFactor;
+    }
+
+    return new ScoredDocument(query._query, docFull, score);
   }
 }

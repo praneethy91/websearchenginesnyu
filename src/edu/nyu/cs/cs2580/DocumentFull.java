@@ -18,20 +18,28 @@ public class DocumentFull extends Document {
 
   private Vector<Integer> _titleTokens = new Vector<Integer>();
   private Vector<Integer> _bodyTokens = new Vector<Integer>();
-
-  public HashMap<String, Double> _tfIdfRepresentation = new HashMap<>();
+  private double _normalizationFactorTfIdf = 0.0;
+  private HashMap<String, Double> _tokenCountMap = new HashMap<>();
 
   public DocumentFull(int docid, IndexerFullScan indexer) {
     super(docid);
     _indexer = indexer;
   }
 
-  public void setTfIdfRepresentation(HashMap<String, Double> tokenCountMap) {
-    this._tfIdfRepresentation = tokenCountMap;
+  public void setTokenCountMap(HashMap<String, Double> tokenCountMap) {
+    this._tokenCountMap = tokenCountMap;
   }
 
-  public HashMap<String, Double> getTfIdfRepresentation() {
-    return this._tfIdfRepresentation;
+  public HashMap<String, Double> getTokenCountMap() {
+    return this._tokenCountMap;
+  }
+
+  public void setNormalizationFactorTfIdf(double _normalizationFactorTfIdf) {
+    this._normalizationFactorTfIdf = _normalizationFactorTfIdf;
+  }
+
+  public double getNormalizationFactorTfIdf() {
+    return this._normalizationFactorTfIdf;
   }
 
   public void setTitleTokens(Vector<Integer> titleTokens) {

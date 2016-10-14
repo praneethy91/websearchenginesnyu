@@ -73,33 +73,7 @@ class IndexerFullScan extends Indexer implements Serializable {
       reader.close();
     }
 
-    // We store in the index the tfidf representation for a document as well for all unique terms in the dictionary.
-
-    int numDocs = this.numDocs();
-    for(Document doc : _documents) {
-      DocumentFull document = (DocumentFull) doc;
-      HashMap<String, Double> tfidfRepresentation = document.getTfIdfRepresentation();
-      double normalizationFactor = 0.0;
-
-      for(String term : _terms) {
-        if(tfidfRepresentation.containsKey(term)) {
-          Double frequencyOfTermInDoc = tfidfRepresentation.get(term);
-          int docFrequencyOfTerm = this.corpusDocFrequencyByTerm(term);
-          double tfIdfTermWithoutNormalization = (Math.log(frequencyOfTermInDoc) + 1.0)*Math.log(numDocs/docFrequencyOfTerm);
-          tfidfRepresentation.put(term, tfIdfTermWithoutNormalization);
-          normalizationFactor += Math.pow(tfIdfTermWithoutNormalization, 2);
-        }
-      }
-
-      normalizationFactor = Math.sqrt(normalizationFactor);
-
-      //Normalizing the tfidf vector with the normalization factor
-      for(Map.Entry<String, Double> termTfIdf : tfidfRepresentation.entrySet()) {
-        tfidfRepresentation.put(termTfIdf.getKey(), termTfIdf.getValue()/normalizationFactor);
-      }
-
-      document.setTfIdfRepresentation(tfidfRepresentation);
-    }
+    postProcessDocuments();
 
     System.out.println(
         "Indexed " + Integer.toString(_numDocs) + " docs with " +
@@ -141,7 +115,7 @@ class IndexerFullScan extends Indexer implements Serializable {
     doc.setNumViews(numViews);
     doc.setTitleTokens(titleTokens);
     doc.setBodyTokens(bodyTokens);
-    doc.setTfIdfRepresentation(tokenCountMap);
+    doc.setTokenCountMap(tokenCountMap);
     _documents.add(doc);
     ++_numDocs;
 
@@ -150,6 +124,25 @@ class IndexerFullScan extends Indexer implements Serializable {
     updateStatistics(doc.getBodyTokens(), uniqueTerms);
     for (Integer idx : uniqueTerms) {
       _termDocFrequency.put(idx, _termDocFrequency.get(idx) + 1);
+    }
+  }
+
+  private void postProcessDocuments() {
+    int numdocs = this.numDocs();
+    for(Document document : _documents) {
+      DocumentFull docFull = (DocumentFull) document;
+      Double normalizationFactorTfIdf = 0.0;
+      for(Map.Entry<String, Double> termEntry: docFull.getTokenCountMap().entrySet()) {
+        String termValue = termEntry.getKey();
+        double termFrequency = termEntry.getValue();
+        int docFrequencyOfTerm = this.corpusDocFrequencyByTerm(termValue);
+        normalizationFactorTfIdf += Math.pow(
+                (Math.log(termFrequency) + 1.0)*Math.log((numdocs*1.0)/docFrequencyOfTerm)
+                , 2);
+      }
+
+      normalizationFactorTfIdf = Math.sqrt(normalizationFactorTfIdf);
+      docFull.setNormalizationFactorTfIdf(normalizationFactorTfIdf);
     }
   }
   
