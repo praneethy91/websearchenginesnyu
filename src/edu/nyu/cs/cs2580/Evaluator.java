@@ -10,13 +10,16 @@ import java.util.*;
  * @author congyu
  */
 class Evaluator {
+
   public static class DocumentRelevances {
     private Map<Integer, Double> relevances = new HashMap<Integer, Double>();
+    private Map<Integer, Double> gains = new HashMap<Integer, Double>();
     
     public DocumentRelevances() { }
     
     public void addDocument(int docid, String grade) {
       relevances.put(docid, convertToBinaryRelevance(grade));
+      gains.put(docid, convertToGainRelevance(grade));
     }
     
     public boolean hasRelevanceForDoc(int docid) {
@@ -26,6 +29,14 @@ class Evaluator {
     public double getRelevanceForDoc(int docid) {
       return relevances.get(docid);
     }
+
+    public boolean hasGainForDoc(int docid){
+      return gains.containsKey(docid);
+    }
+
+    public double getGainForDoc(int docid){
+      return gains.get(docid);
+    }
     
     private static double convertToBinaryRelevance(String grade) {
       if (grade.equalsIgnoreCase("Perfect") ||
@@ -34,6 +45,11 @@ class Evaluator {
         return 1.0;
       }
       return 0.0;
+    }
+
+
+    private static double convertToGainRelevance(String grade){
+     return LabelGainEnum.valueOf(grade.toUpperCase()).gain;
     }
   }
   
@@ -50,7 +66,8 @@ class Evaluator {
     //precision(5, judgments);
     //fMeasure(1,judgements);
     //averagePrecision(judgements);
-    reciprocalRank(judgements);
+    //reciprocalRank(judgements);
+    NDCG(3,judgements);
   }
 
   public static void readRelevanceJudgments(
@@ -137,6 +154,115 @@ class Evaluator {
     System.out.println(query + "\t" + Double.toString(R / N));
   }
 
+  public static void NDCG(int at, Map<String, DocumentRelevances> judgements ) throws IOException{
+
+   float NDCG =  DGC(at,judgements) / IDGC(at,judgements);
+    System.out.println(NDCG);
+  }
+
+  public static float DGC(int at, Map<String, DocumentRelevances> judgements ) throws IOException{
+
+    float discountedGainTotal = 0;
+    int resultNumber = 0;
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+    BufferedReader reader = null;
+    String line = null;
+
+    String currentQuery = "bing";
+    //TODO: remove  hardcoded query
+    DocumentRelevances relevances = judgements.get(currentQuery);
+
+    try {
+      reader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+    }catch (FileNotFoundException e){
+      System.out.println("File not found");
+    }
+
+
+    while ((line = reader.readLine()) != null ) {
+      resultNumber++;
+      Scanner s = new Scanner(line).useDelimiter("\t");
+      final String query = s.next();
+      if(query.equals(currentQuery)){
+
+        if (relevances == null) {
+          System.out.println("Query [" + currentQuery + "] not found!");
+        } else {
+          int docId =  Integer.parseInt(s.next());
+          if(relevances.hasGainForDoc(docId))
+            discountedGainTotal += ((relevances.getGainForDoc(docId)*Math.log(2))/Math.log(resultNumber+1));
+        }
+      }
+    }
+
+    System.out.println("DCG "+ discountedGainTotal);
+
+    return discountedGainTotal;
+
+  }
+
+  public static float IDGC(int at, Map<String, DocumentRelevances> judgements ) throws IOException{
+
+    float discountedGainTotal = 0;
+    int resultNumber = 0;
+    //TODO: remove  hardcoded file. How will prof enter the file name ?
+    String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
+    BufferedReader reader = null;
+    String line = null;
+
+    Map<Integer, Double> idealGains = new HashMap<>();
+
+
+    String currentQuery = "bing";
+    //TODO: remove  hardcoded query
+    DocumentRelevances relevances = judgements.get(currentQuery);
+
+    try {
+      reader =
+              new BufferedReader(new InputStreamReader(new FileInputStream(resultsFile)));
+    }catch (FileNotFoundException e){
+      System.out.println("File not found");
+    }
+
+
+    while ((line = reader.readLine()) != null && at > 0) {
+      at--;
+      Scanner s = new Scanner(line).useDelimiter("\t");
+      final String query = s.next();
+      if(query.equals(currentQuery)){
+
+        if (relevances == null) {
+          System.out.println("Query [" + currentQuery + "] not found!");
+        } else {
+          int docId =  Integer.parseInt(s.next());
+          if(relevances.hasGainForDoc(docId))
+            idealGains.put(docId,relevances.getGainForDoc(docId));
+        }
+      }
+    }
+
+    idealGains = EvaluatorUtils.sortByValue(idealGains);
+
+    Iterator it = idealGains.entrySet().iterator();
+
+    while (it.hasNext()) {
+      resultNumber++;
+      Map.Entry pair = (Map.Entry)it.next();
+
+      discountedGainTotal += (((Double) pair.getValue()*Math.log(2))/Math.log(resultNumber+1));
+
+    }
+
+
+    System.out.println("IDCG "+ discountedGainTotal);
+    return discountedGainTotal;
+
+  }
+
+
+
   public static void reciprocalRank(Map<String, DocumentRelevances> judgements ) throws IOException{
     //TODO: remove  hardcoded file. How will prof enter the file name ?
     String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
@@ -177,10 +303,8 @@ class Evaluator {
     }
 
     System.out.println(0);
-
-
-
   }
+
   public static void averagePrecision( Map<String, DocumentRelevances> judgements  ) throws IOException{
     //TODO: remove  hardcoded file. How will prof enter the file name ?
     String resultsFile = "/Users/sankethpurwar/Desktop/Assignments/testoutput.txt";
