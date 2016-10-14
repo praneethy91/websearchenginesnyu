@@ -1,5 +1,7 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.BufferedReader;
+import java.io.FileReader;
 import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
@@ -25,4 +27,38 @@ public class RankerPhrase extends Ranker {
     // @CS2580: fill in your code here.
     return all;
   }
+
+  int phrasecompare(String[] Query, int docID) {
+
+      Document doc = _indexer.getDoc(docID);
+      Vector<String> docwords = ((DocumentFull) doc).getConvertedBodyTokens();
+
+      double score = 0.0;
+      int i = 0;
+      int phrasefreq = 0;
+
+      if (Query.length == 1)
+          phrasefreq = getfreq(docID);
+
+      else {
+
+          for (int j = 0; j < docwords.size(); j++) {
+
+              if (docwords.get(j).equals(Query[i])) {
+                  i++;
+                  if (i == Query.length) {
+                      phrasefreq++;
+                      i = 0;
+                  } else
+                      i = 0;
+              }
+          }
+
+      }
+      return phrasefreq;
+  }
+
+int getfreq(int docID){
+    return 20;
+}
 }
