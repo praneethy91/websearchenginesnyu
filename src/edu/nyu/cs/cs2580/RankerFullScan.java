@@ -23,15 +23,17 @@ class RankerFullScan extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {    
-    Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-    for (int i = 0; i < _indexer.numDocs(); ++i) {
-      all.add(scoreDocument(query, i));
-    }
-    Collections.sort(all, Collections.reverseOrder());
+  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
     Vector<ScoredDocument> results = new Vector<ScoredDocument>();
-    for (int i = 0; i < all.size() && i < numResults; ++i) {
-      results.add(all.get(i));
+    for(Query query : queries) {
+      Vector<ScoredDocument> all = new Vector<ScoredDocument>();
+      for (int i = 0; i < _indexer.numDocs(); ++i) {
+        all.add(scoreDocument(query, i));
+      }
+      Collections.sort(all, Collections.reverseOrder());
+      for (int i = 0; i < all.size() && i < numResults; ++i) {
+        results.add(all.get(i));
+      }
     }
     return results;
   }

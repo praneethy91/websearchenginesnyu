@@ -29,7 +29,7 @@ public class RankerLinear extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
     System.out.println("  with beta values" +
         ": cosine=" + Float.toString(_betaCosine) +
         ", ql=" + Float.toString(_betaQl) +

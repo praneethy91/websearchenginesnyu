@@ -20,7 +20,7 @@ public class RankerQl extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
     Vector<ScoredDocument> all = new Vector<ScoredDocument>();
     // @CS2580: fill in your code here.
     return all;
