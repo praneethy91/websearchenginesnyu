@@ -1,7 +1,6 @@
 package edu.nyu.cs.cs2580;
 
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.util.Vector;
 
 import com.sun.net.httpserver.Headers;
@@ -9,6 +8,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+
+import javax.xml.ws.http.HTTPException;
 
 /**
  * Handles each incoming query, students do not need to change this class except
@@ -29,6 +30,9 @@ class QueryHandler implements HttpHandler {
   public static class CgiArguments {
     // The raw user query
     public String _query = "";
+
+    //
+    public File _queryFile = null;
     // How many results to return
     private int _numResults = 10;
     
@@ -49,7 +53,14 @@ class QueryHandler implements HttpHandler {
       TEXT,
       HTML,
     }
+
+    public enum OutputType {
+      HTTP,
+      FILE,
+    }
+
     public OutputFormat _outputFormat = OutputFormat.TEXT;
+    public OutputType _outputType = OutputType.HTTP;
 
     public CgiArguments(String uriQuery) {
       String[] params = uriQuery.split("&");
@@ -62,6 +73,13 @@ class QueryHandler implements HttpHandler {
         String val = keyval[1];
         if (key.equals("query")) {
           _query = val;
+        } else if (key.equals("queryfile")) {
+          try {
+            _queryFile = new File(val);
+          }
+          catch(NullPointerException e) {
+            //Ignored, search engine should never fail upon invalid user input.
+          }
         } else if (key.equals("num")) {
           try {
             _numResults = Integer.parseInt(val);
@@ -77,6 +95,12 @@ class QueryHandler implements HttpHandler {
         } else if (key.equals("format")) {
           try {
             _outputFormat = OutputFormat.valueOf(val.toUpperCase());
+          } catch (IllegalArgumentException e) {
+            // Ignored, search engine should never fail upon invalid user input.
+          }
+        } else if (key.equals("output")) {
+          try {
+            _outputType = OutputType.valueOf(val.toUpperCase());
           } catch (IllegalArgumentException e) {
             // Ignored, search engine should never fail upon invalid user input.
           }
@@ -102,6 +126,43 @@ class QueryHandler implements HttpHandler {
     OutputStream responseBody = exchange.getResponseBody();
     responseBody.write(message.getBytes());
     responseBody.close();
+  }
+
+  private void writeToResultsFile(HttpExchange exchange,
+                                  final String message,
+                                  CgiArguments.RankerType rankerType) throws IOException  {
+    String fileName = "";
+    switch (rankerType) {
+      case COSINE:
+        fileName = "hw1.1-vsm.tsv";
+        break;
+      case QL:
+        fileName = "hw1.1-ql.tsv";
+        break;
+      case PHRASE:
+        fileName = "hw1.1-phrase.tsv";
+        break;
+      case NUMVIEWS:
+        fileName = "hw1.1-numviews.tsv";
+        break;
+      case LINEAR:
+        fileName = "hw1.2-linear.tsv";
+        break;
+      case FULLSCAN:
+        fileName = "hw1.1-fs.tsv";
+        break;
+      default:
+        // nothing
+    }
+    String path = "results" + File.separator + fileName;
+    try(PrintWriter out = new PrintWriter(new FileOutputStream(path, false))){
+      out.println(message);
+    }
+    catch (FileNotFoundException e) {
+      respondWithMsg(exchange, "Cannot write to results file:" + path);
+    }
+
+    respondWithMsg(exchange, "Results written to results file:" + path);
   }
 
   private void constructTextOutput(
@@ -140,25 +201,51 @@ class QueryHandler implements HttpHandler {
 
     // Process the CGI arguments.
     CgiArguments cgiArgs = new CgiArguments(uriQuery);
-    if (cgiArgs._query.isEmpty()) {
-      respondWithMsg(exchange, "No query is given!");
+    if (cgiArgs._query.isEmpty() && cgiArgs._queryFile == null) {
+      respondWithMsg(exchange, "No query or query file is given to search!");
     }
 
     // Create the ranker.
     Ranker ranker = Ranker.Factory.getRankerByArguments(
-        cgiArgs, SearchEngine.OPTIONS, _indexer);
+            cgiArgs, SearchEngine.OPTIONS, _indexer);
     if (ranker == null) {
       respondWithMsg(exchange,
-          "Ranker " + cgiArgs._rankerType.toString() + " is not valid!");
+              "Ranker " + cgiArgs._rankerType.toString() + " is not valid!");
     }
 
-    // Processing the query.
-    Query processedQuery = new Query(cgiArgs._query);
-    processedQuery.processQuery();
+    Vector<String> queries = new Vector<>();
+    BufferedReader reader = null;
+
+    //Processing the query from query file if exists and valid
+    if(cgiArgs._queryFile != null) {
+      try {
+        reader = new BufferedReader(new FileReader(cgiArgs._queryFile));
+        String query = null;
+        while ((query = reader.readLine()) != null && !query.trim().isEmpty()) {
+          queries.add(query);
+        }
+      } finally {
+        if(reader != null) {
+          reader.close();
+        }
+      }
+    }
+
+    // Adding the query from query cgi argument if exists
+    if(cgiArgs._query != null && !cgiArgs._query.trim().isEmpty()) {
+      queries.add(cgiArgs._query);
+    }
+
+    Vector<Query> processedQueries = new Vector<>();
+    for(String query: queries) {
+      Query processedQuery = new Query(query);
+      processedQuery.processQuery();
+      processedQueries.add(processedQuery);
+    }
 
     // Ranking.
     Vector<ScoredDocument> scoredDocs =
-        ranker.runQuery(processedQuery, cgiArgs._numResults);
+        ranker.runQuery(processedQueries, cgiArgs._numResults);
     StringBuffer response = new StringBuffer();
     switch (cgiArgs._outputFormat) {
     case TEXT:
@@ -170,8 +257,15 @@ class QueryHandler implements HttpHandler {
     default:
       // nothing
     }
-    respondWithMsg(exchange, response.toString());
-    System.out.println("Finished query: " + cgiArgs._query);
+
+    if(cgiArgs._outputType == CgiArguments.OutputType.HTTP)
+    {
+      respondWithMsg(exchange, response.toString());
+    }
+    else if(cgiArgs._outputType == CgiArguments.OutputType.FILE){
+      writeToResultsFile(exchange, response.toString(), cgiArgs._rankerType);
+    }
+    System.out.println("Finished processing all queries");
   }
 }
 

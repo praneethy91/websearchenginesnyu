@@ -13,26 +13,28 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * @author congyu
  * @author fdiaz
  */
-public class RankerNumviews extends Ranker {
+public class RankerNumViews extends Ranker {
 
-  public RankerNumviews(Options options,
-      CgiArguments arguments, Indexer indexer) {
+  public RankerNumViews(Options options,
+                        CgiArguments arguments, Indexer indexer) {
     super(options, arguments, indexer);
     System.out.println("Using Ranker: " + this.getClass().getSimpleName());
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
-    Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-    for (int i = 0; i < _indexer.numDocs(); ++i) {
-      double totalTermFrequencyInCorpus = _indexer.totalTermFrequency();
-      all.add(scoreDocument(query, i));
+  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
+    Vector<ScoredDocument> results = new Vector<>();
+    for(Query query : queries) {
+      Vector<ScoredDocument> all = new Vector<ScoredDocument>();
+      for (int i = 0; i < _indexer.numDocs(); ++i) {
+        all.add(scoreDocument(query, i));
+      }
+      Collections.sort(all, Collections.reverseOrder());
+      for (int i = 0; i < all.size() && i < numResults; ++i) {
+        results.add(all.get(i));
+      }
     }
-    Collections.sort(all, Collections.reverseOrder());
-    Vector<ScoredDocument> results = new Vector<ScoredDocument>();
-    for (int i = 0; i < all.size() && i < numResults; ++i) {
-      results.add(all.get(i));
-    }
+
     return results;
   }
 
