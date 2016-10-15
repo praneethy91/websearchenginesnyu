@@ -75,11 +75,12 @@ class IndexerFullScan extends Indexer implements Serializable {
     String indexFile = _options._indexPrefix + "/corpus.idx";
     System.out.println("Store index to: " + indexFile);
     File file = new File(indexFile);
-    if(!file.exists()) {
-      file.mkdirs();
+    File parent = file.getParentFile();
+    if(!parent.exists() && !parent.mkdirs()){
+      throw new IllegalStateException("Couldn't create dir: " + parent);
     }
     ObjectOutputStream writer =
-        new ObjectOutputStream(new FileOutputStream(indexFile));
+        new ObjectOutputStream(new FileOutputStream(file));
     writer.writeObject(this);
     writer.close();
   }
