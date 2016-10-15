@@ -23,16 +23,18 @@ public class RankerCosine extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
-    Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-    double numDocs = _indexer.numDocs();
-    for (int i = 0; i < _indexer.numDocs(); ++i) {
-      all.add(scoreDocument(query, i, numDocs));
-    }
-    Collections.sort(all, Collections.reverseOrder());
-    Vector<ScoredDocument> results = new Vector<ScoredDocument>();
-    for (int i = 0; i < all.size() && i < numResults; ++i) {
-      results.add(all.get(i));
+  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
+    Vector<ScoredDocument> results = new Vector<>();
+    int numDocs = _indexer.numDocs();
+    for(Query query : queries) {
+      Vector<ScoredDocument> all = new Vector<>();
+      for (int i = 0; i < _indexer.numDocs(); ++i) {
+        all.add(scoreDocument(query, i, numDocs));
+      }
+      Collections.sort(all, Collections.reverseOrder());
+      for (int i = 0; i < all.size() && i < numResults; ++i) {
+        results.add(all.get(i));
+      }
     }
     return results;
   }
@@ -40,14 +42,12 @@ public class RankerCosine extends Ranker {
   /**
     *The frequency of terms in a document is within the document itself in a frequency map
     * so lookups are fast. Also each document has its tfidf normalization factors
-    * so we don't need to compute, we can load it of the document from the index.
-    * We are using tf normalized query vector and tf-idf normalized document vector
-    * for the cosine similarity ranking model
+    * so we don't need to compute, we can load it of the document from the index
     * @param query
     * @param did
     * @param numdocs
     */
-  private ScoredDocument scoreDocument(Query query, int did, double numdocs) {
+  private ScoredDocument scoreDocument(Query query, int did, int numdocs) {
 
     // Get the document tokens.
     DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
@@ -57,7 +57,7 @@ public class RankerCosine extends Ranker {
     double queryTfNormalizationFactor = 0.0;
     for (Map.Entry<String, Integer> queryTermWithCount : query._tokenCountMap.entrySet()) {
       String queryTerm = queryTermWithCount.getKey();
-      double queryTermCount = queryTermWithCount.getValue();
+      int queryTermCount = queryTermWithCount.getValue();
       if(!docTokenCountMap.containsKey(queryTerm))
       {
         continue;

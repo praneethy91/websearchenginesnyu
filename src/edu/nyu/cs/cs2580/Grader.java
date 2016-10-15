@@ -10,7 +10,7 @@ package edu.nyu.cs.cs2580;
  * In HW1, we will examine your index implementation through the following
  * tasks.
  *
- *  1) Implement RankerCosine, RankerQl, RankerNumviews, RankerPhrase
+ *  1) Implement RankerCosine, RankerQl, RankerNumViews, RankerPhrase
  *     (40 points)
  *
  *  2) Implement RankerLinear (20 points)

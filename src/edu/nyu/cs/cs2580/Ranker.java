@@ -40,11 +40,12 @@ public abstract class Ranker {
 
   /**
    * Processes one query.
-   * @param query the parsed user query
-   * @param numResults number of results to return
-   * @return Up to {@code numResults} scored documents in ranked order
+   * @param queries the parsed user query vector of queries
+   * @param numResults number of results to return for each query
+   * @return Up to {@code numResults} scored documents in ranked order for each query
+   *         The ranked/scored documents are appended for each query.
    */
-  public abstract Vector<ScoredDocument> runQuery(Query query, int numResults);
+  public abstract Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults);
 
   /**
    * All Rankers must be created through this factory class based on the
@@ -63,7 +64,7 @@ public abstract class Ranker {
       case PHRASE:
         return new RankerPhrase(options, arguments, indexer);
       case NUMVIEWS:
-        return new RankerNumviews(options, arguments, indexer);
+        return new RankerNumViews(options, arguments, indexer);
       case LINEAR:
         return new RankerLinear(options, arguments, indexer);
       case NONE:
