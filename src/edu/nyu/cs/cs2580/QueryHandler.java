@@ -82,7 +82,12 @@ class QueryHandler implements HttpHandler {
           }
         } else if (key.equals("num")) {
           try {
-            _numResults = Integer.parseInt(val);
+            if(val.toLowerCase().equals("all")) {
+              _numResults = _indexer._numDocs;
+            }
+            else {
+              _numResults = Integer.parseInt(val);
+            }
           } catch (NumberFormatException e) {
             // Ignored, search engine should never fail upon invalid user input.
           }
@@ -112,7 +117,7 @@ class QueryHandler implements HttpHandler {
   // For accessing the underlying documents to be used by the Ranker. Since 
   // we are not worried about thread-safety here, the Indexer class must take
   // care of thread-safety.
-  private Indexer _indexer;
+  private static Indexer _indexer;
 
   public QueryHandler(Options options, Indexer indexer) {
     _indexer = indexer;
