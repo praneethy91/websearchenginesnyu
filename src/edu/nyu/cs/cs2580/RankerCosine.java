@@ -22,11 +22,6 @@ public class RankerCosine extends Ranker {
     System.out.println("Using Ranker: " + this.getClass().getSimpleName());
   }
 
-  @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
-    return super.runQuery(query, numResults);
-  }
-
   /**
     *The frequency of terms in a document is within the document itself in a frequency map
     * so lookups are fast. Also each document has its tfidf normalization factors

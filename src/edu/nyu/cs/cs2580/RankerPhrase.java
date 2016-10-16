@@ -21,13 +21,9 @@ public class RankerPhrase extends Ranker {
     System.out.println("Using Ranker: " + this.getClass().getSimpleName());
   }
 
-  @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
-    return super.runQuery(query, numResults);
-  }
+  public ScoredDocument scoreDocument(Query query, int did) {
 
-  public ScoredDocument scoreDocument(Query query, int did) {DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
-
+    DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
     HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
     Vector<String> docbodytokens = docFull.getConvertedBodyTokens();
     int docTokenCount = docbodytokens.size();

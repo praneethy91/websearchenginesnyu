@@ -26,6 +26,14 @@ class ScoredDocument implements Comparable<ScoredDocument> {
     return buf.toString();
   }
 
+  public double getScore() {
+    return _score;
+  }
+
+  public void setScore(double score) {
+    _score = score;
+  }
+
   /**
    * @CS2580: Student should implement {@code asHtmlResult} for final project.
    */

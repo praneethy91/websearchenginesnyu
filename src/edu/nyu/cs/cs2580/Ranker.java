@@ -41,7 +41,7 @@ public abstract class Ranker {
 
   /**
    * Processes one query.
-   * @param queries the parsed user query vector of queries
+   * @param query the parsed user query vector of queries
    * @param numResults number of results to return for each query
    * @return Up to {@code numResults} scored documents in ranked order for each query
    *         The ranked/scored documents are appended for each query.
@@ -58,6 +58,36 @@ public abstract class Ranker {
       results.add(all.get(i));
     }
     return results;
+  }
+
+  /**
+   * Processes one query.
+   * @param query the parsed user query vector of queries
+   * @return Up to {@code numResults} scored documents in the order in which the documents
+   *         are, according to the document index in the corpus.
+   */
+  public Vector<ScoredDocument> runQueryOriginalOrder(Query query) {
+    Vector<ScoredDocument> all = new Vector<>();
+    double minScore = Integer.MAX_VALUE;
+    double maxScore = Integer.MIN_VALUE;
+    for (int i = 0; i < _indexer.numDocs(); ++i) {
+      ScoredDocument scoredDocument = scoreDocument(query, i);
+      if(scoredDocument.getScore() < minScore) {
+        minScore = scoredDocument.getScore();
+      }
+      if(scoredDocument.getScore() > maxScore) {
+        maxScore = scoredDocument.getScore();
+      }
+      all.add(scoredDocument);
+    }
+    if(minScore == maxScore) { return all; }
+    double normalization = maxScore - minScore;
+    for (int i = 0; i < all.size(); ++i) {
+      ScoredDocument scoredDocument= all.get(i);
+      scoredDocument.setScore(
+              (scoredDocument.getScore() - minScore)/normalization);
+    }
+    return all;
   }
 
   public abstract ScoredDocument scoreDocument(Query query, int did);
