@@ -76,7 +76,7 @@ For example, you input as the following cgi-argument:
 format=text
 ```
 ### Number of ranked documents
-You can pass in a value which determined how many ranked documents are returned.
+You can pass in a value which determined how many ranked documents are returned. Default is 10.
 
 For example, you input as the following cgi-argument to display top 30 results.
 ```
