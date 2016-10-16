@@ -19,6 +19,10 @@ public class RankerLinear extends Ranker {
   private float _betaQl = 1.0f;
   private float _betaPhrase = 1.0f;
   private float _betaNumviews = 1.0f;
+  private Vector<ScoredDocument> _cosineRankedDocs;
+  private Vector<ScoredDocument> _qlRankedDocs;
+  private Vector<ScoredDocument> _phraseRankedDocs;
+  private Vector<ScoredDocument> _numViewsRankedDocs;
 
   public RankerLinear(Options options,
       CgiArguments arguments, Indexer indexer) {
@@ -47,39 +51,32 @@ public class RankerLinear extends Ranker {
      */
     _arguments._rankerType = CgiArguments.RankerType.COSINE;
     Ranker cosineRanker = new RankerCosine(_options, _arguments, _indexer);
-    Vector<ScoredDocument> cosineRankedDocs = cosineRanker.runQueryOriginalOrder(query);
+    _cosineRankedDocs = cosineRanker.runQueryOriginalOrder(query);
 
     _arguments._rankerType = CgiArguments.RankerType.QL;
     Ranker qlRanker = new RankerQl(_options, _arguments, _indexer);
-    Vector<ScoredDocument> qlRankedDocs = qlRanker.runQueryOriginalOrder(query);
+    _qlRankedDocs = qlRanker.runQueryOriginalOrder(query);
 
     _arguments._rankerType = CgiArguments.RankerType.PHRASE;
     Ranker phraseRanker = new RankerPhrase(_options, _arguments, _indexer);
-    Vector<ScoredDocument> phraseRankedDocs = phraseRanker.runQueryOriginalOrder(query);
+    _phraseRankedDocs = phraseRanker.runQueryOriginalOrder(query);
 
     _arguments._rankerType = CgiArguments.RankerType.NUMVIEWS;
     Ranker numViewsRanker = new RankerNumViews(_options, _arguments, _indexer);
-    Vector<ScoredDocument> numViewsRankedDocs = numViewsRanker.runQueryOriginalOrder(query);
+    _numViewsRankedDocs = numViewsRanker.runQueryOriginalOrder(query);
 
-    for(int i = 0; i < _indexer.numDocs(); i++) {
-      double score =
-              _betaCosine*cosineRankedDocs.get(i).getScore()
-              + _betaQl*qlRankedDocs.get(i).getScore()
-              + _betaPhrase*phraseRankedDocs.get(i).getScore()
-              + _betaNumviews*numViewsRankedDocs.get(i).getScore();
-
-      // We are using cosine ranked docs as an intermediate storage for sorting to save space
-      cosineRankedDocs.get(i).setScore(score);
-    }
-
-    Collections.sort(cosineRankedDocs, Collections.reverseOrder());
-    for (int i = 0; i < cosineRankedDocs.size() && i < numResults; ++i) {
-      results.add(cosineRankedDocs.get(i));
-    }
-
-    return results;
+    _arguments._rankerType = CgiArguments.RankerType.LINEAR;
+    return super.runQuery(query, numResults);
   }
+
   public ScoredDocument scoreDocument(Query query, int did) {
-    throw new NotImplementedException();
+
+    DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
+    double score =
+            _betaCosine*_cosineRankedDocs.get(did).getScore()
+                    + _betaQl*_qlRankedDocs.get(did).getScore()
+                    + _betaPhrase*_phraseRankedDocs.get(did).getScore()
+                    + _betaNumviews*_numViewsRankedDocs.get(did).getScore();
+    return new ScoredDocument(query._query, docFull, score);
   }
 }
