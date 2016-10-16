@@ -27,12 +27,10 @@ public class RankerPhrase extends Ranker {
       Vector<ScoredDocument> results = new Vector<ScoredDocument>();
     // @CS2580: fill in your code here.
 
-      int numDocs = _indexer.numDocs();
-
       for(Query query : queries) {
           Vector<ScoredDocument> all = new Vector<ScoredDocument>();
           for (int i = 0; i < _indexer.numDocs(); ++i) {
-              all.add(scoreDocument(query, i, numDocs));
+              all.add(scoreDocument(query, i));
           }
           Collections.sort(all, Collections.reverseOrder());
           for (int i = 0; i < all.size() && i < numResults; ++i) {
@@ -43,43 +41,41 @@ public class RankerPhrase extends Ranker {
       return results;
 
   }
-    private ScoredDocument scoreDocument(Query query, int did, int numDocs) {
+    private ScoredDocument scoreDocument(Query query, int did) {
+        query.processQuery();
         DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
         HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
 
-        int docTokenCount = docFull.getBodyTokens().size();
+        int docTokenCount = docFull.getConvertedBodyTokens().size();
+
+        Vector<String> docbodytokens = docFull.getConvertedBodyTokens();
+
+        Vector<String> querytokens = query._tokens;
 
         double score = 0.0;
-        int i = 0;
 
-        for (int k=0;k<numDocs;++k) {
 
-            if (query._tokens.size() == 1)
+            if (querytokens.size() == 1)
 
-                score = docTokenCountMap.get(query);
+                score = docTokenCountMap.get(querytokens.firstElement());
 
             else {
 
-                for (int j = 0; j < docTokenCount - 1; j++) {
+                for (int docbodyindex = 0; docbodyindex < docTokenCount - 1; docbodyindex++) {
 
+                    for (int queryindex = 0; queryindex != querytokens.size() - 1 ; queryindex++) {
 
-                    while (i != query._tokens.size() - 1) {
-
-                        if (query._tokens.get(i).equals(docFull.getConvertedBodyTokens().get(j))) {
-
-                            if (query._tokens.get(i + 1).equals(docFull.getConvertedBodyTokens().get(j + 1))) {
+                        if (querytokens.get(queryindex).equals(docbodytokens.get(docbodyindex)) && querytokens.get(queryindex + 1).equals(docbodytokens.get(docbodyindex + 1))) {
 
                                 score++;
-                                i++;
-                            } else
-                                i++;
-                        } else
-                            i++;
+
+                        }
                     }
-                    i = 0;
+
                 }
             }
-        }
+
+
         return new ScoredDocument(query._query, docFull, score);
     }
 
