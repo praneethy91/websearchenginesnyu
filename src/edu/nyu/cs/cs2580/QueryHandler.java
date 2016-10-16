@@ -155,7 +155,13 @@ class QueryHandler implements HttpHandler {
         // nothing
     }
     String path = "results" + File.separator + fileName;
-    try(PrintWriter out = new PrintWriter(new FileOutputStream(path, false))){
+    File file = new File(path);
+    File parent = file.getParentFile();
+    if(!parent.exists() && !parent.mkdirs()){
+      throw new IllegalStateException("Couldn't create dir: " + parent);
+    }
+
+    try(PrintWriter out = new PrintWriter(new FileOutputStream(file, false))){
       out.println(message);
     }
     catch (FileNotFoundException e) {
