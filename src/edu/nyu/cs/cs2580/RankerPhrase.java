@@ -57,7 +57,7 @@ public class RankerPhrase extends Ranker {
 
             if (querytokens.size() == 1)
 
-                score = docTokenCountMap.get(querytokens.firstElement());
+                score = docTokenCountMap.get(querytokens.get(0));
 
             else {
 
