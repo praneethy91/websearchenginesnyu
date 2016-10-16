@@ -53,6 +53,8 @@ public abstract class Ranker {
     for (int i = 0; i < _indexer.numDocs(); ++i) {
       all.add(scoreDocument(query, i));
     }
+
+    numResults = Math.min(numResults,_indexer.numDocs());
     Collections.sort(all, Collections.reverseOrder());
     for (int i = 0; i < all.size() && i < numResults; ++i) {
       results.add(all.get(i));
