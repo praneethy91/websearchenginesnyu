@@ -4,6 +4,7 @@ import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @CS2580: Use this template to implement the linear ranker for HW1. You must
@@ -29,7 +30,7 @@ public class RankerLinear extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
+  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
     System.out.println("  with beta values" +
         ": cosine=" + Float.toString(_betaCosine) +
         ", ql=" + Float.toString(_betaQl) +
@@ -38,5 +39,8 @@ public class RankerLinear extends Ranker {
     Vector<ScoredDocument> all = new Vector<ScoredDocument>();
     // @CS2580: fill in your code here.
     return all;
+  }
+  public ScoredDocument scoreDocument(Query query, int did) {
+    throw new NotImplementedException();
   }
 }

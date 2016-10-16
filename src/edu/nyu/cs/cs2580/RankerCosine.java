@@ -23,20 +23,8 @@ public class RankerCosine extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
-    Vector<ScoredDocument> results = new Vector<>();
-    int numDocs = _indexer.numDocs();
-    for(Query query : queries) {
-      Vector<ScoredDocument> all = new Vector<>();
-      for (int i = 0; i < _indexer.numDocs(); ++i) {
-        all.add(scoreDocument(query, i, numDocs));
-      }
-      Collections.sort(all, Collections.reverseOrder());
-      for (int i = 0; i < all.size() && i < numResults; ++i) {
-        results.add(all.get(i));
-      }
-    }
-    return results;
+  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+    return super.runQuery(query, numResults);
   }
 
   /**
@@ -45,13 +33,13 @@ public class RankerCosine extends Ranker {
     * so we don't need to compute, we can load it of the document from the index
     * @param query
     * @param did
-    * @param numdocs
     */
-  private ScoredDocument scoreDocument(Query query, int did, int numdocs) {
+  public ScoredDocument scoreDocument(Query query, int did) {
 
     // Get the document tokens.
     DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
     HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
+    int numDocs = _indexer.numDocs();
 
     double score = 0.0;
     double queryTfNormalizationFactor = 0.0;
@@ -65,7 +53,7 @@ public class RankerCosine extends Ranker {
 
       double queryTermFrequency = docTokenCountMap.get(queryTerm);
       double docFrequencyOfTerm = _indexer.corpusDocFrequencyByTerm(queryTerm)*1.0;
-      double tfIdfTermWithoutNormalization = (Math.log(queryTermFrequency) + 1.0)*Math.log((numdocs*1.0)/docFrequencyOfTerm);
+      double tfIdfTermWithoutNormalization = (Math.log(queryTermFrequency) + 1.0)*Math.log((numDocs*1.0)/docFrequencyOfTerm);
       score += queryTermCount*tfIdfTermWithoutNormalization;
       queryTfNormalizationFactor += Math.pow(queryTermCount, 2);
     }

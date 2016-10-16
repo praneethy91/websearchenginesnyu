@@ -250,12 +250,14 @@ class QueryHandler implements HttpHandler {
     }
 
     // Ranking.
-    Vector<ScoredDocument> scoredDocs =
-        ranker.runQuery(processedQueries, cgiArgs._numResults);
     StringBuffer response = new StringBuffer();
     switch (cgiArgs._outputFormat) {
     case TEXT:
-      constructTextOutput(scoredDocs, response);
+      for(Query query : processedQueries) {
+        Vector<ScoredDocument> scoredDocs =
+                ranker.runQuery(query, cgiArgs._numResults);
+        constructTextOutput(scoredDocs, response);
+      }
       break;
     case HTML:
       // @CS2580: Plug in your HTML output

@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.Collections;
 import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
@@ -45,7 +46,21 @@ public abstract class Ranker {
    * @return Up to {@code numResults} scored documents in ranked order for each query
    *         The ranked/scored documents are appended for each query.
    */
-  public abstract Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults);
+
+  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+    Vector<ScoredDocument> results = new Vector<>();
+    Vector<ScoredDocument> all = new Vector<>();
+    for (int i = 0; i < _indexer.numDocs(); ++i) {
+      all.add(scoreDocument(query, i));
+    }
+    Collections.sort(all, Collections.reverseOrder());
+    for (int i = 0; i < all.size() && i < numResults; ++i) {
+      results.add(all.get(i));
+    }
+    return results;
+  }
+
+  public abstract ScoredDocument scoreDocument(Query query, int did);
 
   /**
    * All Rankers must be created through this factory class based on the

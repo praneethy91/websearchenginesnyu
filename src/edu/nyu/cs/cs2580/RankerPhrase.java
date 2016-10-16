@@ -22,23 +22,11 @@ public class RankerPhrase extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Vector<Query> queries  , int numResults) {
-    Vector<ScoredDocument> results = new Vector<>();
-    for(Query query : queries) {
-      Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-      for (int i = 0; i < _indexer.numDocs(); ++i) {
-        all.add(scoreDocument(query, i));
-      }
-      Collections.sort(all, Collections.reverseOrder());
-      for (int i = 0; i < all.size() && i < numResults; ++i) {
-        results.add(all.get(i));
-      }
-    }
-
-    return results;
+  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+    return super.runQuery(query, numResults);
   }
 
-  private ScoredDocument scoreDocument(Query query, int did) {DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
+  public ScoredDocument scoreDocument(Query query, int did) {DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
 
     HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
     Vector<String> docbodytokens = docFull.getConvertedBodyTokens();

@@ -22,20 +22,8 @@ public class RankerQl extends Ranker {
   }
 
   @Override
-  public Vector<ScoredDocument> runQuery(Vector<Query> queries, int numResults) {
-    Vector<ScoredDocument> results = new Vector<ScoredDocument>();
-    for(Query query : queries) {
-      Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-      for (int i = 0; i < _indexer.numDocs(); ++i) {
-        double totalTermFrequencyInCorpus = _indexer.totalTermFrequency();
-        all.add(scoreDocument(query, i, totalTermFrequencyInCorpus));
-      }
-      Collections.sort(all, Collections.reverseOrder());
-      for (int i = 0; i < all.size() && i < numResults; ++i) {
-        results.add(all.get(i));
-      }
-    }
-    return results;
+  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+    return super.runQuery(query, numResults);
   }
 
   /**
@@ -46,7 +34,8 @@ public class RankerQl extends Ranker {
    * @param query
    * @param did
    */
-  private ScoredDocument scoreDocument(Query query, int did, double totalTermFrequencyInCorpus) {
+  public ScoredDocument scoreDocument(Query query, int did) {
+    double totalTermFrequencyInCorpus = _indexer.totalTermFrequency();
     DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
     HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
 
