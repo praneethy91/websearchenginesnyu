@@ -16,9 +16,6 @@ import static edu.nyu.cs.cs2580.EvaluationGenerator.getBufferReader;
 class Evaluator {
 
 
-    //TODO: remove  hardcoded query
-    static String currentQuery = "bing";
-
     public static class DocumentRelevances {
         private Map<Integer, Double> relevances = new HashMap<Integer, Double>();
         private Map<Integer, Double> gains = new HashMap<Integer, Double>();
@@ -143,20 +140,20 @@ class Evaluator {
         System.out.println(query + "\t" + Double.toString(R / N));
     }
 
-    public static float NDCG(int at, Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float NDCG(int at, DocumentRelevances relevances, RankerResult result) throws IOException {
 
-        float ideal = IDGC(at, judgements, result);
+        float ideal = IDGC(at, relevances, result);
         if(ideal == 0)
             return 0;
-        float NDCG = DGC(at, judgements, result) / ideal;
+        float NDCG = DGC(at, relevances, result) / ideal;
         return NDCG;
     }
 
-    public static float DGC(int rankAt, Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float DGC(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
 
         float discountedGainTotal = 0;
 
-        DocumentRelevances relevances = judgements.get(currentQuery);
+
 
         Iterator it = result.ranking.entrySet().iterator();
 
@@ -172,13 +169,12 @@ class Evaluator {
         return discountedGainTotal;
     }
 
-    public static float IDGC(int rankAt, Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float IDGC(int rankAt,DocumentRelevances relevances, RankerResult result) throws IOException {
 
         float discountedGainTotal = 0;
 
         Map<Integer, Double> idealGains = new HashMap<>();
 
-        DocumentRelevances relevances = judgements.get(currentQuery);
 
         Iterator it = result.ranking.entrySet().iterator();
 
@@ -210,9 +206,8 @@ class Evaluator {
     }
 
 
-    public static float reciprocalRank(Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float reciprocalRank(DocumentRelevances relevances, RankerResult result) throws IOException {
 
-        DocumentRelevances relevances = judgements.get(currentQuery);
 
         Iterator it = result.ranking.entrySet().iterator();
 
@@ -225,43 +220,25 @@ class Evaluator {
         }
 
 
-//    while ((line = reader.readLine()) != null ) {
-//      rank++;
-//      Scanner s = new Scanner(line).useDelimiter("\t");
-//      final String query = s.next();
-//      if(query.equals(currentQuery)){
-//
-//        if (relevances == null) {
-//          System.out.println("Query [" + currentQuery + "] not found!");
-//        } else {
-//          int docId =  Integer.parseInt(s.next());
-//          if(relevances.hasRelevanceForDoc(docId) && relevances.getRelevanceForDoc(docId) == 1.0) {
-//            return (float) 1 / rank;
-//          }
-//        }
-//      }
-//    }
-
         return 0;
     }
 
-    public static float averagePrecision(Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float averagePrecision(DocumentRelevances relevances, RankerResult result) throws IOException {
 
 
         float recall = 0;
         int avgCount = 0;
         float sum = 0;
 
-        DocumentRelevances relevances = judgements.get(currentQuery);
 
         Iterator it = result.ranking.entrySet().iterator();
 
         while (it.hasNext()) {
             Map.Entry pair = (Map.Entry) it.next();
-            float currentRecall = recall((Integer) pair.getKey(), judgements, result);
+            float currentRecall = recall((Integer) pair.getKey(), relevances, result);
             if (currentRecall > recall) {
                 recall = currentRecall;
-                sum += precision((Integer) pair.getKey(), judgements, result);
+                sum += precision((Integer) pair.getKey(), relevances, result);
                 avgCount++;
             }
         }
@@ -274,9 +251,9 @@ class Evaluator {
 
     }
 
-    public static float fMeasure(int rankAt, Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
-        float precision = precision(rankAt, judgements, result);
-        float recall = recall(rankAt, judgements, result);
+    public static float fMeasure(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
+        float precision = precision(rankAt, relevances, result);
+        float recall = recall(rankAt, relevances, result);
         if(precision == 0 && recall == 0){
             return 0;
         }
@@ -285,10 +262,10 @@ class Evaluator {
         return fMeasure;
     }
 
-    public static float precision(int rankAt, Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float precision(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
 
 
-        DocumentRelevances relevances = judgements.get(currentQuery);
+
 
 
         int relevantDocuments = 0;
@@ -311,15 +288,15 @@ class Evaluator {
         return precision;
     }
 
-    public static float recall(int rankAt, Map<String, DocumentRelevances> judgements, RankerResult result) throws IOException {
+    public static float recall(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
 
 
 //    String line = null;
 //    int documentsConsidered = rankAt;
 
-        DocumentRelevances relevances = judgements.get(currentQuery);
 
-        int totalRelevantDocuments = getRelevantDocumentsCount(judgements.get(currentQuery));
+
+        int totalRelevantDocuments = getRelevantDocumentsCount(relevances);
         int relevantDocuments = 0;
 
         Iterator it = result.ranking.entrySet().iterator();
@@ -334,23 +311,6 @@ class Evaluator {
             } else
                 break;
         }
-
-//    while ((line = reader.readLine()) != null && documentsConsidered > 0) {
-//      documentsConsidered--;
-//      Scanner s = new Scanner(line).useDelimiter("\t");
-//      final String query = s.next();
-//      if(query.equals(currentQuery)){
-//
-//        if (relevances == null) {
-//          System.out.println("Query [" + currentQuery + "] not found!");
-//        } else {
-//          int docId =  Integer.parseInt(s.next());
-//          if (relevances.hasRelevanceForDoc(docId) && relevances.getRelevanceForDoc(docId) == 1.0 ) {
-//            relevantDocuments++;
-//          }
-//        }
-//      }
-//    }
 
         float recall = (float) relevantDocuments / totalRelevantDocuments;
         System.out.println("Recall " + recall);

@@ -85,23 +85,25 @@ public class EvaluationGenerator {
             while (it.hasNext()) {
 
                 Map.Entry pair = (Map.Entry)it.next();
-                result = pair.getKey() + "\t";
+                String query = (String)pair.getKey();
+                result += query + "\t";
+                Evaluator.DocumentRelevances relevances = (Evaluator.DocumentRelevances)judgements.get(query);
                 RankerResult rankerResult = (RankerResult)pair.getValue();
-                result += Evaluator.precision(1,judgements, rankerResult) + "\t";
-                result += Evaluator.precision(5,judgements, rankerResult) + "\t";
-                result += Evaluator.precision(10,judgements,rankerResult) + "\t";
-                result += Evaluator.recall(1,judgements,rankerResult) + "\t";
-                result += Evaluator.recall(5,judgements,rankerResult) + "\t";
-                result += Evaluator.recall(10,judgements,rankerResult) + "\t";
-                result += Evaluator.fMeasure(1,judgements,rankerResult) + "\t";
-                result += Evaluator.fMeasure(5,judgements,rankerResult) + "\t";
-                result += Evaluator.fMeasure(10,judgements,rankerResult) + "\t";
+                result += Evaluator.precision(1,relevances, rankerResult) + "\t";
+                result += Evaluator.precision(5,relevances, rankerResult) + "\t";
+                result += Evaluator.precision(10,relevances,rankerResult) + "\t";
+                result += Evaluator.recall(1,relevances,rankerResult) + "\t";
+                result += Evaluator.recall(5,relevances,rankerResult) + "\t";
+                result += Evaluator.recall(10,relevances,rankerResult) + "\t";
+                result += Evaluator.fMeasure(1,relevances,rankerResult) + "\t";
+                result += Evaluator.fMeasure(5,relevances,rankerResult) + "\t";
+                result += Evaluator.fMeasure(10,relevances,rankerResult) + "\t";
                 //TODO: PRECISION AT RECALL POINT STILL PENDING
-                result += Evaluator.averagePrecision(judgements,rankerResult) + "\t";
-                result += Evaluator.NDCG(1,judgements,rankerResult) + "\t";
-                result += Evaluator.NDCG(5,judgements,rankerResult) + "\t";
-                result += Evaluator.NDCG(10,judgements,rankerResult) + "\t";
-                result += Evaluator.reciprocalRank(judgements,rankerResult) + "\t";
+                result += Evaluator.averagePrecision(relevances,rankerResult) + "\t";
+                result += Evaluator.NDCG(1,relevances,rankerResult) + "\t";
+                result += Evaluator.NDCG(5,relevances,rankerResult) + "\t";
+                result += Evaluator.NDCG(10,relevances,rankerResult) + "\t";
+                result += Evaluator.reciprocalRank(relevances,rankerResult) + "\t";
 
                 System.out.println(result);
                 result +=  "\n";
@@ -135,7 +137,7 @@ public class EvaluationGenerator {
         String currentQuery = null;
 
         try {
-            while ((line = reader.readLine()) != null) {
+            while ((line = reader.readLine()) != null && !line.isEmpty()) {
                 Scanner s = new Scanner(line).useDelimiter("\t");
                 String query = s.next();
                 Integer docId = Integer.parseInt(s.next());
