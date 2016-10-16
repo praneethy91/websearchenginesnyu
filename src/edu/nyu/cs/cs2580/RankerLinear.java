@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.Collections;
 import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
@@ -36,9 +37,47 @@ public class RankerLinear extends Ranker {
         ", ql=" + Float.toString(_betaQl) +
         ", phrase=" + Float.toString(_betaPhrase) +
         ", numviews=" + Float.toString(_betaNumviews));
-    Vector<ScoredDocument> all = new Vector<ScoredDocument>();
-    // @CS2580: fill in your code here.
-    return all;
+    Vector<ScoredDocument> results = new Vector<>();
+
+    /*Implemented a new run query method which returns all ranked
+     *documents in the order in which they appear in the indexer
+     * This way we apply the coefficients to each ranking model
+     * and sort the entire documents again based on linear combination
+     * of scores
+     */
+    _arguments._rankerType = CgiArguments.RankerType.COSINE;
+    Ranker cosineRanker = new RankerCosine(_options, _arguments, _indexer);
+    Vector<ScoredDocument> cosineRankedDocs = cosineRanker.runQueryOriginalOrder(query);
+
+    _arguments._rankerType = CgiArguments.RankerType.QL;
+    Ranker qlRanker = new RankerQl(_options, _arguments, _indexer);
+    Vector<ScoredDocument> qlRankedDocs = qlRanker.runQueryOriginalOrder(query);
+
+    _arguments._rankerType = CgiArguments.RankerType.PHRASE;
+    Ranker phraseRanker = new RankerPhrase(_options, _arguments, _indexer);
+    Vector<ScoredDocument> phraseRankedDocs = phraseRanker.runQueryOriginalOrder(query);
+
+    _arguments._rankerType = CgiArguments.RankerType.NUMVIEWS;
+    Ranker numViewsRanker = new RankerNumViews(_options, _arguments, _indexer);
+    Vector<ScoredDocument> numViewsRankedDocs = numViewsRanker.runQueryOriginalOrder(query);
+
+    for(int i = 0; i < _indexer.numDocs(); i++) {
+      double score =
+              _betaCosine*cosineRankedDocs.get(i).getScore()
+              + _betaQl*qlRankedDocs.get(i).getScore()
+              + _betaPhrase*phraseRankedDocs.get(i).getScore()
+              + _betaNumviews*numViewsRankedDocs.get(i).getScore();
+
+      // We are using cosine ranked docs as an intermediate storage for sorting to save space
+      cosineRankedDocs.get(i).setScore(score);
+    }
+
+    Collections.sort(cosineRankedDocs, Collections.reverseOrder());
+    for (int i = 0; i < cosineRankedDocs.size() && i < numResults; ++i) {
+      results.add(cosineRankedDocs.get(i));
+    }
+
+    return results;
   }
   public ScoredDocument scoreDocument(Query query, int did) {
     throw new NotImplementedException();

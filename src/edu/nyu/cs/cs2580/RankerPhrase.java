@@ -26,8 +26,9 @@ public class RankerPhrase extends Ranker {
     return super.runQuery(query, numResults);
   }
 
-  public ScoredDocument scoreDocument(Query query, int did) {DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
+  public ScoredDocument scoreDocument(Query query, int did) {
 
+    DocumentFull docFull = (DocumentFull) _indexer.getDoc(did);
     HashMap<String, Double> docTokenCountMap = docFull.getTokenCountMap();
     Vector<String> docbodytokens = docFull.getConvertedBodyTokens();
     int docTokenCount = docbodytokens.size();
