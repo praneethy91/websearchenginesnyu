@@ -136,17 +136,19 @@ public class EvaluationGenerator {
         String currentQuery = null;
 
         try {
-            while ((line = reader.readLine()) != null && !line.isEmpty()) {
-                Scanner s = new Scanner(line).useDelimiter("\t");
-                String query = s.next();
-                Integer docId = Integer.parseInt(s.next());
-                if (currentQuery == null || !currentQuery.equalsIgnoreCase(query)) {
-                    rank = 1;
-                    currentQuery = query;
-                } else {
-                    rank++;
+            while ((line = reader.readLine()) != null ) {
+                if (!line.isEmpty()) {
+                    Scanner s = new Scanner(line).useDelimiter("\t");
+                    String query = s.next();
+                    Integer docId = Integer.parseInt(s.next());
+                    if (currentQuery == null || !currentQuery.equalsIgnoreCase(query)) {
+                        rank = 1;
+                        currentQuery = query;
+                    } else {
+                        rank++;
+                    }
+                    rankerResultsFile.addResult(query, docId, rank);
                 }
-                rankerResultsFile.addResult(query, docId, rank);
             }
         }catch (IOException e){
             System.out.println("IO Exception while reading results file");
