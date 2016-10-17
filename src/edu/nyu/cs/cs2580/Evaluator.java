@@ -64,7 +64,6 @@ class Evaluator {
      */
     public static void main(String[] args)  {
 
-        SearchEngine.Check(args.length == 2, "Must provide labels and metric_id!");
 
         EvaluationGenerator.evaluateAllRankers(args[0]);
         //evaluateStdin(Integer.parseInt(args[1]), judgments);
