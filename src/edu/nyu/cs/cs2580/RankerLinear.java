@@ -1,11 +1,9 @@
 package edu.nyu.cs.cs2580;
 
-import java.util.Collections;
 import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @CS2580: Use this template to implement the linear ranker for HW1. You must

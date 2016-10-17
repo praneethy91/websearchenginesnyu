@@ -13,9 +13,9 @@ You would need Git, Java Development Kit(JDK) installed. If you are using Window
 git clone https://github.com/praneethy91/websearchenginesnyu.git
 ```
 - In the terminal move into the root directory of the repo. Run all subsequent commands from this directory.
-- Run command to compile all source files
+- Run command to compile all source files. We are using jsoup to generate html output.
 ```
-javac src/edu/nyu/cs/cs2580/*.java
+javac -cp "external/" src/edu/nyu/cs/cs2580/*.java
 ```
 - Generate the index file.
 ```
@@ -66,7 +66,7 @@ For example, you input as the following cgi-argument:
 output=http
 ```
 ### Output Format
-Two output format types are supported. Default is text if not provided.
+Two output format types are supported. Default is text if not provided. Remember the html output will only display results properly if the search is run from a browser instead of cUrl.
 
 1. html
 2. text

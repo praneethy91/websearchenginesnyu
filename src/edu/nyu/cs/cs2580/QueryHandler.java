@@ -9,8 +9,6 @@ import com.sun.net.httpserver.HttpHandler;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
-import javax.xml.ws.http.HTTPException;
-
 /**
  * Handles each incoming query, students do not need to change this class except
  * to provide more query time CGI arguments and the HTML output.
@@ -38,13 +36,22 @@ class QueryHandler implements HttpHandler {
     
     // The type of the ranker we will be using.
     public enum RankerType {
-      NONE,
-      FULLSCAN,
-      COSINE,
-      QL,
-      PHRASE,
-      NUMVIEWS,  // This is a query-independent ranking signal
-      LINEAR,
+      NONE("Unidentified Ranker"),
+      FULLSCAN("Naive Ranker"),
+      COSINE("Cosine Similarity Ranker"),
+      QL("Query Likelihood Ranker"),
+      PHRASE("Phrase Ranker"),
+      NUMVIEWS("Numviews Ranker"),  // This is a query-independent ranking signal
+      LINEAR("Simple Linear Ranking Model");
+
+      private String desc;
+      RankerType(String desc) {
+        this.desc=desc;
+      }
+
+      public String getDesc() {
+        return desc;
+      }
     }
     public RankerType _rankerType = RankerType.NONE;
     
@@ -125,11 +132,21 @@ class QueryHandler implements HttpHandler {
 
   private void respondWithMsg(HttpExchange exchange, final String message)
       throws IOException {
+    respond(exchange, message, "text/plain");
+  }
+
+  private void respondWithHtml(HttpExchange exchange, final String html)
+          throws IOException {
+    respond(exchange, html, "text/html");
+  }
+
+  private void respond(HttpExchange exchange, final String data, String dataType)
+          throws IOException {
     Headers responseHeaders = exchange.getResponseHeaders();
-    responseHeaders.set("Content-Type", "text/plain");
+    responseHeaders.set("Content-Type", dataType);
     exchange.sendResponseHeaders(200, 0); // arbitrary number of bytes
     OutputStream responseBody = exchange.getResponseBody();
-    responseBody.write(message.getBytes());
+    responseBody.write(data.getBytes());
     responseBody.close();
   }
 
@@ -265,7 +282,13 @@ class QueryHandler implements HttpHandler {
       }
       break;
     case HTML:
-      // @CS2580: Plug in your HTML output
+      HtmlFormatter formatter = new HtmlFormatter();
+      for(Query query : processedQueries) {
+        Vector<ScoredDocument> scoredDocs =
+                ranker.runQuery(query, cgiArgs._numResults);
+        formatter.AddTable(query, scoredDocs, cgiArgs._rankerType);
+      }
+      response.append(formatter.asHtmlString());
       break;
     default:
       // nothing
@@ -273,7 +296,12 @@ class QueryHandler implements HttpHandler {
 
     if(cgiArgs._outputType == CgiArguments.OutputType.HTTP)
     {
-      respondWithMsg(exchange, response.toString());
+      if(cgiArgs._outputFormat == CgiArguments.OutputFormat.TEXT) {
+        respondWithMsg(exchange, response.toString());
+      }
+      else if(cgiArgs._outputFormat == CgiArguments.OutputFormat.HTML) {
+        respondWithHtml(exchange, response.toString());
+      }
     }
     else if(cgiArgs._outputType == CgiArguments.OutputType.FILE){
       writeToResultsFile(exchange, response.toString(), cgiArgs._rankerType);

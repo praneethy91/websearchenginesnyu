@@ -34,6 +34,14 @@ class ScoredDocument implements Comparable<ScoredDocument> {
     _score = score;
   }
 
+  public String getTitle() {
+    return _doc.getTitle();
+  }
+
+  public int getID() {
+    return _doc._docid;
+  }
+
   /**
    * @CS2580: Student should implement {@code asHtmlResult} for final project.
    */
