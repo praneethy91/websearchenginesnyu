@@ -303,6 +303,11 @@ class Evaluator {
             }
         }
 
+        while(currentRecall <= 1.0){
+            values += 0.0+"\t";
+            currentRecall += 0.1;
+        }
+
         return values;
     }
 
