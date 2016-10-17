@@ -13,6 +13,7 @@ import edu.nyu.cs.cs2580.QueryHandler.CgiArguments.RankerType;
 public class EvaluationGenerator {
 
     public static class RankerResult{
+        //(rank,docid )
         public Map<Integer, Integer> ranking = new HashMap<Integer, Integer>();
     }
 
@@ -98,7 +99,7 @@ public class EvaluationGenerator {
                 result += Evaluator.fMeasure(1,relevances,rankerResult) + "\t";
                 result += Evaluator.fMeasure(5,relevances,rankerResult) + "\t";
                 result += Evaluator.fMeasure(10,relevances,rankerResult) + "\t";
-                //TODO: PRECISION AT RECALL POINT STILL PENDING
+                result += Evaluator.precisionAtRecall(relevances,rankerResult);
                 result += Evaluator.averagePrecision(relevances,rankerResult) + "\t";
                 result += Evaluator.NDCG(1,relevances,rankerResult) + "\t";
                 result += Evaluator.NDCG(5,relevances,rankerResult) + "\t";

@@ -62,7 +62,7 @@ class Evaluator {
     /**
      * Usage: java -cp src edu.nyu.cs.cs2580.Evaluator [labels] [metric_id]
      */
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args)  {
 
         SearchEngine.Check(args.length == 2, "Must provide labels and metric_id!");
 
@@ -140,7 +140,7 @@ class Evaluator {
         System.out.println(query + "\t" + Double.toString(R / N));
     }
 
-    public static float NDCG(int at, DocumentRelevances relevances, RankerResult result) throws IOException {
+    public static float NDCG(int at, DocumentRelevances relevances, RankerResult result)  {
 
         float ideal = IDGC(at, relevances, result);
         if(ideal == 0)
@@ -149,7 +149,7 @@ class Evaluator {
         return NDCG;
     }
 
-    public static float DGC(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
+    public static float DGC(int rankAt, DocumentRelevances relevances, RankerResult result) {
 
         float discountedGainTotal = 0;
 
@@ -169,7 +169,7 @@ class Evaluator {
         return discountedGainTotal;
     }
 
-    public static float IDGC(int rankAt,DocumentRelevances relevances, RankerResult result) throws IOException {
+    public static float IDGC(int rankAt,DocumentRelevances relevances, RankerResult result)  {
 
         float discountedGainTotal = 0;
 
@@ -262,7 +262,53 @@ class Evaluator {
         return fMeasure;
     }
 
-    public static float precision(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
+    public static String precisionAtRecall(DocumentRelevances relevances, RankerResult result) {
+        // set of (recall,precision)
+        Map<Double, Double>  PRSet = new HashMap<Double, Double>();
+        PRSet.put(0.0,0.0);
+        Iterator it = result.ranking.entrySet().iterator();
+        while(it.hasNext()){
+            Map.Entry pair = (Map.Entry) it.next();
+            Integer rank = (Integer) pair.getKey();
+            Integer docId = (Integer) pair.getValue();
+
+            Double precision = (double) precision(rank,relevances,result);
+            Double recall = (double) recall(rank,relevances,result);
+
+            if(PRSet.get(recall) != null && PRSet.get(recall) > precision ){
+
+            }else {
+                PRSet.put(recall,precision);
+            }
+        }
+
+        Double currentRecall = 0.1;
+        int currentIndex = 1;
+
+        List recalls = new ArrayList(PRSet.keySet());
+
+        String values = "0.0\t";
+        while(currentRecall <= 1.0 && currentIndex < recalls.size()){
+
+            if(currentRecall < (Double)recalls.get(currentIndex) && currentRecall > (Double)recalls.get(currentIndex - 1) ){
+                Double x1 = (Double)recalls.get(currentIndex -1);
+                Double x2 = (Double)recalls.get(currentIndex );
+                Double y1 = PRSet.get(x1);
+                Double y2 = PRSet.get(x2);
+
+                Double y = y1 + ((y2-y1)/(x2-x1))*(currentRecall-x1);
+                System.out.println("recall " + currentRecall +" Precision "+ y);
+                values += y+"\t";
+                currentRecall += 0.1;
+            }else {
+                currentIndex++;
+            }
+        }
+
+        return values;
+    }
+
+    public static float precision(int rankAt, DocumentRelevances relevances, RankerResult result)  {
 
 
 
@@ -288,7 +334,7 @@ class Evaluator {
         return precision;
     }
 
-    public static float recall(int rankAt, DocumentRelevances relevances, RankerResult result) throws IOException {
+    public static float recall(int rankAt, DocumentRelevances relevances, RankerResult result)  {
 
 
 //    String line = null;
