@@ -87,6 +87,17 @@ For example, you input as the following cgi-argument to display all documents in
 num=all
 ```
 
+## Evaluation
+To evaluate rankers you need to generate rankers outputs to files in results folder. To acheive that you need to run following command for each ranker type you want to evaluate. 
+```
+curl "http://localhost:25802/search?queryfile=data%2Fqueries.tsv&ranker=<rankerType>&format=text&output=file"
+```
+Once results are generated in results folder. You can run evalutation using following command. 
+
+```
+java -cp src -Xmx512m edu.nyu.cs.cs2580.Evaluator data/labels.tsv
+```
+
 ### Authors
 * **Praneeth Yenugutala** - [Profile](https://github.com/praneethy91)
 * **Sanketh Purwar**
