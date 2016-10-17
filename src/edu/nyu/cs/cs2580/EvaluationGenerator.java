@@ -73,7 +73,6 @@ public class EvaluationGenerator {
     public static void listFilesForFolder(final File folder, Map<String, Evaluator.DocumentRelevances> judgements) throws IOException{
         for (final File fileEntry : folder.listFiles()) {
             if (!fileEntry.isDirectory() && fileEntry.getName().charAt(4) != '3') {
-                System.out.println(fileEntry.getName());
                 evaluateFile(fileEntry.getName(), judgements);
             }
         }
@@ -106,7 +105,6 @@ public class EvaluationGenerator {
                 result += Evaluator.NDCG(10,relevances,rankerResult) + "\t";
                 result += Evaluator.reciprocalRank(relevances,rankerResult) + "\t";
 
-                System.out.println(result);
                 result +=  "\n";
             }
 

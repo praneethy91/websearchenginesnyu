@@ -297,7 +297,6 @@ class Evaluator {
                 Double y2 = PRSet.get(x2);
 
                 Double y = y1 + ((y2-y1)/(x2-x1))*(currentRecall-x1);
-                System.out.println("recall " + currentRecall +" Precision "+ y);
                 values += y+"\t";
                 currentRecall += 0.1;
             }else {
@@ -330,7 +329,7 @@ class Evaluator {
         }
 
         float precision = (float) relevantDocuments / rankAt;
-        System.out.println("Precision " + precision);
+
         return precision;
     }
 
@@ -359,7 +358,6 @@ class Evaluator {
         }
 
         float recall = (float) relevantDocuments / totalRelevantDocuments;
-        System.out.println("Recall " + recall);
         return recall;
     }
 
