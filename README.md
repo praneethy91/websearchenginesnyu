@@ -1,6 +1,10 @@
 # Web Search Engines
 Web search engines project started in Fall 2016 at New York University with multiple rankers, evaluators, Indexer, Query parser and more to come...
 
+## TODO:
+1. Rankers are busted as DocumentFullScan.java, IndexFullScan.java, Query.java representation has changed in HW2.
+2. Removed RankerCosine, RankerLinear, RankerNumViews, RankerPhrase. Put them back after refactoring with the indexing code ni Hw2 if time permits.
+
 ## Getting Started
 These instructions will get you up and running with respect to compiling the code, generating the index file and starting the search engine. Then you can issue queries to it via various input channels and get your output as HTTP or in a results file. You can also run search engine evalutors on it.
 
@@ -88,11 +92,11 @@ num=all
 ```
 
 ## Evaluation
-To evaluate rankers you need to generate rankers outputs to files in results folder. To acheive that you need to run following command for each ranker type you want to evaluate. 
+To evaluate rankers you need to generate rankers outputs to files in results folder. To acheive that you need to run following command for each ranker type you want to evaluate.
 ```
 curl "http://localhost:25802/search?queryfile=data%2Fqueries.tsv&ranker=<rankerType>&format=text&output=file"
 ```
-Once results are generated in results folder. You can run evalutation using following command. 
+Once results are generated in results folder. You can run evalutation using following command.
 
 ```
 java -cp src -Xmx512m edu.nyu.cs.cs2580.Evaluator data/labels.tsv

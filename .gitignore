@@ -6,5 +6,6 @@ results
 out
 .idea/
 data/index
+data/wiki
 .DS_Store
 *.iml

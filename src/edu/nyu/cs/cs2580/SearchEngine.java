@@ -23,7 +23,7 @@ import com.sun.net.httpserver.HttpServer;
  *   java -cp src -Xmx256m edu.nyu.cs.cs2580.SearchEngine \
  *     --mode=serve --port=[port] --options=conf/engine.conf
  *  3) Searching
- *   http://localhost:[port]/search?query=web&ranker=fullscan&format=text
+ *   http://localhost:[port]/search?query=web&ranker=fullscan
  *
  * @CS2580:
  * You must ensure your program runs with maximum heap memory size -Xmx512m.
@@ -43,9 +43,12 @@ public class SearchEngine {
   public static class Options {
     // The parent path where the corpus resides.
     // HW1: We have only one file, corpus.csv.
+    // HW2: We have a partial Wikipedia dump.
     public String _corpusPrefix = null;
-    
+
     // The parent path where the constructed index resides.
+    // HW1: n/a
+    // HW2: This is where the index is built into and loaded from.
     public String _indexPrefix = null;
     
     // The specific Indexer to be used.

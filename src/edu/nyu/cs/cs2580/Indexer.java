@@ -11,6 +11,10 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * Do NOT change the interface of this class.
  * 
  * In HW1: instructor's {@link IndexerFullScan} is provided as is.
+ * 
+ * In HW2: students will implement {@link IndexerInvertedDoconly},
+ * {@link IndexerInvertedOccurrence}, and {@link IndexerInvertedCompressed}.
+ * See comments below for more info.
  *
  * @author congyu
  * @author fdiaz
@@ -71,9 +75,9 @@ public abstract class Indexer {
    *      drop the processing of a certain inverted list.
    *
    * The index must reside at the directory of index_prefix, no other data can
-   * be stored (either in a hidden file or in a temporary directory). We will
-   * construct your index on one machine and move the index to a different
-   * machine for serving, so do NOT try to play tricks. 
+   * be stored (either in a hidden file or in a temporary directory). In serve
+   * mode, the constructed index should provide the necessary functionality to
+   * support the search tasks.
    */
   public abstract void constructIndex() throws IOException;
 
@@ -123,6 +127,12 @@ public abstract class Indexer {
     public static Indexer getIndexerByOption(Options options) {
       if (options._indexerType.equals("fullscan")) {
         return new IndexerFullScan(options);
+      } else if (options._indexerType.equals("inverted-doconly")) {
+        return new IndexerInvertedDoconly(options);
+      } else if (options._indexerType.equals("inverted-occurrence")) {
+        return new IndexerInvertedOccurrence(options);
+      } else if (options._indexerType.equals("inverted-compressed")) {
+        return new IndexerInvertedCompressed(options);
       }
       return null;
     }

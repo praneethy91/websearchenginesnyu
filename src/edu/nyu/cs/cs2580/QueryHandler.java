@@ -37,6 +37,8 @@ class QueryHandler implements HttpHandler {
     // The type of the ranker we will be using.
     public enum RankerType {
       NONE("Unidentified Ranker"),
+      CONJUNCTIVE("Conjunctive Ranker"),
+      FAVORITE("Favorite Ranker"),
       FULLSCAN("Naive Ranker"),
       COSINE("Cosine Similarity Ranker"),
       QL("Query Likelihood Ranker"),

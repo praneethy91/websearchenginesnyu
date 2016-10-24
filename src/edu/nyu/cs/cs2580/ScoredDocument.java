@@ -7,19 +7,16 @@ package edu.nyu.cs.cs2580;
  * @author congyu
  */
 class ScoredDocument implements Comparable<ScoredDocument> {
-  private String _query;
   private Document _doc;
   private double _score;
 
-  public ScoredDocument(String query, Document doc, double score) {
-    _query = query;
+  public ScoredDocument(Document doc, double score) {
     _doc = doc;
     _score = score;
   }
 
   public String asTextResult() {
     StringBuffer buf = new StringBuffer();
-    buf.append(_query).append("\t");
     buf.append(_doc._docid).append("\t");
     buf.append(_doc.getTitle()).append("\t");
     buf.append(_score);

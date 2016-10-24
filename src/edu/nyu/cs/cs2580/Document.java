@@ -9,6 +9,8 @@ import java.io.Serializable;
  * 
  * In HW1: instructors provide {@link DocumentFull}.
  * 
+ * In HW2: students must implement the more efficient {@link DocumentIndexed}.
+ * 
  * @author fdiaz
  * @author congyu
  */
@@ -20,7 +22,7 @@ class Document implements Serializable {
   // Basic information for display
   private String _title = "";
   private String _url = "";
-  
+
   // Basic information for ranking
   private float _pageRank = 0.0f;
   private int _numViews = 0;

@@ -56,6 +56,7 @@ class IndexerFullScan extends Indexer implements Serializable {
   public void constructIndex() throws IOException {
     String corpusFile = _options._corpusPrefix + "/corpus.tsv";
     System.out.println("Construct index from: " + corpusFile);
+
     BufferedReader reader = new BufferedReader(new FileReader(corpusFile));
     try {
       String line = null;
@@ -65,9 +66,6 @@ class IndexerFullScan extends Indexer implements Serializable {
     } finally {
       reader.close();
     }
-
-    computeTfIdfNormalizationFactorsForDocuments();
-
     System.out.println(
         "Indexed " + Integer.toString(_numDocs) + " docs with " +
         Long.toString(_totalTermFrequency) + " terms.");
@@ -80,7 +78,7 @@ class IndexerFullScan extends Indexer implements Serializable {
       throw new IllegalStateException("Couldn't create dir: " + parent);
     }
     ObjectOutputStream writer =
-        new ObjectOutputStream(new FileOutputStream(file));
+        new ObjectOutputStream(new FileOutputStream(indexFile));
     writer.writeObject(this);
     writer.close();
   }
@@ -95,15 +93,10 @@ class IndexerFullScan extends Indexer implements Serializable {
 
     String title = s.next();
     Vector<Integer> titleTokens = new Vector<Integer>();
-    HashMap<String, Double> tokenCountMap = new HashMap<>();
-
-    // We do not put title tokens in token count map of document
-    readTermVector(title, titleTokens, null);
+    readTermVector(title, titleTokens);
 
     Vector<Integer> bodyTokens = new Vector<Integer>();
-
-    //We put body tokens in token count map for the document
-    readTermVector(s.next(), bodyTokens, tokenCountMap);
+    readTermVector(s.next(), bodyTokens);
 
     int numViews = Integer.parseInt(s.next());
     s.close();
@@ -113,9 +106,6 @@ class IndexerFullScan extends Indexer implements Serializable {
     doc.setNumViews(numViews);
     doc.setTitleTokens(titleTokens);
     doc.setBodyTokens(bodyTokens);
-
-    //We store the token frequency map in the document for fast term frequency lookups
-    doc.setTokenCountMap(tokenCountMap);
     _documents.add(doc);
     ++_numDocs;
 
@@ -126,29 +116,6 @@ class IndexerFullScan extends Indexer implements Serializable {
       _termDocFrequency.put(idx, _termDocFrequency.get(idx) + 1);
     }
   }
-
-  /**
-   * Process and store the normalization factor for TfIDf in each document
-   * so that we don't need to compute it again and again for each query
-   */
-  private void computeTfIdfNormalizationFactorsForDocuments() {
-    int numdocs = this.numDocs();
-    for(Document document : _documents) {
-      DocumentFull docFull = (DocumentFull) document;
-      Double normalizationFactorTfIdf = 0.0;
-      for(Map.Entry<String, Double> termEntry: docFull.getTokenCountMap().entrySet()) {
-        String termValue = termEntry.getKey();
-        double termFrequency = termEntry.getValue();
-        int docFrequencyOfTerm = this.corpusDocFrequencyByTerm(termValue);
-        normalizationFactorTfIdf += Math.pow(
-                (Math.log(termFrequency) + 1.0)*Math.log((numdocs*1.0)/docFrequencyOfTerm)
-                , 2);
-      }
-
-      normalizationFactorTfIdf = Math.sqrt(normalizationFactorTfIdf);
-      docFull.setNormalizationFactorTfIdf(normalizationFactorTfIdf);
-    }
-  }
   
   /**
    * Tokenize {@code content} into terms, translate terms into their integer
@@ -156,21 +123,11 @@ class IndexerFullScan extends Indexer implements Serializable {
    * @param content
    * @param tokens
    */
-  private void readTermVector(String content, Vector<Integer> tokens, HashMap<String, Double> tokenCountMap) {
+  private void readTermVector(String content, Vector<Integer> tokens) {
     Scanner s = new Scanner(content);  // Uses white space by default.
     while (s.hasNext()) {
       String token = s.next();
       int idx = -1;
-
-      //Additionally computes a term frequency HashMap for the document
-      if(tokenCountMap != null) {
-        if (tokenCountMap.containsKey(token)) {
-          tokenCountMap.put(token, tokenCountMap.get(token) + 1.0);
-        } else {
-          tokenCountMap.put(token, 1.0);
-        }
-      }
-
       if (_dictionary.containsKey(token)) {
         idx = _dictionary.get(token);
       } else {

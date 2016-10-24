@@ -1,6 +1,5 @@
 package edu.nyu.cs.cs2580;
 
-import java.util.HashMap;
 import java.util.Vector;
 
 /**
@@ -18,28 +17,10 @@ public class DocumentFull extends Document {
 
   private Vector<Integer> _titleTokens = new Vector<Integer>();
   private Vector<Integer> _bodyTokens = new Vector<Integer>();
-  private double _normalizationFactorTfIdf = 0.0;
-  private HashMap<String, Double> _tokenCountMap = new HashMap<>();
 
   public DocumentFull(int docid, IndexerFullScan indexer) {
     super(docid);
     _indexer = indexer;
-  }
-
-  public void setTokenCountMap(HashMap<String, Double> tokenCountMap) {
-    this._tokenCountMap = tokenCountMap;
-  }
-
-  public HashMap<String, Double> getTokenCountMap() {
-    return this._tokenCountMap;
-  }
-
-  public void setNormalizationFactorTfIdf(double _normalizationFactorTfIdf) {
-    this._normalizationFactorTfIdf = _normalizationFactorTfIdf;
-  }
-
-  public double getNormalizationFactorTfIdf() {
-    return this._normalizationFactorTfIdf;
   }
 
   public void setTitleTokens(Vector<Integer> titleTokens) {
