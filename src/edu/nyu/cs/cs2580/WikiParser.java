@@ -1,4 +1,5 @@
 package edu.nyu.cs.cs2580;
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
@@ -26,16 +27,24 @@ public class WikiParser {
 
   private org.jsoup.nodes.Document _htmlDocument;
 
-  private String _link;
+  private String _url;
 
   private String _title;
 
   private HashSet<String> _tokens;
 
-  public WikiParser(File htmlDocument) throws IOException {
+  public WikiParser(File htmlDocument) throws IOException, IllegalArgumentException {
     _htmlDocument = Jsoup.parse(htmlDocument, "UTF-8");
     _title = _htmlDocument.title();
-    _title = _title.substring(0, _title.indexOf("- Wikipedia")).trim();
+    if(_title == null || _title.equals("")) {
+
+      // Not a well formed wiki article
+      throw new IllegalArgumentException();
+    }
+    int wikiIndex = _title.indexOf("- Wikipedia");
+    if(wikiIndex != -1) {
+      _title = _title.substring(0, wikiIndex).trim();
+    }
     _tokens = new HashSet<>();
   }
 
@@ -43,8 +52,8 @@ public class WikiParser {
     return _title;
   }
 
-  public String getLink() {
-    return _link;
+  public String getUrl() {
+    return _url;
   }
 
   public Vector<String> ParseTokens() {
@@ -53,7 +62,7 @@ public class WikiParser {
     for (Element element : elements) {
       Element elementParent = element.parent();
       if(elementParent != null && elementParent.attr("class").equals("printfooter")) {
-        _link = element.ownText();
+        _url = element.ownText();
       }
 
       String[] tokensArr = element.ownText().toLowerCase().split("[\\p{Punct}\\s]+");
