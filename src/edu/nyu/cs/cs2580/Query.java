@@ -14,45 +14,14 @@ import java.util.regex.Pattern;
  * @author congyu
  * @auhtor fdiaz
  */
-public class Query {
+public abstract class Query {
   public String _query = null;
-  public Vector<String> _tokens = new Vector<String>();
+
+  public Vector<QueryToken> _tokens = new Vector<>();
 
   public Query(String query) {
     _query = query;
   }
 
-  public void processQuery() {
-    if(_query == null) {
-      _query = "";
-      return;
-    }
-    _query = _query.trim();
-    StringBuilder sb = new StringBuilder();
-    boolean ignore = false;
-    for(int i = 0; i < _query.length(); i++) {
-      if(_query.charAt(i) == '"') {
-        sb.append(' ');
-        ignore = !ignore;
-      }
-      else if(!ignore) {
-        sb.append(_query.charAt(i));
-      }
-    }
-
-    if(ignore) {
-      sb.append(_query.substring(_query.lastIndexOf('"') + 1, _query.length()));
-    }
-
-    if (_query.equals("")) {
-      return;
-    }
-
-    Scanner s = new Scanner(sb.toString());
-    while (s.hasNext()) {
-      _tokens.add(s.next());
-    }
-
-    s.close();
-  }
+  public abstract void processQuery();
 }

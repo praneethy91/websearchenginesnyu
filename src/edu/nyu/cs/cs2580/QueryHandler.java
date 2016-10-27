@@ -268,7 +268,7 @@ class QueryHandler implements HttpHandler {
 
     Vector<Query> processedQueries = new Vector<>();
     for(String query: queries) {
-      Query processedQuery = new Query(query);
+      Query processedQuery = new QueryPhrase(query);
       processedQuery.processQuery();
       processedQueries.add(processedQuery);
     }

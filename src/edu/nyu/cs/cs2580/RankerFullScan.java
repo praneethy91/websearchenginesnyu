@@ -47,8 +47,8 @@ class RankerFullScan extends Ranker {
     // where a document is scored 1.0 if it gets hit by at least one query term.
     double score = 0.0;
     for (String docToken : docTokens) {
-      for (String queryToken : query._tokens) {
-        if (docToken.equals(queryToken)) {
+      for (QueryToken queryToken : query._tokens) {
+        if (docToken.equals(queryToken.getToken())) {
           score = 1.0;
           break;
         }
