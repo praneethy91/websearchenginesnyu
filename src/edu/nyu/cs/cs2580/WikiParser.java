@@ -5,6 +5,7 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.Vector;
 
 /**
@@ -25,14 +26,17 @@ public class WikiParser {
 
   private org.jsoup.nodes.Document _htmlDocument;
 
-  private static String _link;
+  private String _link;
 
-  private static String _title;
+  private String _title;
+
+  private HashSet<String> _tokens;
 
   public WikiParser(File htmlDocument) throws IOException {
     _htmlDocument = Jsoup.parse(htmlDocument, "UTF-8");
     _title = _htmlDocument.title();
     _title = _title.substring(0, _title.indexOf("- Wikipedia")).trim();
+    _tokens = new HashSet<>();
   }
 
   public String getTitle() {
@@ -44,7 +48,6 @@ public class WikiParser {
   }
 
   public Vector<String> ParseTokens() {
-    Vector<String> tokens = new Vector<>();
     Elements elements = _htmlDocument.select("*");
 
     for (Element element : elements) {
@@ -57,11 +60,12 @@ public class WikiParser {
       for(String token : tokensArr) {
         String trimToken = token.trim();
         if(!trimToken.equals("")) {
-          tokens.add(trimToken);
+          _tokens.add(trimToken);
         }
       }
+
     }
 
-    return tokens;
+    return new Vector<>(_tokens);
   }
 }

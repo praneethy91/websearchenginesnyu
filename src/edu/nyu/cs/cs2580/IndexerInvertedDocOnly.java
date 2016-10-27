@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -19,6 +20,8 @@ public class IndexerInvertedDocOnly extends Indexer {
   // This is where we will store the index file
   private final String _indexFile = _options._indexPrefix + "//invertedIndexDocOnly";
 
+  private final String _wikiCorpusDir = _options._corpusPrefix;
+
   //We will also store the Documents in the DocumentIndexed vector for the rankers
   private Vector<DocumentIndexed> _indexedDocs = new Vector<>();
 
@@ -29,6 +32,13 @@ public class IndexerInvertedDocOnly extends Indexer {
 
   @Override
   public void constructIndex() throws IOException {
+    File dir = new File(_wikiCorpusDir);
+    File[] directoryListing = dir.listFiles();
+    WikiParser wikiParser = null;
+    for(File wikiFile : directoryListing) {
+      wikiParser = new WikiParser(wikiFile);
+      Vector<String> tokens = wikiParser.ParseTokens();
+    }
   }
 
   @Override
