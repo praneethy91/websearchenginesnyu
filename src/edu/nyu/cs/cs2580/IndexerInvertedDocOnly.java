@@ -2,10 +2,7 @@ package edu.nyu.cs.cs2580;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectOutputStream;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -13,7 +10,7 @@ import java.util.Vector;
 /**
  * @CS2580: Implement this class for HW2.
  */
-public class IndexerInvertedDocOnly extends Indexer {
+public class IndexerInvertedDocOnly extends Indexer implements Serializable {
 
   // We will be storing the inverted doc only representation in this data structure
   private Map<String, Vector<Integer>> _index = new HashMap<>();
