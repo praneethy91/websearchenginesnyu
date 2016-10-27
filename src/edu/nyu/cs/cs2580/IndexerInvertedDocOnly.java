@@ -1,15 +1,28 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Vector;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
  * @CS2580: Implement this class for HW2.
  */
-public class IndexerInvertedDoconly extends Indexer {
+public class IndexerInvertedDocOnly extends Indexer {
 
-  public IndexerInvertedDoconly(Options options) {
+  // We will be soring the inverted doc only representation in this data structure
+  private Map<String, List<Integer>> _index = new HashMap<>();
+
+  // This is where we will store the index file
+  private final String _indexFile = _options._indexPrefix + "//invertedIndexDocOnly";
+
+  //We will also store the Documents in the DocumentIndexed vector for the rankers
+  private Vector<DocumentIndexed> _indexedDocs = new Vector<>();
+
+  public IndexerInvertedDocOnly(Options options) {
     super(options);
     System.out.println("Using Indexer: " + this.getClass().getSimpleName());
   }

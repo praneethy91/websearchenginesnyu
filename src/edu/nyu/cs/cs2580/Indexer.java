@@ -12,7 +12,7 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * 
  * In HW1: instructor's {@link IndexerFullScan} is provided as is.
  * 
- * In HW2: students will implement {@link IndexerInvertedDoconly},
+ * In HW2: students will implement {@link IndexerInvertedDocOnly},
  * {@link IndexerInvertedOccurrence}, and {@link IndexerInvertedCompressed}.
  * See comments below for more info.
  *
@@ -128,7 +128,7 @@ public abstract class Indexer {
       if (options._indexerType.equals("fullscan")) {
         return new IndexerFullScan(options);
       } else if (options._indexerType.equals("inverted-doconly")) {
-        return new IndexerInvertedDoconly(options);
+        return new IndexerInvertedDocOnly(options);
       } else if (options._indexerType.equals("inverted-occurrence")) {
         return new IndexerInvertedOccurrence(options);
       } else if (options._indexerType.equals("inverted-compressed")) {
