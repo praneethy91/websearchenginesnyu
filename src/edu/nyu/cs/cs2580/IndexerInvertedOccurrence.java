@@ -10,33 +10,11 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
-  public class DocumentWordOccurrence  implements Serializable {
-    Integer docId;
-    ArrayList<Integer> occurrence;
-
-    DocumentWordOccurrence(Integer docId, int pos){
-      this.docId = docId;
-      this.occurrence = new ArrayList<>();
-      this.occurrence.add(pos);
-    }
-
-    private void addNextPosition(Integer pos){
-      Integer currentPostition = 0;
-      for(int i = 0 ; i < occurrence.size() ; i++){
-        currentPostition =currentPostition + occurrence.get(i);
-      }
-      this.occurrence.add(pos - currentPostition);
-    }
-  }
-
-  private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
-
   // This is where we will store the index file
   private final String _indexFile = _options._indexPrefix + "/invertedIndex.idx";
-
   //The wiki corpus directory from where we will load files for constructing index
   private final String _wikiCorpusDir = _options._corpusPrefix;
-
+  private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
   //We will also store the Documents in the DocumentIndexed vector for the rankers
   private Vector<DocumentIndexed> _indexedDocs = new Vector<>();
 
@@ -77,21 +55,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         }
 
         // Updating postings lists
-        for (int i = 0 ; i < tokens.size() ; i++) {
-          String token = tokens.elementAt(i);
+        for (int pos = 0 ; pos < tokens.size() ; pos++) {
+          String token = tokens.elementAt(pos);
 
-          if (!_index.containsKey(token)) {
-            _index.put(token, new LinkedHashMap<>());
-            _index.get(token).put(docID, new DocumentWordOccurrence(docID,i));
-          } else {
-              if(!_index.get(token).containsKey(docID)){
-                   _index.get(token).put(docID, new DocumentWordOccurrence(docID, i));
-              }else {
-                _index.get(token).get(docID).addNextPosition(i);
-              }
-          }
+          insertToken(token, docID, pos,true);
 
         }
+
         docID++;
         count++;
         if(count >= 2000){
@@ -116,8 +86,45 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
   }
 
+  private void insertToken(String token, int docID, int position, boolean isAbosolutePosition) {
+
+    if (!_index.containsKey(token)) {
+      _index.put(token, new LinkedHashMap<>());
+      _index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
+    } else {
+        if(!_index.get(token).containsKey(docID)){
+             _index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
+        }else {
+          if(isAbosolutePosition)
+            _index.get(token).get(docID).addAbsolutePosition(position);
+          else
+            _index.get(token).get(docID).addRelativePosition(position);
+        }
+    }
+
+  }
+
   @Override
-  public void loadIndex() throws IOException, ClassNotFoundException {
+  public void loadIndex() throws IOException {
+
+      // Open the file
+      FileInputStream fstream = new FileInputStream(_indexFile + "1");
+      BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+
+    String strLine;
+
+    while ((strLine = br.readLine()) != null)   {
+      String[] indexTokens = strLine.split(":");
+      for(int i  = 1 ; i < indexTokens.length ; i++){
+        String[] occurences = indexTokens[i].split(",");
+        for(int j = 1; j < occurences.length ; j++)
+        insertToken(indexTokens[0],Integer.parseInt( occurences[0]),Integer.parseInt(occurences[j]),false);
+      }
+    }
+
+  //Close the input stream
+    br.close();
   }
 
   @Override
@@ -131,81 +138,107 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public DocumentIndexed nextDoc(Query query, int docid) {
 
+    Map<QueryToken, Integer> queryTokenCount = new HashMap<>();
 
-    List<Integer> docs  = new Vector<>();
+    List<QueryTokenIndexData> indexData  = new Vector<>();
 
     for(QueryToken token : query._tokens ){
-        int nextDocId = -1;
+      QueryTokenIndexData data;
+        int nextDocId = -1 ;
         if(token.isPhrase()){
-           nextDocId = nextDocForPhrase(token,docid);
+           data = nextDocForPhrase(token,docid);
         }else {
-           nextDocId = nextDocForWord(token.getToken(),docid);
+           data  = nextDocForWord(token,docid);
         }
 
-      if(nextDocId == -1){
+      if(data.docId == -1){
         return null;
       }else {
-        docs.add(nextDocId);
+        indexData.add(data);
       }
     }
 
 
     boolean flag = true ;
 
-    for(int i = 0 ; i < docs.size() - 1; i++){
-      if(docs.get(i) != docs.get(i+1)){
+    for(int i = 0 ; i < indexData.size() - 1; i++){
+      if(indexData.get(i).docId != indexData.get(i+1).docId){
         flag = false;
       }
     }
 
-    if(flag)
-      return new DocumentIndexed(docs.get(0));
+    if(flag){
+      DocumentIndexed documentIndexed = new DocumentIndexed(indexData.get(0).docId);
+      for(int i = 0; i < indexData.size() ; i++) {
+        documentIndexed.quertTokenCount.put(indexData.get(i).queryToken,indexData.get(i).count);
+      }
+      return documentIndexed;
+    }
 
-    return nextDoc(query,Collections.max(docs) -1);
+    int maxDocId = -1;
+    for(int i = 0 ; i < indexData.size() ; i++){
+      if(indexData.get(i).docId > maxDocId)
+        maxDocId = indexData.get(i).docId;
+    }
+
+    return nextDoc(query,maxDocId -1);
 
   }
 
-  private Integer nextDocForWord(String word, int docId){
+  private QueryTokenIndexData nextDocForWord(QueryToken word, int docId){
 
     LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word);
 
     Set<Integer> keys = wordMap.keySet();
 
+    QueryTokenIndexData data = new QueryTokenIndexData();
+
     for(Integer key: keys){
       if(key > docId){
-        return key;
+        data.queryToken = word;
+        data.count = wordMap.get(key).occurrence.size();
+        data.docId = key;
+        return data;
       }
     }
 
-    return -1;
+    return null;
   }
 
-  private Integer nextDocForPhrase(QueryToken phrase, Integer docId){
+  private QueryTokenIndexData nextDocForPhrase(QueryToken phrase, Integer docId){
 
     String[] tokens = phrase.getToken().split(" ");
-    List<Integer> docs  = new Vector<>();
+
+    List<QueryTokenIndexData> indexData  = new Vector<>();
+
 
     for(String token : tokens){
-      int nextDoc  = nextDocForWord(token,docId);
-      //return -1 if any one of the token in the phrase is not in the doc
-      if(nextDoc == -1)
-        return -1;
-
-      docs.add(nextDoc);
+      QueryTokenIndexData data   = nextDocForWord(new QueryToken(false,token),docId);
+      //return null if any one of the token in the phrase is not in the doc
+      if(data.docId == -1)
+        return null;
+      indexData.add(data);
     }
 
     boolean flag = true ;
 
-    for(int i = 0 ; i < docs.size() - 1; i++){
-      if(docs.get(i) != docs.get(i+1)){
+    for(int i = 0 ; i < indexData.size() - 1; i++){
+      if(indexData.get(i).docId != indexData.get(i+1).docId){
         flag = false;
       }
     }
 
     if(flag)
-      return docs.get(0);
+      return indexData.get(0);
 
-    return nextPhraseInSameDoc(phrase,docId,Collections.max(docs) -1);
+    int maxDocId = -1;
+    for(int i = 0 ; i < indexData.size() ; i++){
+      if(indexData.get(i).docId > maxDocId)
+        maxDocId = indexData.get(i).docId;
+    }
+
+
+    return nextDocForPhrase(phrase,maxDocId -1);
 
   }
 
@@ -252,6 +285,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     return -1;
   }
+
   @Override
   public int corpusDocFrequencyByTerm(String term) {
     return 0;
@@ -302,5 +336,34 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
 
+  }
+
+  public class QueryTokenIndexData{
+    QueryToken queryToken;
+    Integer count;
+    Integer docId;
+  }
+
+  public class DocumentWordOccurrence  implements Serializable {
+    Integer docId;
+    ArrayList<Integer> occurrence;
+
+    DocumentWordOccurrence(Integer docId, int pos){
+      this.docId = docId;
+      this.occurrence = new ArrayList<>();
+      this.occurrence.add(pos);
+    }
+
+    private void addAbsolutePosition(Integer pos){
+      Integer currentPostition = 0;
+      for(int i = 0 ; i < occurrence.size() ; i++){
+        currentPostition =currentPostition + occurrence.get(i);
+      }
+      this.occurrence.add(pos - currentPostition);
+    }
+
+    private void addRelativePosition(Integer pos){
+      this.occurrence.add(pos);
+    }
   }
 }
