@@ -65,6 +65,8 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
             _index.get(token).add(docID);
           }
         }
+
+        docID++;
       }
 
       //Finally writes to Index file.
