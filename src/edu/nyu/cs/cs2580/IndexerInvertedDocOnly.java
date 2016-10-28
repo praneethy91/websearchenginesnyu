@@ -3,6 +3,7 @@ package edu.nyu.cs.cs2580;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 import java.io.*;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -35,7 +36,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
     File[] directoryListing = dir.listFiles();
     WikiParser wikiParser = null;
     int docID = 0;
-    Vector<String> tokens;
+    Collection<String> tokens;
 
     try {
       for (File wikiFile : directoryListing) {
@@ -43,7 +44,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
 
           //Parsing and extracting token;
           wikiParser = new WikiParser(wikiFile);
-          tokens = wikiParser.ParseTokens();
+          tokens = wikiParser.ParseTokensNoDuplicates();
 
           // Populating and adding DocumentIndexed for this document.
           DocumentIndexed docIndexed = new DocumentIndexed(docID);

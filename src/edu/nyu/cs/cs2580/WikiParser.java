@@ -6,7 +6,9 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collection;
 import java.util.HashSet;
+import java.util.Set;
 import java.util.Vector;
 
 /**
@@ -31,21 +33,18 @@ public class WikiParser {
 
   private String _title;
 
-  private HashSet<String> _tokens;
-
   public WikiParser(File htmlDocument) throws IOException, IllegalArgumentException {
     _htmlDocument = Jsoup.parse(htmlDocument, "UTF-8");
     _title = _htmlDocument.title();
-    if(_title == null || _title.equals("")) {
+    if (_title == null || _title.equals("")) {
 
       // Not a well formed wiki article
       throw new IllegalArgumentException();
     }
     int wikiIndex = _title.indexOf("- Wikipedia");
-    if(wikiIndex != -1) {
+    if (wikiIndex != -1) {
       _title = _title.substring(0, wikiIndex).trim();
     }
-    _tokens = new HashSet<>();
   }
 
   public String getTitle() {
@@ -57,24 +56,35 @@ public class WikiParser {
   }
 
   public Vector<String> ParseTokens() {
+    Vector<String> tokens = new Vector<>();
+    Parse(tokens);
+    return tokens;
+  }
+
+  public Set<String> ParseTokensNoDuplicates() {
+    HashSet<String> tokens = new HashSet<>();
+    Parse(tokens);
+    return tokens;
+  }
+
+  private void Parse(Collection<String> tokens) {
     Elements elements = _htmlDocument.select("*");
 
     for (Element element : elements) {
       Element elementParent = element.parent();
       if(elementParent != null && elementParent.attr("class").equals("printfooter")) {
         _url = element.ownText();
+        continue;
       }
 
       String[] tokensArr = element.ownText().toLowerCase().split("[\\p{Punct}\\s]+");
       for(String token : tokensArr) {
         String trimToken = token.trim();
         if(!trimToken.equals("")) {
-          _tokens.add(trimToken);
+          tokens.add(trimToken);
         }
       }
-
     }
-
-    return new Vector<>(_tokens);
   }
+
 }
