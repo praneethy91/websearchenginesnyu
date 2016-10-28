@@ -547,11 +547,13 @@ class Stemmer {
     k = i - 1;
     if (k > 1) {
       step1();
-      step2();
+
+      // Using only step 1 of the porter stemming algorithm
+      /*step2();
       step3();
       step4();
       step5();
-      step6();
+      step6();*/
     }
     i_end = k + 1;
     i = 0;
@@ -563,7 +565,7 @@ class Stemmer {
    * the word stemmed is expected to be in lower case: forcing lower case must
    * be done outside the Stemmer class. Usage: Stemmer file-name file-name ...
    */
-  public static void main(String[] args) {
+  /*public static void main(String[] args) {
     Stemmer s = new Stemmer();
     for (int i = 0; i < args.length; i++) {
       String lower = args[i].toLowerCase();
@@ -571,5 +573,5 @@ class Stemmer {
       s.stem();
       System.out.println(s.toString());
     }
-  }
+  }*/
 }

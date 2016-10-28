@@ -81,7 +81,10 @@ public class WikiParser {
       for(String token : tokensArr) {
         String trimToken = token.trim();
         if(!trimToken.equals("")) {
-          tokens.add(trimToken);
+          Stemmer stemmer = new Stemmer();
+          stemmer.add(token.toCharArray(), token.length());
+          stemmer.stem();
+          tokens.add(stemmer.toString());
         }
       }
     }
