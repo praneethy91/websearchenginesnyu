@@ -64,7 +64,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
         docID++;
         count++;
-        if(count >= 2000){
+        if(count >= 20000){
           WriteToIndexFile(fileNumber);
           count = 0;
           fileNumber++;
@@ -96,9 +96,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
              _index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
         }else {
           if(isAbosolutePosition)
-            _index.get(token).get(docID).addAbsolutePosition(position);
+            _index.get(token).get(docID).occurrence.add(position);
           else
-            _index.get(token).get(docID).addRelativePosition(position);
+            _index.get(token).get(docID).occurrence.add(position);
         }
     }
 
@@ -107,12 +107,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public void loadIndex() throws IOException {
 
+    _index.clear();
       // Open the file
       FileInputStream fstream = new FileInputStream(_indexFile + "1");
       BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
 
-    String strLine;
+      String strLine;
 
     while ((strLine = br.readLine()) != null)   {
       String[] indexTokens = strLine.split(":");
@@ -181,13 +182,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         maxDocId = indexData.get(i).docId;
     }
 
+
     return nextDoc(query,maxDocId -1);
 
   }
 
   private QueryTokenIndexData nextDocForWord(QueryToken word, int docId){
 
-    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word);
+    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word.getToken());
 
     Set<Integer> keys = wordMap.keySet();
 
@@ -228,8 +230,26 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     }
 
-    if(flag)
-      return indexData.get(0);
+    if(flag) {
+      int currentPosition = nextPhraseInSameDoc(phrase,indexData.get(0).docId, -1);
+      if( currentPosition == -1){
+        return  nextDocForPhrase(phrase, indexData.get(0).docId);
+      }
+      int count = 1;
+
+      while(currentPosition > -1 ){
+        currentPosition = nextPhraseInSameDoc(phrase, indexData.get(0).docId, currentPosition);
+        if(currentPosition > -1)
+            count ++;
+      }
+
+      QueryTokenIndexData returnData = new QueryTokenIndexData();
+      returnData.docId = indexData.get(0).docId;
+      returnData.queryToken = phrase;
+      returnData.count = count;
+
+      return returnData;
+    }
 
     int maxDocId = -1;
     for(int i = 0 ; i < indexData.size() ; i++){
@@ -354,16 +374,16 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       this.occurrence.add(pos);
     }
 
-    private void addAbsolutePosition(Integer pos){
-      Integer currentPostition = 0;
-      for(int i = 0 ; i < occurrence.size() ; i++){
-        currentPostition =currentPostition + occurrence.get(i);
-      }
-      this.occurrence.add(pos - currentPostition);
-    }
-
-    private void addRelativePosition(Integer pos){
-      this.occurrence.add(pos);
-    }
+//    private void addAbsolutePosition(Integer pos){
+//        Integer currentPostition = 0;
+////      for(int i = 0 ; i < occurrence.size() ; i++){
+////        currentPostition =currentPostition + occurrence.get(i);
+////      }
+//      this.occurrence.add(pos - currentPostition);
+//    }
+//
+//    private void addRelativePosition(Integer pos){
+//      this.occurrence.add(pos);
+//    }
   }
 }
