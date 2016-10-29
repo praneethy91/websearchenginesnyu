@@ -51,13 +51,8 @@ public class QueryPhrase extends Query {
 
     Scanner s = new Scanner(sb.toString());
     while (s.hasNext()) {
-      String trimmedToken = s.next();
-      if(!trimmedToken.equals("") && trimmedToken.length() > 1) {
-        String finalToken = Stemmer.StemToken(trimmedToken);
-        if(!finalToken.equals("")) {
-          _tokens.add(new QueryToken(false, finalToken));
-        }
-      }
+      String token = s.next();
+      NormalizeToken(token);
     }
 
     s.close();
@@ -65,13 +60,21 @@ public class QueryPhrase extends Query {
     Pattern p = Pattern.compile("\"([^\"]*)\"");
     Matcher m = p.matcher(_query);
     while (m.find()) {
-      String trimmedToken = m.group(1);
-      if(!trimmedToken.equals("") && trimmedToken.length() > 1) {
+      String token = m.group(1);
+      NormalizeToken(token);
+    }
+  }
+
+  private void NormalizeToken(String token) {
+    String[] trimmedTokens = token.split("[\\p{Punct}\\s]+");
+    for(String trimmedToken : trimmedTokens) {
+      trimmedToken = trimmedToken.trim();
+      if (!trimmedToken.equals("") && trimmedToken.length() > 1) {
         String finalToken = Stemmer.StemToken(trimmedToken);
-        if(!finalToken.equals("")) {
-          _tokens.add(new QueryToken(true, finalToken));
+        if (!finalToken.equals("")) {
+          _tokens.add(new QueryToken(false, finalToken));
         }
-      };
+      }
     }
   }
 
