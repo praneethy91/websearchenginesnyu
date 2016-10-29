@@ -16,7 +16,7 @@ import java.util.Vector;
  */
 public class WikiParser {
 
-  /*public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException {
     File dir = new File("C:\\Users\\Praneeth\\Documents\\Git\\websearchenginesnyu\\data\\wiki");
     File[] directoryListing = dir.listFiles();
     System.out.println(directoryListing[0].getAbsolutePath());
@@ -25,7 +25,7 @@ public class WikiParser {
     for(String token: tokens) {
       System.out.println(token);
     }
-  }*/
+  }
 
   private org.jsoup.nodes.Document _htmlDocument;
 
@@ -68,26 +68,34 @@ public class WikiParser {
   }
 
   private void Parse(Collection<String> tokens) {
-    Elements elements = _htmlDocument.select("*");
+    Element contentElement = _htmlDocument.select("div#content").first();
+    DFSParse(contentElement, tokens);
+  }
 
-    for (Element element : elements) {
-      Element elementParent = element.parent();
-      if(elementParent != null && elementParent.attr("class").equals("printfooter")) {
-        _url = element.ownText();
-        continue;
-      }
+  private void DFSParse(Element element, Collection<String> tokens) {
+    Element elementParent = element.parent();
+    if(elementParent != null && elementParent.attr("class").equals("printfooter")) {
+      _url = element.ownText();
+      return;
+    }
 
-      String[] tokensArr = element.ownText().toLowerCase().split("[\\p{Punct}\\s]+");
-      for(String token : tokensArr) {
-        String trimToken = token.trim();
-        if(!trimToken.equals("")) {
-          Stemmer stemmer = new Stemmer();
-          stemmer.add(token.toCharArray(), token.length());
-          stemmer.stem();
-          tokens.add(stemmer.toString());
+    if(elementParent.attr("class").equals("references")) {
+      return;
+    }
+
+    String[] tokensArr = element.ownText().toLowerCase().split("[\\p{Punct}\\s]+");
+    for(String token : tokensArr) {
+      String trimmedToken = token.trim();
+      if(!trimmedToken.equals("") && trimmedToken.length() > 1) {
+        String finalToken = Stemmer.StemToken(trimmedToken);
+        if(!finalToken.equals("")) {
+          tokens.add(finalToken);
         }
       }
     }
-  }
 
+    for(Element childrenElements: element.children()) {
+      DFSParse(childrenElements, tokens);
+    }
+  }
 }

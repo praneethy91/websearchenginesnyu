@@ -12,6 +12,14 @@ import java.util.regex.Pattern;
  */
 public class QueryPhrase extends Query {
 
+  /*public static void main(String[] args) {
+    QueryPhrase q = new QueryPhrase("CHoRus \"Hello World\"WHat");
+    q.processQuery();
+    for(QueryToken qt: q._tokens) {
+      System.out.println(qt.getToken());
+    }
+  }*/
+
   public Vector<QueryToken> _tokens = new Vector<>();
 
   public QueryPhrase(String query) {
@@ -24,7 +32,7 @@ public class QueryPhrase extends Query {
       _query = "";
       return;
     }
-    _query = _query.trim();
+    _query = _query.trim().toLowerCase();
     StringBuilder sb = new StringBuilder();
     boolean ignore = false;
     for(int i = 0; i < _query.length(); i++) {
@@ -43,7 +51,13 @@ public class QueryPhrase extends Query {
 
     Scanner s = new Scanner(sb.toString());
     while (s.hasNext()) {
-      _tokens.add(new QueryToken(false, s.next()));
+      String trimmedToken = s.next();
+      if(!trimmedToken.equals("") && trimmedToken.length() > 1) {
+        String finalToken = Stemmer.StemToken(trimmedToken);
+        if(!finalToken.equals("")) {
+          _tokens.add(new QueryToken(false, finalToken));
+        }
+      }
     }
 
     s.close();
@@ -51,7 +65,15 @@ public class QueryPhrase extends Query {
     Pattern p = Pattern.compile("\"([^\"]*)\"");
     Matcher m = p.matcher(_query);
     while (m.find()) {
-      _tokens.add(new QueryToken(true, m.group(1)));
+      String trimmedToken = m.group(1);
+      if(!trimmedToken.equals("") && trimmedToken.length() > 1) {
+        String finalToken = Stemmer.StemToken(trimmedToken);
+        if(!finalToken.equals("")) {
+          _tokens.add(new QueryToken(true, finalToken));
+        }
+      };
     }
   }
+
+
 }

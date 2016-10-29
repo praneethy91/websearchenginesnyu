@@ -40,7 +40,7 @@ package edu.nyu.cs.cs2580;
  * the various stem(something) methods.
  */
 
-class Stemmer {
+public class Stemmer {
   private static final int INC = 50;
 
   private char[] b;
@@ -557,6 +557,14 @@ class Stemmer {
     }
     i_end = k + 1;
     i = 0;
+  }
+
+  public static String StemToken(String trimmedToken) {
+    Stemmer stemmer = new Stemmer();
+    stemmer.add(trimmedToken.toCharArray(), trimmedToken.length());
+    stemmer.stem();
+    String finalToken = stemmer.toString().trim();
+    return finalToken;
   }
 
   /**
