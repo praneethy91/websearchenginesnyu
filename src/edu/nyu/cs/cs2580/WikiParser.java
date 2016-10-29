@@ -4,8 +4,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -17,14 +16,26 @@ import java.util.Vector;
 public class WikiParser {
 
   public static void main(String[] args) throws IOException {
-    File dir = new File("C:\\Users\\Praneeth\\Documents\\Git\\websearchenginesnyu\\data\\wiki");
+    /*File dir = new File("C:\\Users\\Praneeth\\Documents\\Git\\websearchenginesnyu\\data\\wiki");
     File[] directoryListing = dir.listFiles();
     System.out.println(directoryListing[0].getAbsolutePath());
     WikiParser htmlParser = new WikiParser(directoryListing[0]);
     Vector<String> tokens = htmlParser.ParseTokens();
     for(String token: tokens) {
       System.out.println(token);
+    }*/
+    // writing string to a file encoded as modified UTF-8
+    DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream("C:\\Users\\Praneeth\\Desktop\\dos")));
+    dataOut.writeUTF("hello");
+    for(int i = 0; i < 1024*1024*1024; i++) {
+      dataOut.writeByte((byte)100);
     }
+    dataOut.flush();
+    dataOut.close();
+
+    // Reading data from the same file
+    DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Users\\Praneeth\\Desktop\\dos"));
+    dataIn.close();
   }
 
   private org.jsoup.nodes.Document _htmlDocument;

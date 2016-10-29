@@ -125,6 +125,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
   //Close the input stream
+    fstream.close();
     br.close();
   }
 
@@ -349,8 +350,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         out.append(line+"\n");
 
       }
-      out.close();
+      fw.close();;
       bw.close();
+      out.close();
 
     } catch (IOException e) {
     }

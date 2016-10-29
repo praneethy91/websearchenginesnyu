@@ -120,7 +120,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
       throw new IllegalStateException("Couldn't create dir: " + parent);
     }
     ObjectOutputStream writer =
-            new ObjectOutputStream(new FileOutputStream(_indexFile));
+            new ObjectOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile)));
     writer.writeObject(this);
     writer.close();
   }
