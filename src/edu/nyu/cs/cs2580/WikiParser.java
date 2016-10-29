@@ -83,6 +83,10 @@ public class WikiParser {
       return;
     }
 
+    if(elementParent.attr("id").equals("siteSub")) {
+      return;
+    }
+
     String[] tokensArr = element.ownText().toLowerCase().split("[\\p{Punct}\\s]+");
     for(String token : tokensArr) {
       String trimmedToken = token.trim();
