@@ -12,6 +12,7 @@ public class DocumentIndexed extends Document {
 
   Map<QueryToken, Integer> quertTokenCount = new HashMap<>();
 
+  Integer totalNumberOfTokensInDoc = 0;
 
   public DocumentIndexed(int docid) {
     super(docid);

@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
+import java.util.Vector;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -136,5 +137,13 @@ public abstract class Indexer {
       }
       return null;
     }
+  }
+
+  public Vector<Integer> getTokensPerDoc(){
+    return null ;
+  }
+
+  public int getTotalTokens(){
+    return 0 ;
   }
 }

@@ -12,9 +12,16 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   // This is where we will store the index file
   private final String _indexFile = _options._indexPrefix + "/invertedIndex.idx";
+  private final String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
+
   //The wiki corpus directory from where we will load files for constructing index
   private final String _wikiCorpusDir = _options._corpusPrefix;
   private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
+
+  private Vector<Integer> totalTokensPerDoc =new Vector<>();
+  int totalTokensInCorpus = 0;
+  int numberOfDocs = 12000;
+
   //We will also store the Documents in the DocumentIndexed vector for the rankers
   private Vector<DocumentIndexed> _indexedDocs = new Vector<>();
 
@@ -62,6 +69,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
         }
 
+        totalTokensPerDoc.insertElementAt(tokens.size(), docID);
+        totalTokensInCorpus += tokens.size();
+
         docID++;
         count++;
         if(count >= 2000){
@@ -72,7 +82,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         }
 
       }
+      numberOfDocs = docID;
       WriteToIndexFile(fileNumber);
+      writeCorpusStatistics();
       _index.clear();
 
       //Finally writes to Index file.
@@ -84,6 +96,42 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     {
       e.printStackTrace();
     }
+  }
+
+  private void writeCorpusStatistics() throws  FileNotFoundException, IOException{
+
+
+    DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_corpusStatics, false)));
+
+    dataOut.writeInt(numberOfDocs);
+    dataOut.writeInt(totalTokensInCorpus);
+    dataOut.writeInt(totalTokensPerDoc.size());
+
+    for(Integer entry : totalTokensPerDoc){
+      dataOut.writeInt(entry);
+    }
+
+    dataOut.flush();
+    dataOut.close();
+
+  }
+
+  private  void loadCorpusStatistics() throws  FileNotFoundException, IOException{
+    // Open the file
+    DataInputStream dis = new DataInputStream(new FileInputStream(_corpusStatics ));
+
+    while (dis.available() > 0) {
+      numberOfDocs = dis.readInt();
+      totalTokensInCorpus = dis.readInt();
+      int size = dis.readInt();
+
+      totalTokensPerDoc.clear();
+      for (int i = 0; i < size; i++) {
+        totalTokensPerDoc.add(dis.readInt());
+      }
+    }
+    dis.close();
+
   }
 
   private void insertToken(String token, int docID, int position, boolean isAbosolutePosition) {
@@ -107,6 +155,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public void loadIndex() throws IOException {
 
+    long startTime = System.currentTimeMillis();
+
     _index.clear();
       // Open the file
     DataInputStream dis = new DataInputStream(new FileInputStream(_indexFile + "1"));
@@ -125,6 +175,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
     //Close the input stream
     dis.close();
+    loadCorpusStatistics();
+    System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
   }
 
   @Override
@@ -138,51 +190,57 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public DocumentIndexed nextDoc(Query query, int docid) {
 
-    Map<QueryToken, Integer> queryTokenCount = new HashMap<>();
 
-    List<QueryTokenIndexData> indexData  = new Vector<>();
+    while ( docid < numberOfDocs) {
+      System.out.println(docid);
 
-    for(QueryToken token : query._tokens ){
-      QueryTokenIndexData data;
-        int nextDocId = -1 ;
-        if(token.isPhrase()){
-           data = nextDocForPhrase(token,docid);
-        }else {
-           data  = nextDocForWord(token,docid);
+      Map<QueryToken, Integer> queryTokenCount = new HashMap<>();
+
+      List<QueryTokenIndexData> indexData = new Vector<>();
+
+      for (QueryToken token : query._tokens) {
+        QueryTokenIndexData data;
+        int nextDocId = -1;
+        if (token.isPhrase()) {
+          data = nextDocForPhrase(token, docid);
+        } else {
+          data = nextDocForWord(token, docid);
         }
 
-      if(data.docId == -1){
-        return null;
-      }else {
-        indexData.add(data);
+        if (data.docId == -1) {
+          return null;
+        } else {
+          indexData.add(data);
+        }
       }
-    }
 
 
-    boolean flag = true ;
+      boolean flag = true;
 
-    for(int i = 0 ; i < indexData.size() - 1; i++){
-      if(indexData.get(i).docId != indexData.get(i+1).docId){
-        flag = false;
+      for (int i = 0; i < indexData.size() - 1; i++) {
+        if (indexData.get(i).docId != indexData.get(i + 1).docId) {
+          flag = false;
+        }
       }
-    }
 
-    if(flag){
-      DocumentIndexed documentIndexed = new DocumentIndexed(indexData.get(0).docId);
-      for(int i = 0; i < indexData.size() ; i++) {
-        documentIndexed.quertTokenCount.put(indexData.get(i).queryToken,indexData.get(i).count);
+      if (flag) {
+        DocumentIndexed documentIndexed = new DocumentIndexed(indexData.get(0).docId);
+        for (int i = 0; i < indexData.size(); i++) {
+          documentIndexed.quertTokenCount.put(indexData.get(i).queryToken, indexData.get(i).count);
+        }
+        documentIndexed.totalNumberOfTokensInDoc = totalTokensPerDoc.get(documentIndexed._docid);
+        return documentIndexed;
       }
-      return documentIndexed;
+
+      int maxDocId = -1;
+      for (int i = 0; i < indexData.size(); i++) {
+        if (indexData.get(i).docId > maxDocId)
+          maxDocId = indexData.get(i).docId;
+      }
+
+      docid = maxDocId -1;
     }
-
-    int maxDocId = -1;
-    for(int i = 0 ; i < indexData.size() ; i++){
-      if(indexData.get(i).docId > maxDocId)
-        maxDocId = indexData.get(i).docId;
-    }
-
-
-    return nextDoc(query,maxDocId -1);
+    return null;
 
   }
 
@@ -207,57 +265,63 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
   private QueryTokenIndexData nextDocForPhrase(QueryToken phrase, Integer docId){
-
+    QueryTokenIndexData returnData = new QueryTokenIndexData();
     String[] tokens = phrase.getToken().split(" ");
 
-    List<QueryTokenIndexData> indexData  = new Vector<>();
+    while(docId < numberOfDocs) {
+      System.out.println("phrase "+ docId);
+      List<QueryTokenIndexData> indexData = new Vector<>();
 
 
-    for(String token : tokens){
-      QueryTokenIndexData data   = nextDocForWord(new QueryToken(false,token),docId);
-      //return null if any one of the token in the phrase is not in the doc
-      if(data.docId == -1)
-        return null;
-      indexData.add(data);
-    }
-
-    boolean flag = true ;
-
-    for(int i = 0 ; i < indexData.size() - 1; i++){
-      if(indexData.get(i).docId != indexData.get(i+1).docId){
-        flag = false;
-      }
-    }
-
-    if(flag) {
-      int currentPosition = nextPhraseInSameDoc(phrase,indexData.get(0).docId, -1);
-      if( currentPosition == -1){
-        return  nextDocForPhrase(phrase, indexData.get(0).docId);
-      }
-      int count = 1;
-
-      while(currentPosition > -1 ){
-        currentPosition = nextPhraseInSameDoc(phrase, indexData.get(0).docId, currentPosition);
-        if(currentPosition > -1)
-            count ++;
+      for (String token : tokens) {
+        QueryTokenIndexData data = nextDocForWord(new QueryToken(false, token), docId);
+        //return null if any one of the token in the phrase is not in the doc
+        if (data.docId == -1)
+          return null;
+        indexData.add(data);
       }
 
-      QueryTokenIndexData returnData = new QueryTokenIndexData();
-      returnData.docId = indexData.get(0).docId;
-      returnData.queryToken = phrase;
-      returnData.count = count;
+      boolean flag = true;
 
-      return returnData;
+      for (int i = 0; i < indexData.size() - 1; i++) {
+        if (indexData.get(i).docId.intValue() !=  indexData.get(i + 1).docId.intValue()) {
+          flag = false;
+        }
+      }
+
+      if (flag) {
+        int currentPosition = nextPhraseInSameDoc(phrase, indexData.get(0).docId, -1);
+
+        if (currentPosition == -1) {
+          docId = indexData.get(0).docId;
+        } else {
+          int count = 1;
+
+          while (currentPosition > -1) {
+            currentPosition = nextPhraseInSameDoc(phrase, indexData.get(0).docId, currentPosition);
+            if (currentPosition > -1)
+              count++;
+          }
+
+          returnData.docId = indexData.get(0).docId;
+          returnData.queryToken = phrase;
+          returnData.count = count;
+
+          return returnData;
+        }
+      } else {
+
+        int maxDocId = -1;
+        for (int i = 0; i < indexData.size(); i++) {
+          if (indexData.get(i).docId > maxDocId)
+            maxDocId = indexData.get(i).docId;
+        }
+
+        docId = maxDocId - 1;
+      }
+
     }
-
-    int maxDocId = -1;
-    for(int i = 0 ; i < indexData.size() ; i++){
-      if(indexData.get(i).docId > maxDocId)
-        maxDocId = indexData.get(i).docId;
-    }
-
-
-    return nextDocForPhrase(phrase,maxDocId -1);
+    return null;
 
   }
 
@@ -319,6 +383,16 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   public int documentTermFrequency(String term, int docid) {
     SearchEngine.Check(false, "Not implemented!");
     return 0;
+  }
+
+  @Override
+  public Vector<Integer> getTokensPerDoc(){
+    return totalTokensPerDoc ;
+  }
+
+  @Override
+  public int getTotalTokens(){
+    return totalTokensInCorpus ;
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {
