@@ -286,7 +286,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     if(flag)
       return positions.get(0);
 
-    return nextPhraseInSameDoc(phrase,docId,Collections.max(positions) -1);
+    return nextPhraseInSameDoc(phrase,docId,Collections.max(positions) - positions.size());
 
 
   }
@@ -297,9 +297,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     Integer currentPos = 0;
 
     for(int i = 0 ; i < occurrence.size() ; i++){
-      currentPos = currentPos + occurrence.get(i);
-      if(currentPos > pos){
-        return currentPos;
+      //currentPos = currentPos + occurrence.get(i);
+      if(occurrence.get(i) > pos){
+        return occurrence.get(i);
       }
     }
 
