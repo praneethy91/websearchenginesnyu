@@ -50,7 +50,7 @@ public class QueryPhrase extends Query {
     Scanner s = new Scanner(sb.toString());
     while (s.hasNext()) {
       String token = s.next();
-      NormalizeToken(token);
+      NormalizeToken(token, false);
     }
 
     s.close();
@@ -59,20 +59,28 @@ public class QueryPhrase extends Query {
     Matcher m = p.matcher(_query);
     while (m.find()) {
       String token = m.group(1);
-      NormalizeToken(token);
+      NormalizeToken(token, true);
     }
   }
 
-  private void NormalizeToken(String token) {
+  private void NormalizeToken(String token, boolean combine) {
     String[] trimmedTokens = token.split("[\\p{Punct}\\s]+");
-    for(String trimmedToken : trimmedTokens) {
-      trimmedToken = trimmedToken.trim();
+    for(int i = 0; i < trimmedTokens.length; i++) {
+      String trimmedToken = trimmedTokens[i].trim();
       if (!trimmedToken.equals("") && trimmedToken.length() > 1) {
         String finalToken = Stemmer.StemToken(trimmedToken);
         if (!finalToken.equals("")) {
-          _tokens.add(new QueryToken(false, finalToken));
+          if(!combine) {
+            _tokens.add(new QueryToken(false, finalToken));
+          }
+          else {
+            trimmedTokens[i] = finalToken;
+          }
         }
       }
+    }
+    if(combine) {
+      _tokens.add(new QueryToken(true, String.join(" ", trimmedTokens)));
     }
   }
 
