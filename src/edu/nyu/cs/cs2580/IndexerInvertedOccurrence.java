@@ -64,7 +64,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
         docID++;
         count++;
-        if(count >= 20000){
+        if(count >= 200){
           WriteToIndexFile(fileNumber);
           count = 0;
           fileNumber++;
@@ -326,7 +326,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   private void WriteToIndexFile(Integer fileNumber) throws IOException {
     String indexFileName = _indexFile + fileNumber.toString();
     System.out.println("Printing index number " + fileNumber.toString());
-    try(FileWriter fw = new FileWriter(indexFileName, true);
+    try(FileWriter fw = new FileWriter(indexFileName, false);
         BufferedWriter bw = new BufferedWriter(fw);
         PrintWriter out = new PrintWriter(bw))
     {
@@ -336,19 +336,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       for(String word : sortedKeys){
          Map<Integer, DocumentWordOccurrence> entry = _index.get(word);
 
-        String line = "";
-        line = word;
+        StringBuilder line = new StringBuilder();
+        line.append(word);
 
         for(Map.Entry<Integer,DocumentWordOccurrence> occurrenceEntry : entry.entrySet()){
-          line = line+":"+occurrenceEntry.getKey().toString()+",";
+          line.append(":").append(occurrenceEntry.getKey().toString()).append(",");
           for(Integer occurrence : occurrenceEntry.getValue().occurrence){
-            line = line+occurrence.toString()+",";
+            line.append(occurrence.toString()).append(",");
           }
-          line = line.substring(0, line.length() - 1);
+          line.setLength(line.length() - 1);
         }
 
-        out.append(line+"\n");
-
+        out.append(line.toString());
+        out.append("\n");
       }
       fw.close();;
       bw.close();
