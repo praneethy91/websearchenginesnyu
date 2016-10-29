@@ -109,24 +109,22 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     _index.clear();
       // Open the file
-      FileInputStream fstream = new FileInputStream(_indexFile + "1");
-      BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+    DataInputStream dis = new DataInputStream(new FileInputStream(_indexFile + "1"));
 
-
-      String strLine;
-
-    while ((strLine = br.readLine()) != null)   {
-      String[] indexTokens = strLine.split(":");
-      for(int i  = 1 ; i < indexTokens.length ; i++){
-        String[] occurences = indexTokens[i].split(",");
-        for(int j = 1; j < occurences.length ; j++)
-        insertToken(indexTokens[0],Integer.parseInt( occurences[0]),Integer.parseInt(occurences[j]),false);
+    while (dis.available() > 0) {
+      String term = dis.readUTF();
+      int numberOfPostings = dis.readInt();
+      for (int i = 0; i < numberOfPostings; i++) {
+        int docID = dis.readInt();
+        int numberOfOccurencesInThisDoc = dis.readInt();
+        for (int j = 0; j < numberOfOccurencesInThisDoc; j++) {
+          int position = dis.readInt();
+          insertToken(term, docID, position, false);
+        }
       }
     }
-
-  //Close the input stream
-    fstream.close();
-    br.close();
+    //Close the input stream
+    dis.close();
   }
 
   @Override
@@ -326,33 +324,27 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   private void WriteToIndexFile(Integer fileNumber) throws IOException {
     String indexFileName = _indexFile + fileNumber.toString();
     System.out.println("Printing index number " + fileNumber.toString());
-    try(FileWriter fw = new FileWriter(indexFileName, false);
-        BufferedWriter bw = new BufferedWriter(fw);
-        PrintWriter out = new PrintWriter(bw))
-    {
-      List<String> sortedKeys=new ArrayList(_index.keySet());
-      Collections.sort(sortedKeys);
+    DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(indexFileName, false)));
+    List<String> sortedKeys=new ArrayList(_index.keySet());
+    Collections.sort(sortedKeys);
 
-      for(String word : sortedKeys){
-         Map<Integer, DocumentWordOccurrence> entry = _index.get(word);
+    for(String word : sortedKeys){
+      Map<Integer, DocumentWordOccurrence> entry = _index.get(word);
 
-        StringBuilder line = new StringBuilder();
-        line.append(word);
-
-        for(Map.Entry<Integer,DocumentWordOccurrence> occurrenceEntry : entry.entrySet()){
-          line.append(":").append(occurrenceEntry.getKey().toString()).append(",");
-          for(Integer occurrence : occurrenceEntry.getValue().occurrence){
-            line.append(occurrence.toString()).append(",");
-          }
-          line.setLength(line.length() - 1);
+      dataOut.writeUTF(word); // Write Term
+      dataOut.writeInt(entry.size()); // Write number of postings for this term
+      for(Map.Entry<Integer,DocumentWordOccurrence> occurrenceEntry : entry.entrySet()){
+        dataOut.writeInt(occurrenceEntry.getKey()); //Write the docID
+        ArrayList<Integer> occurrenceEntries = occurrenceEntry.getValue().occurrence;
+        dataOut.writeInt(occurrenceEntries.size()); //Write the number of occurrences of the term for this docID.
+        for(Integer occurrence : occurrenceEntries){
+          dataOut.writeInt(occurrence); // Write number of occurrences in this doc and their positions
         }
-
-        out.append(line.toString());
-        out.append("\n");
       }
-      fw.close();
-      out.close();
     }
+
+    dataOut.flush();
+    dataOut.close();
   }
 
   public class QueryTokenIndexData{
