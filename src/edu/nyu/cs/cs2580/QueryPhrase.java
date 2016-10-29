@@ -20,8 +20,6 @@ public class QueryPhrase extends Query {
     }
   }*/
 
-  public Vector<QueryToken> _tokens = new Vector<>();
-
   public QueryPhrase(String query) {
     super(query);
   }
