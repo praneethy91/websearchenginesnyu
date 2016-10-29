@@ -64,7 +64,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
         docID++;
         count++;
-        if(count >= 200){
+        if(count >= 2000){
           WriteToIndexFile(fileNumber);
           count = 0;
           fileNumber++;
@@ -350,14 +350,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         out.append(line.toString());
         out.append("\n");
       }
-      fw.close();;
-      bw.close();
+      fw.close();
       out.close();
-
-    } catch (IOException e) {
     }
-
-
   }
 
   public class QueryTokenIndexData{
