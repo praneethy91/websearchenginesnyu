@@ -207,7 +207,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           data = nextDocForWord(token, docid);
         }
 
-        if (data.docId == -1) {
+        if (data == null || data.docId == -1) {
           return null;
         } else {
           indexData.add(data);
@@ -269,14 +269,16 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     String[] tokens = phrase.getToken().split(" ");
 
     while(docId < numberOfDocs) {
-      System.out.println("phrase "+ docId);
+
+      if(docId == 1979)
+        System.out.println("phrase "+ docId);
       List<QueryTokenIndexData> indexData = new Vector<>();
 
 
       for (String token : tokens) {
         QueryTokenIndexData data = nextDocForWord(new QueryToken(false, token), docId);
         //return null if any one of the token in the phrase is not in the doc
-        if (data.docId == -1)
+        if (data == null || data.docId == -1)
           return null;
         indexData.add(data);
       }
@@ -326,8 +328,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
   //returns next pos of phrase in docId after pos
-  private  Integer nextPhraseInSameDoc(QueryToken phrase, Integer docId, Integer pos){
+  private  Integer nextPhraseInSameDoc(QueryToken phrase, Integer docId, int pos){
 
+    if(pos == 15231) {
+      System.out.println(pos);
+    }
     String[] tokens = phrase.getToken().split(" ");
     List<Integer> positions  = new Vector<>();
 
@@ -341,7 +346,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
     boolean flag = true ;
     for(int i = 0 ; i < positions.size() - 1; i++){
-      if(positions.get(i) + 1 != positions.get(i+1)){
+      if(positions.get(i).intValue() + 1 != positions.get(i+1).intValue()){
         flag = false;
       }
     }
@@ -349,7 +354,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     if(flag)
       return positions.get(0);
 
-    return nextPhraseInSameDoc(phrase,docId,Collections.max(positions) - positions.size());
+    return nextPhraseInSameDoc(phrase,docId,Collections.max(positions) - positions.size() + 1);
 
 
   }
@@ -393,6 +398,35 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public int getTotalTokens(){
     return totalTokensInCorpus ;
+  }
+
+  @Override
+  public Map<QueryToken, Integer> getQueryTokenCountInCorpus(Query query){
+
+
+    Map<QueryToken, Integer> queryTokenInCorpus = new HashMap<>();
+
+    for(QueryToken token : query._tokens) {
+      int docId = -1;
+      int count = 0;
+
+      Query newQuery = new QueryPhrase("");
+      newQuery._tokens.clear();
+      newQuery._tokens.add(token);
+
+      DocumentIndexed documentIndexed = this.nextDoc(query, docId);
+      count = documentIndexed.quertTokenCount.get(token);
+
+      while(documentIndexed != null){
+        documentIndexed = this.nextDoc(query, documentIndexed._docid);
+        if(documentIndexed != null )
+          count += documentIndexed.quertTokenCount.get(token);
+      }
+      queryTokenInCorpus.put(token,count);
+    }
+
+    return queryTokenInCorpus;
+
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

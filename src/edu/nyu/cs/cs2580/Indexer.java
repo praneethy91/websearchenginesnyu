@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
+import java.util.Map;
 import java.util.Vector;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -145,5 +146,9 @@ public abstract class Indexer {
 
   public int getTotalTokens(){
     return 0 ;
+  }
+
+  public Map<QueryToken, Integer> getQueryTokenCountInCorpus(Query query){
+    return null;
   }
 }
