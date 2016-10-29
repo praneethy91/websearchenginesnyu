@@ -20,7 +20,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
   int totalTokensInCorpus = 0;
-  int numberOfDocs = 12000;
+  int numberOfDocs = 0;
 
   //We will also store the Documents in the DocumentIndexed vector for the rankers
   private Vector<DocumentIndexed> _indexedDocs = new Vector<>();
@@ -391,22 +391,25 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
   @Override
-  public Vector<Integer> getTokensPerDoc(){
-    return totalTokensPerDoc ;
+  public int getTokensPerDoc(int docId){
+    return totalTokensPerDoc.get(docId) ;
   }
 
+
+
   @Override
-  public int getTotalTokens(){
-    return totalTokensInCorpus ;
+  public  int numDocs() { return numberOfDocs; }
+
+
+  @Override
+  public final int totalTermFrequency() {
+    return totalTokensInCorpus;
   }
 
+
   @Override
-  public Map<QueryToken, Integer> getQueryTokenCountInCorpus(Query query){
+  public int getQueryTokenCountInCorpus(QueryToken token){
 
-
-    Map<QueryToken, Integer> queryTokenInCorpus = new HashMap<>();
-
-    for(QueryToken token : query._tokens) {
       int docId = -1;
       int count = 0;
 
@@ -414,19 +417,16 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       newQuery._tokens.clear();
       newQuery._tokens.add(token);
 
-      DocumentIndexed documentIndexed = this.nextDoc(query, docId);
+      DocumentIndexed documentIndexed = this.nextDoc(newQuery, docId);
       count = documentIndexed.quertTokenCount.get(token);
 
       while(documentIndexed != null){
-        documentIndexed = this.nextDoc(query, documentIndexed._docid);
+        documentIndexed = this.nextDoc(newQuery, documentIndexed._docid);
         if(documentIndexed != null )
           count += documentIndexed.quertTokenCount.get(token);
       }
-      queryTokenInCorpus.put(token,count);
-    }
 
-    return queryTokenInCorpus;
-
+      return count;
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

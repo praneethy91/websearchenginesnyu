@@ -84,6 +84,16 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
   }
 
   @Override
+  public int numDocs() {
+    return 0;
+  }
+
+  @Override
+  public int totalTermFrequency() {
+    return 0;
+  }
+
+  @Override
   public Document getDoc(int docid) {
     return null;
   }
@@ -107,8 +117,18 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
   }
 
   @Override
+  public int getTokensPerDoc(int docId) {
+    return 0;
+  }
+
+  @Override
   public int documentTermFrequency(String term, int docid) {
     SearchEngine.Check(false, "Not implemented!");
+    return 0;
+  }
+
+  @Override
+  public int getQueryTokenCountInCorpus(QueryToken token) {
     return 0;
   }
 

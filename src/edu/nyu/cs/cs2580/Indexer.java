@@ -30,7 +30,7 @@ public abstract class Indexer {
   // serving unless they are made thread-safe. For comments, see APIs below.
   // Subclasses should populate those fields properly.
   protected int _numDocs = 0;
-  protected long _totalTermFrequency = 0;
+  protected int _totalTermFrequency = 0;
 
   // Provided for serialization.
   public Indexer() { }
@@ -107,10 +107,10 @@ public abstract class Indexer {
    */
 
   // Number of documents in the corpus.
-  public final int numDocs() { return _numDocs; }
+  public  abstract int numDocs();
   // Number of term occurrences in the corpus. If a term appears 10 times, it
   // will be counted 10 times.
-  public final long totalTermFrequency() { return _totalTermFrequency; }
+  public abstract   int totalTermFrequency() ;
 
   // Number of documents in which {@code term} appeared, over the full corpus.
   public abstract int corpusDocFrequencyByTerm(String term);
@@ -118,7 +118,8 @@ public abstract class Indexer {
   // Number of times {@code term} appeared in corpus. 
   public abstract int corpusTermFrequency(String term);
 
-  // Number of times {@code term} appeared in the document {@code docid}.
+  public abstract  int  getTokensPerDoc(int docId);
+
   public abstract int documentTermFrequency(String term, int docid);
 
   /**
@@ -140,15 +141,5 @@ public abstract class Indexer {
     }
   }
 
-  public Vector<Integer> getTokensPerDoc(){
-    return null ;
-  }
-
-  public int getTotalTokens(){
-    return 0 ;
-  }
-
-  public Map<QueryToken, Integer> getQueryTokenCountInCorpus(Query query){
-    return null;
-  }
+  public abstract int getQueryTokenCountInCorpus(QueryToken token);
 }

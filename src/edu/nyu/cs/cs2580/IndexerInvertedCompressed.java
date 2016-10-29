@@ -23,6 +23,16 @@ public class IndexerInvertedCompressed extends Indexer {
   }
 
   @Override
+  public int numDocs() {
+    return 0;
+  }
+
+  @Override
+  public int totalTermFrequency() {
+    return 0;
+  }
+
+  @Override
   public Document getDoc(int docid) {
     return null;
   }
@@ -45,11 +55,21 @@ public class IndexerInvertedCompressed extends Indexer {
     return 0;
   }
 
+  @Override
+  public int getTokensPerDoc(int docId) {
+    return 0;
+  }
+
   /**
    * @CS2580: Implement this to work with your RankerFavorite.
    */
   @Override
   public int documentTermFrequency(String term, int docid) {
+    return 0;
+  }
+
+  @Override
+  public int getQueryTokenCountInCorpus(QueryToken token) {
     return 0;
   }
 }
