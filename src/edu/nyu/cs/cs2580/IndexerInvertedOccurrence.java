@@ -56,7 +56,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           docIndexed.setTitle(wikiParser.getTitle());
           docIndexed.setUrl(wikiParser.getUrl());
           _indexedDocs.add(docIndexed);
-          
+
 
           // Updating postings lists
           for (int pos = 0 ; pos < tokens.size() ; pos++) {
@@ -273,6 +273,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private QueryTokenIndexData nextDocForWord(QueryToken word, int docId){
 
+    if(!_index.containsKey(word.getToken()))
+        return null;
     LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word.getToken());
 
     Set<Integer> keys = wordMap.keySet();
@@ -462,7 +464,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   @Override
   public int getQueryTokenCountInCorpus(QueryToken token){
-
       int docId = -1;
       int count = 0;
 
