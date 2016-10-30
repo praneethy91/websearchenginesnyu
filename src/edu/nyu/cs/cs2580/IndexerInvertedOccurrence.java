@@ -56,6 +56,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           docIndexed.setTitle(wikiParser.getTitle());
           docIndexed.setUrl(wikiParser.getUrl());
           _indexedDocs.add(docIndexed);
+          
 
           // Updating postings lists
           for (int pos = 0 ; pos < tokens.size() ; pos++) {
@@ -278,7 +279,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
 
     QueryTokenIndexData data = new QueryTokenIndexData();
-    docId++;
+
     //Collections.binarySearch(keys, docId);
 
     for(Integer key: keys){
