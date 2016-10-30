@@ -157,12 +157,8 @@ public class SearchEngine {
     Indexer indexer = Indexer.Factory.getIndexerByOption(SearchEngine.OPTIONS);
     Check(indexer != null,
         "Indexer " + SearchEngine.OPTIONS._indexerType + " not found!");
-      //indexer.constructIndex();
-      indexer.loadIndex();
-        Query query = new QueryPhrase("justin timberlake");
-        query.processQuery();
-       indexer.nextDoc(query,-1);
-    //indexer.getQueryTokenCountInCorpus(query);
+      indexer.constructIndex();
+    
   }
   
   private static void startServing() throws IOException, ClassNotFoundException {
