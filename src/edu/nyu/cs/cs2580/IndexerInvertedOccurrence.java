@@ -105,6 +105,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       MergeFiles(fileNumber - 1);
 
       //Clearing the old Index files after merging
+      System.out.println("Deleting the old index...");
       indexDir = new File(_options._indexPrefix);
       foundFiles = indexDir.listFiles(new FilenameFilter() {
         public boolean accept(File dir, String name) {
@@ -137,7 +138,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     }
 
-    System.out.println("Merging the index files");
+    System.out.println("Merging the index files...");
 
     DataInputStream[] disArr = new DataInputStream[fileNumber];
     PriorityQueue<PostingListPointer> postingListPQ = new PriorityQueue<>(new Comparator<PostingListPointer>() {
@@ -200,9 +201,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     });
 
-    //TODO: delete all alphabet merged files before starting indexing
-
-    System.out.println("Merging posting lists for character: " + word.charAt(0));
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
     dataOutputStream.writeUTF(word);
     int[] numberOfOccurences = new int[disArr.length];
@@ -619,7 +617,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {
     String indexFileName = _indexFile + fileNumber.toString();
-    System.out.println("Creating index number " + fileNumber.toString());
+    System.out.println("Creating index number " + fileNumber.toString() + "...");
     DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(indexFileName, false)));
     List<String> sortedKeys=new ArrayList(_index.keySet());
     Collections.sort(sortedKeys);

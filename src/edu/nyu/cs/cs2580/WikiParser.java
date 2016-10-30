@@ -52,6 +52,9 @@ public class WikiParser {
       // Not a well formed wiki article
       throw new IllegalArgumentException();
     }
+
+    _url = _htmlDocument.select("div.printFooter a").first().ownText();
+
     int wikiIndex = _title.indexOf("- Wikipedia");
     if (wikiIndex != -1) {
       _title = _title.substring(0, wikiIndex).trim();
@@ -85,10 +88,6 @@ public class WikiParser {
 
   private void DFSParse(Element element, Collection<String> tokens) {
     Element elementParent = element.parent();
-    if(elementParent != null && elementParent.attr("class").equals("printfooter")) {
-      _url = element.ownText();
-      return;
-    }
 
     if(elementParent.attr("class").equals("references")) {
       return;
