@@ -72,9 +72,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
 
           // Updating postings lists
-          for (int pos = 0 ; pos < tokens.size() ; pos++) {
+          for (int pos = 0; pos < tokens.size(); pos++) {
             String token = tokens.elementAt(pos);
-            insertToken(token, docID, pos,true);
+            insertToken(token, docID, pos, true);
           }
 
           //Adding later as well formed documents only we should consider
@@ -83,11 +83,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           totalTokensPerDoc.add(tokens.size());
           totalTokensInCorpus += tokens.size();
         }
-        catch(IllegalArgumentException e) {
+        catch (IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
         }
 
-        if(count >= 200){
+        if (count >= 200) {
           WriteToIndexFile(fileNumber);
           count = 0;
           fileNumber++;
@@ -118,11 +118,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
 
       long endTime = System.currentTimeMillis();
-      System.out.println("Done Indexing. Seconds taken to run indexing is : " + (endTime - startTime)/1000);
+      System.out.println("Done Indexing. Seconds taken to run indexing is : " + (endTime - startTime) / 1000);
 
     }
-    catch(Exception e)
-    {
+    catch (Exception e) {
       e.printStackTrace();
     }
   }
@@ -149,8 +148,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     });
 
     for(int i = 0; i < fileNumber; i++) {
-      disArr[i] = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + fileNumber)));
-      postingListPQ.add(new PostingListPointer(disArr[i].readUTF(), i));
+      disArr[i] = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + (i + 1))));
+      String word = disArr[i].readUTF();
+      postingListPQ.add(new PostingListPointer(word, i));
     }
 
     while(!postingListPQ.isEmpty()) {
@@ -162,8 +162,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         pointersToMerge[++i] = postingListPQ.poll()._pointer;
       }
 
-      MergePostingsLists(pointersToMerge, disArr, postingListPointer._word);
-      for(int j = 0; j < pointersToMerge.length; j++) {
+      MergePostingsLists(pointersToMerge, i, disArr, postingListPointer._word);
+      for(int j = 0; j <= i; j++) {
         if(disArr[pointersToMerge[j]].available() > 0) {
           postingListPQ.add(new PostingListPointer(disArr[pointersToMerge[j]].readUTF(), pointersToMerge[j]));
         }
@@ -175,7 +175,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
   }
 
-  private void MergePostingsLists(int[] pointersToMerge, DataInputStream[] disArr, String word) throws IOException {
+  private void MergePostingsLists(int[] pointersToMerge, int endIndexPointersToMerge, DataInputStream[] disArr, String word) throws IOException {
 
     class OccurenceListPointer {
       public int _docID;
@@ -205,7 +205,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     dataOutputStream.writeUTF(word);
     int[] numberOfOccurences = new int[disArr.length];
     int totalOccurences = 0;
-    for(int i = 0; i < pointersToMerge.length; i++) {
+    for(int i = 0; i <= endIndexPointersToMerge; i++) {
       numberOfOccurences[pointersToMerge[i]] = disArr[pointersToMerge[i]].readInt();
       totalOccurences += numberOfOccurences[pointersToMerge[i]];
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
@@ -214,11 +214,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     dataOutputStream.writeInt(totalOccurences);
     while(!occurenceListPQ.isEmpty()) {
       OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+      dataOutputStream.writeInt(occurenceListPointer._docID);
       DataInputStream dis = disArr[occurenceListPointer._pointer];
       int occurrences = dis.readInt();
       dataOutputStream.writeInt(occurrences);
       for(int i = 0; i < occurrences; i++) {
-        dataOutputStream.writeInt(dis.readInt());
+        int position = dis.readInt();
+        dataOutputStream.writeInt(position);
       }
 
       numberOfOccurences[occurenceListPointer._pointer]--;
@@ -243,7 +245,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     dataOut.close();
   }
 
-  private void writeCorpusStatistics() throws  FileNotFoundException, IOException{
+  private void writeCorpusStatistics() throws IOException{
 
 
     DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_corpusStatics, false)));
@@ -261,7 +263,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   }
 
-  private  void loadCorpusStatistics() throws  FileNotFoundException, IOException{
+  private  void loadCorpusStatistics() throws IOException{
     // Open the file
     DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_corpusStatics )));
 
@@ -318,7 +320,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     _index.clear();
       // Open the file
-    DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "1")));
+    DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_a")));
 
     while (dis.available() > 0) {
       String term = dis.readUTF();
@@ -426,34 +428,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     return null;
-
-//    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word.getToken());
-//
-//    List<Integer> keys = new ArrayList<>(wordMap.keySet());
-//
-//
-//    QueryTokenIndexData data = new QueryTokenIndexData();
-//    data.queryToken = word;
-//
-//    docId++;
-//    docId = 70;
-//    int nextDocIdIndex = Collections.binarySearch(keys, docId);
-//
-//    if(nextDocIdIndex > 0){
-//        int nextDocId = keys.get(nextDocIdIndex);
-//      data.count = wordMap.get(nextDocId).occurrence.size();
-//      data.docId = nextDocId;
-//    }else {
-//      int nextDocId = keys.get(nextDocIdIndex) * -1;
-//      nextDocId --;
-//      if(nextDocId >= numberOfDocs )
-//        return null;
-//      data.count = wordMap.get(nextDocId).occurrence.size();
-//      data.docId = nextDocId;
-//    }
-//
-//
-//    return data;
   }
 
 
@@ -656,17 +630,5 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       this.occurrence = new ArrayList<>();
       this.occurrence.add(pos);
     }
-
-//    private void addAbsolutePosition(Integer pos){
-//        Integer currentPostition = 0;
-////      for(int i = 0 ; i < occurrence.size() ; i++){
-////        currentPostition =currentPostition + occurrence.get(i);
-////      }
-//      this.occurrence.add(pos - currentPostition);
-//    }
-//
-//    private void addRelativePosition(Integer pos){
-//      this.occurrence.add(pos);
-//    }
   }
 }
