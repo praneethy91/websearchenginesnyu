@@ -51,17 +51,16 @@ public class RankerFavorite extends Ranker {
     double lambda = 0.5;
 
     // TODO: Need to get document token count from _indexer or DocumentIndexed class
-    double docTokenCount = 17000;
+    double docTokenCount = _indexer.getTokensPerDoc(docIndexed._docid);
 
     for (Map.Entry<QueryToken, Integer> queryTokenEntry: docIndexed.quertTokenCount.entrySet()) {
       double queryTokenFrequency = queryTokenEntry.getValue();
 
       // TODO: Need to get the frequency of the token (should support free words and phrases both) in the corpus
-      double frequencyOfTokenInCorpus = _indexer.corpusTermFrequency(queryTokenEntry.getKey().getToken());
+      double frequencyOfTokenInCorpus = _indexer.getQueryTokenCountInCorpus(queryTokenEntry.getKey());
       score = score * ((1 - lambda)*queryTokenFrequency/docTokenCount) + (lambda * frequencyOfTokenInCorpus / totalTermFrequencyInCorpus);
     }
 
     return new ScoredDocument(docIndexed, score);
   }
-
 }

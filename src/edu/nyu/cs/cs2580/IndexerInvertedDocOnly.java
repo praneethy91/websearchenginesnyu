@@ -55,6 +55,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
         catch(IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
           tokens = new Vector<>();
+          docID++;
         }
 
         // Updating postings lists
@@ -66,8 +67,6 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
             _index.get(token).add(docID);
           }
         }
-
-        docID++;
       }
 
       //Finally writes to Index file.
