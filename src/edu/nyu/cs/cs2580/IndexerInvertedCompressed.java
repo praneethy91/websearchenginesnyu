@@ -19,7 +19,7 @@ public class IndexerInvertedCompressed extends Indexer {
   }
 
   @Override
-  public void loadIndex() throws IOException, ClassNotFoundException {
+  public void loadIndex(Query query) throws IOException, ClassNotFoundException {
   }
 
   @Override

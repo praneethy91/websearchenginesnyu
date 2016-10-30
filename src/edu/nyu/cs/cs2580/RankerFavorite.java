@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.io.IOException;
 import java.util.*;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
@@ -27,6 +28,15 @@ public class RankerFavorite extends Ranker {
     Queue<ScoredDocument> rankQueue = new PriorityQueue<ScoredDocument>();
     Document doc = null;
     int docid = -1;
+
+    try {
+      _indexer.loadIndex(query);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+
     while ((doc = _indexer.nextDoc(query, docid)) != null) {
       rankQueue.add(scoreDocument(query, doc));
       if (rankQueue.size() > numResults) {

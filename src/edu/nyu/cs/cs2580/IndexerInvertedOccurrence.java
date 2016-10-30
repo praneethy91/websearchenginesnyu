@@ -19,6 +19,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   private final String _wikiCorpusDir = _options._corpusPrefix;
   private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
 
+  private Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
+
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
   int totalTokensInCorpus = 0;
   int numberOfDocs = 0;
@@ -74,7 +76,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           // Updating postings lists
           for (int pos = 0; pos < tokens.size(); pos++) {
             String token = tokens.elementAt(pos);
-            insertToken(token, docID, pos, true);
+            insertToken(token, docID, pos,true,_index);
           }
 
           //Adding later as well formed documents only we should consider
@@ -295,52 +297,84 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     dis.close();
   }
 
-  private void insertToken(String token, int docID, int position, boolean isAbosolutePosition) {
+  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> index ) {
 
-    if (!_index.containsKey(token)) {
-      _index.put(token, new LinkedHashMap<>());
-      _index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
+    if (!index.containsKey(token)) {
+      index.put(token, new LinkedHashMap<>());
+      index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
     } else {
-        if(!_index.get(token).containsKey(docID)){
-             _index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
+        if(!index.get(token).containsKey(docID)){
+             index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
         }else {
-          if(isAbosolutePosition)
-            _index.get(token).get(docID).occurrence.add(position);
+          if(isAbsolutePosition)
+            index.get(token).get(docID).occurrence.add(position);
           else
-            _index.get(token).get(docID).occurrence.add(position);
+            index.get(token).get(docID).occurrence.add(position);
         }
     }
 
+  }
+
+
+  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, String s) {
+
+    if(!distributedIndex.containsKey(s)){
+      distributedIndex.put(s, new HashMap<>());
+    }
+
+    insertToken(token,docID, position,isAbsolutePosition, distributedIndex.get(s));
   }
 
   @Override
-  public void loadIndex() throws IOException {
+  public void loadIndex(Query query) throws IOException {
+
+    Set<String> firstCharacters = new HashSet<>();
+    for(QueryToken queryToken : query._tokens){
+      if(queryToken.isPhrase()){
+        for(String querySubTokens : queryToken.getToken().split(" ")){
+          firstCharacters.add(querySubTokens.substring(0,1));
+        }
+      }else {
+        firstCharacters.add(queryToken.getToken().substring(0,1));
+      }
+    }
+
+    loadIndex(firstCharacters.toArray(new String[firstCharacters.size()]));
+
+  }
+
+
+  public void loadIndex(String[] queryCharacters) throws IOException{
 
     long startTime = System.currentTimeMillis();
 
-    _index.clear();
+    for(String s : queryCharacters) {
+      _index.clear();
       // Open the file
-    DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_a")));
+      DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_" + s)));
 
-    while (dis.available() > 0) {
-      String term = dis.readUTF();
-      int numberOfPostings = dis.readInt();
-      for (int i = 0; i < numberOfPostings; i++) {
-        int docID = dis.readInt();
-        int numberOfOccurencesInThisDoc = dis.readInt();
-        for (int j = 0; j < numberOfOccurencesInThisDoc; j++) {
-          int position = dis.readInt();
-          insertToken(term, docID, position, false);
+      while (dis.available() > 0) {
+        String term = dis.readUTF();
+        int numberOfPostings = dis.readInt();
+        for (int i = 0; i < numberOfPostings; i++) {
+          int docID = dis.readInt();
+          int numberOfOccurencesInThisDoc = dis.readInt();
+          for (int j = 0; j < numberOfOccurencesInThisDoc; j++) {
+            int position = dis.readInt();
+            insertToken(term, docID, position, false, s);
+          }
         }
       }
+      //Close the input stream
+      dis.close();
     }
-    //Close the input stream
-    dis.close();
-    loadCorpusStatistics();
-    loadDocumentData();
+        loadCorpusStatistics();
+        loadDocumentData();
     System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
-  }
 
+
+
+  }
   @Override
   public Document getDoc(int docid) {
     return null;
@@ -351,7 +385,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
    */
   @Override
   public DocumentIndexed nextDoc(Query query, int docid) {
-
 
     while ( docid < numberOfDocs) {
 
@@ -407,9 +440,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private QueryTokenIndexData nextDocForWord(QueryToken word, int docId){
 
-    if(!_index.containsKey(word.getToken()))
+    if(!distributedIndex.get(word.getToken().substring(0,1)).containsKey(word.getToken()))
         return null;
-    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word.getToken());
+    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = distributedIndex.get(word.getToken().substring(0,1)).get(word.getToken());
 
     Set<Integer> keys = wordMap.keySet();
 
@@ -522,7 +555,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private int nextWordPostionInSameDoc(String word, Integer docId, Integer pos){
 
-    List<Integer> occurrence = _index.get(word).get(docId).occurrence;
+    List<Integer> occurrence = distributedIndex.get(word.substring(0,1)).get(word).get(docId).occurrence;
     Integer currentPos = 0;
 
     for(int i = 0 ; i < occurrence.size() ; i++){

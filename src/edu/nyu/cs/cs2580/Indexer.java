@@ -93,7 +93,7 @@ public abstract class Indexer {
    * serve mode, it will NOT have access to the corpus, all grading for serve
    * mode will be done with the corpus removed from the machine.
    */
-  public abstract void loadIndex() throws IOException, ClassNotFoundException;
+  public abstract void loadIndex(Query query) throws IOException, ClassNotFoundException;
 
   /**
    * APIs for statistics needed for ranking.
