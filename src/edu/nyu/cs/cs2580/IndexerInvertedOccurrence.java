@@ -246,7 +246,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       boolean flag = true;
 
       for (int i = 0; i < indexData.size() - 1; i++) {
-        if (!indexData.get(i).docId.equals(indexData.get(i + 1).docId)) {
+        if (indexData.get(i).docId.intValue() != indexData.get(i + 1).docId.intValue()) {
           flag = false;
         }
       }
@@ -276,31 +276,51 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word.getToken());
 
-    List<Integer> keys = new ArrayList<>(wordMap.keySet());
+    Set<Integer> keys = wordMap.keySet();
 
 
     QueryTokenIndexData data = new QueryTokenIndexData();
-    data.queryToken = word;
-
     docId++;
-    docId = 70;
-    int nextDocIdIndex = Collections.binarySearch(keys, docId);
+    //Collections.binarySearch(keys, docId);
 
-    if(nextDocIdIndex > 0){
-        int nextDocId = keys.get(nextDocIdIndex);
-      data.count = wordMap.get(nextDocId).occurrence.size();
-      data.docId = nextDocId;
-    }else {
-      int nextDocId = keys.get(nextDocIdIndex) * -1;
-      nextDocId --;
-      if(nextDocId >= numberOfDocs )
-        return null;
-      data.count = wordMap.get(nextDocId).occurrence.size();
-      data.docId = nextDocId;
+    for(Integer key: keys){
+      if(key > docId){
+        data.queryToken = word;
+        data.count = wordMap.get(key).occurrence.size();
+        data.docId = key;
+        return data;
+      }
     }
 
+    return null;
 
-    return data;
+//    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = _index.get(word.getToken());
+//
+//    List<Integer> keys = new ArrayList<>(wordMap.keySet());
+//
+//
+//    QueryTokenIndexData data = new QueryTokenIndexData();
+//    data.queryToken = word;
+//
+//    docId++;
+//    docId = 70;
+//    int nextDocIdIndex = Collections.binarySearch(keys, docId);
+//
+//    if(nextDocIdIndex > 0){
+//        int nextDocId = keys.get(nextDocIdIndex);
+//      data.count = wordMap.get(nextDocId).occurrence.size();
+//      data.docId = nextDocId;
+//    }else {
+//      int nextDocId = keys.get(nextDocIdIndex) * -1;
+//      nextDocId --;
+//      if(nextDocId >= numberOfDocs )
+//        return null;
+//      data.count = wordMap.get(nextDocId).occurrence.size();
+//      data.docId = nextDocId;
+//    }
+//
+//
+//    return data;
   }
 
 

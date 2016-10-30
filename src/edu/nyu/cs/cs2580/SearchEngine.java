@@ -153,11 +153,16 @@ public class SearchEngine {
   
   ///// Main functionalities start
   
-  private static void startIndexing() throws IOException {
+  private static void startIndexing() throws IOException, ClassNotFoundException {
     Indexer indexer = Indexer.Factory.getIndexerByOption(SearchEngine.OPTIONS);
     Check(indexer != null,
         "Indexer " + SearchEngine.OPTIONS._indexerType + " not found!");
-    indexer.constructIndex();
+      //indexer.constructIndex();
+      indexer.loadIndex();
+        Query query = new QueryPhrase("justin timberlake");
+        query.processQuery();
+       indexer.nextDoc(query,-1);
+    //indexer.getQueryTokenCountInCorpus(query);
   }
   
   private static void startServing() throws IOException, ClassNotFoundException {
@@ -193,6 +198,7 @@ public class SearchEngine {
       }
     } catch (Exception e) {
       e.printStackTrace();
+
     }
   }
 }
