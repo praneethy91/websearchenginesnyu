@@ -11,7 +11,7 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   // This is where we will store the index file
-  private final String _indexFile = _options._indexPrefix + "/invertedIndex.idx";
+  private final String _indexFile = _options._indexPrefix + "/invertedOccurrenceIndex.idx";
   private final String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
   private final String _documentStatistics = _options._indexPrefix + "/documentStatistics.idx";
 
@@ -42,6 +42,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     Vector<String> tokens;
     int count = 0;
     int fileNumber = 1;
+
+    //Clearing all Index files
+    File indexDir = new File(_options._indexPrefix);
+    File[] foundFiles = indexDir.listFiles(new FilenameFilter() {
+      public boolean accept(File dir, String name) {
+        return name.startsWith("invertedOccurrenceIndex");
+      }
+    });
+
+    for (File file : foundFiles) {
+      file.delete();
+    }
+
     try {
       for (File wikiFile : directoryListing) {
         try {
@@ -74,7 +87,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           // A random non-wiki file, just skip this document
         }
 
-        if(count >= 2000){
+        if(count >= 200){
           WriteToIndexFile(fileNumber);
           count = 0;
           fileNumber++;
@@ -85,18 +98,139 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
       numberOfDocs = docID;
       WriteToIndexFile(fileNumber);
+      fileNumber++;
       writeCorpusStatistics();
       writeDocumentData();
       _index.clear();
+      MergeFiles(fileNumber - 1);
+
+      //Clearing the old Index files after merging
+      indexDir = new File(_options._indexPrefix);
+      foundFiles = indexDir.listFiles(new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+          return name.matches(".*x\\d+");
+        }
+      });
+
+      for (File file : foundFiles) {
+        file.delete();
+      }
 
       long endTime = System.currentTimeMillis();
-      System.out.println("Seconds taken to run indexing is : " + (endTime - startTime)/1000);
+      System.out.println("Done Indexing. Seconds taken to run indexing is : " + (endTime - startTime)/1000);
 
     }
     catch(Exception e)
     {
       e.printStackTrace();
     }
+  }
+
+  private void MergeFiles(int fileNumber) throws IOException {
+
+    class PostingListPointer {
+      public String _word;
+      public int _pointer;
+      public PostingListPointer(String word, int pointer) {
+        this._word = word;
+        this._pointer = pointer;
+      }
+    }
+
+    System.out.println("Merging the index files");
+
+    DataInputStream[] disArr = new DataInputStream[fileNumber];
+    PriorityQueue<PostingListPointer> postingListPQ = new PriorityQueue<>(new Comparator<PostingListPointer>() {
+      @Override
+      public int compare(PostingListPointer o1, PostingListPointer o2) {
+        return o1._word.compareTo(o2._word);
+      }
+    });
+
+    for(int i = 0; i < fileNumber; i++) {
+      disArr[i] = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + fileNumber)));
+      postingListPQ.add(new PostingListPointer(disArr[i].readUTF(), i));
+    }
+
+    while(!postingListPQ.isEmpty()) {
+      int[] pointersToMerge = new int[fileNumber];
+      int i = 0;
+      PostingListPointer postingListPointer = postingListPQ.poll();
+      pointersToMerge[i] = postingListPointer._pointer;
+      while(postingListPQ.peek() != null && postingListPQ.peek()._word.equals(postingListPointer._word)) {
+        pointersToMerge[++i] = postingListPQ.poll()._pointer;
+      }
+
+      MergePostingsLists(pointersToMerge, disArr, postingListPointer._word);
+      for(int j = 0; j < pointersToMerge.length; j++) {
+        if(disArr[pointersToMerge[j]].available() > 0) {
+          postingListPQ.add(new PostingListPointer(disArr[pointersToMerge[j]].readUTF(), pointersToMerge[j]));
+        }
+      }
+    }
+
+    for(int i = 0; i < fileNumber; i++) {
+      disArr[i].close();
+    }
+  }
+
+  private void MergePostingsLists(int[] pointersToMerge, DataInputStream[] disArr, String word) throws IOException {
+
+    class OccurenceListPointer {
+      public int _docID;
+      public int _pointer;
+      public OccurenceListPointer(int docID, int pointer) {
+        this._docID = docID;
+        this._pointer = pointer;
+      }
+    }
+
+    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<>(new Comparator<OccurenceListPointer>() {
+      @Override
+      public int compare(OccurenceListPointer o1, OccurenceListPointer o2) {
+        if(o1._docID > o2._docID) {
+          return 1;
+        }
+        else if(o2._docID > o1._docID) {
+          return -1;
+        }
+        else {
+          return 0;
+        }
+      }
+    });
+
+    //TODO: delete all alphabet merged files before starting indexing
+
+    System.out.println("Merging posting lists for character: " + word.charAt(0));
+    DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
+    dataOutputStream.writeUTF(word);
+    int[] numberOfOccurences = new int[disArr.length];
+    int totalOccurences = 0;
+    for(int i = 0; i < pointersToMerge.length; i++) {
+      numberOfOccurences[pointersToMerge[i]] = disArr[pointersToMerge[i]].readInt();
+      totalOccurences += numberOfOccurences[pointersToMerge[i]];
+      occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
+    }
+
+    dataOutputStream.writeInt(totalOccurences);
+    while(!occurenceListPQ.isEmpty()) {
+      OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+      DataInputStream dis = disArr[occurenceListPointer._pointer];
+      int occurrences = dis.readInt();
+      dataOutputStream.writeInt(occurrences);
+      for(int i = 0; i < occurrences; i++) {
+        dataOutputStream.writeInt(dis.readInt());
+      }
+
+      numberOfOccurences[occurenceListPointer._pointer]--;
+      if(numberOfOccurences[occurenceListPointer._pointer] != 0) {
+        occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+      }
+    }
+
+    dataOutputStream.flush();
+    dataOutputStream.close();
   }
 
   private void writeDocumentData() throws IOException {
@@ -131,7 +265,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private  void loadCorpusStatistics() throws  FileNotFoundException, IOException{
     // Open the file
-    DataInputStream dis = new DataInputStream(new FileInputStream(_corpusStatics ));
+    DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_corpusStatics )));
 
     while (dis.available() > 0) {
       numberOfDocs = dis.readInt();
@@ -485,7 +619,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {
     String indexFileName = _indexFile + fileNumber.toString();
-    System.out.println("Printing index number " + fileNumber.toString());
+    System.out.println("Creating index number " + fileNumber.toString());
     DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(indexFileName, false)));
     List<String> sortedKeys=new ArrayList(_index.keySet());
     Collections.sort(sortedKeys);

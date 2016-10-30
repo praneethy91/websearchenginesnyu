@@ -103,7 +103,7 @@ public class WikiParser {
       String trimmedToken = token.trim();
       if(!trimmedToken.equals("") && trimmedToken.length() > 1) {
         String finalToken = Stemmer.StemToken(trimmedToken);
-        if(!finalToken.equals("")) {
+        if(!finalToken.equals("") && finalToken.matches("^[a-zA-Z0-9]*$")) {
           tokens.add(finalToken);
         }
       }

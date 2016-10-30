@@ -69,7 +69,7 @@ public class QueryPhrase extends Query {
       String trimmedToken = trimmedTokens[i].trim();
       if (!trimmedToken.equals("") && trimmedToken.length() > 1) {
         String finalToken = Stemmer.StemToken(trimmedToken);
-        if (!finalToken.equals("")) {
+        if (!finalToken.equals("") && finalToken.matches("^[a-zA-Z0-9]*$")) {
           if(!combine) {
             _tokens.add(new QueryToken(false, finalToken));
           }
