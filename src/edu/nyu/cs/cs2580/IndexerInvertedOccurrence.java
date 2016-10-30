@@ -13,6 +13,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   // This is where we will store the index file
   private final String _indexFile = _options._indexPrefix + "/invertedIndex.idx";
   private final String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
+  private final String _documentStatistics = _options._indexPrefix + "/documentStatistics.idx";
 
   //The wiki corpus directory from where we will load files for constructing index
   private final String _wikiCorpusDir = _options._corpusPrefix;
@@ -55,6 +56,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           docIndexed.setTitle(wikiParser.getTitle());
           docIndexed.setUrl(wikiParser.getUrl());
           _indexedDocs.add(docIndexed);
+
+          //Adding later as well formed documents only we should consider
+          docID++;
+          count++;
+          totalTokensPerDoc.add(tokens.size());
+          totalTokensInCorpus += tokens.size();
         }
         catch(IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
@@ -64,16 +71,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         // Updating postings lists
         for (int pos = 0 ; pos < tokens.size() ; pos++) {
           String token = tokens.elementAt(pos);
-
           insertToken(token, docID, pos,true);
-
         }
 
-        totalTokensPerDoc.insertElementAt(tokens.size(), docID);
-        totalTokensInCorpus += tokens.size();
 
-        docID++;
-        count++;
         if(count >= 2000){
           WriteToIndexFile(fileNumber);
           count = 0;
@@ -82,12 +83,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         }
 
       }
+
       numberOfDocs = docID;
       WriteToIndexFile(fileNumber);
       writeCorpusStatistics();
+      writeDocumentData();
       _index.clear();
 
-      //Finally writes to Index file.
       long endTime = System.currentTimeMillis();
       System.out.println("Seconds taken to run indexing is : " + (endTime - startTime)/1000);
 
@@ -96,6 +98,18 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     {
       e.printStackTrace();
     }
+  }
+
+  private void writeDocumentData() throws IOException {
+    DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_documentStatistics, false)));
+
+    for(DocumentIndexed doc : _indexedDocs){
+      dataOut.writeUTF(doc.getTitle());
+      dataOut.writeUTF(doc.getUrl());
+    }
+
+    dataOut.flush();
+    dataOut.close();
   }
 
   private void writeCorpusStatistics() throws  FileNotFoundException, IOException{
@@ -134,6 +148,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   }
 
+  private  void loadDocumentData() throws IOException{
+    // Open the file
+    DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_documentStatistics)));
+
+    for(int i = 0; i < numDocs(); i++) {
+      DocumentIndexed doc = new DocumentIndexed(i);
+      doc.setTitle(dis.readUTF());
+      doc.setUrl(dis.readUTF());
+      _indexedDocs.add(doc);
+    }
+
+    dis.close();
+  }
+
   private void insertToken(String token, int docID, int position, boolean isAbosolutePosition) {
 
     if (!_index.containsKey(token)) {
@@ -159,7 +187,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     _index.clear();
       // Open the file
-    DataInputStream dis = new DataInputStream(new FileInputStream(_indexFile + "1"));
+    DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "1")));
 
     while (dis.available() > 0) {
       String term = dis.readUTF();
@@ -176,6 +204,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     //Close the input stream
     dis.close();
     loadCorpusStatistics();
+    loadDocumentData();
     System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
   }
 
@@ -192,7 +221,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
 
     while ( docid < numberOfDocs) {
-      System.out.println(docid);
 
       Map<QueryToken, Integer> queryTokenCount = new HashMap<>();
 
@@ -218,13 +246,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       boolean flag = true;
 
       for (int i = 0; i < indexData.size() - 1; i++) {
-        if (indexData.get(i).docId != indexData.get(i + 1).docId) {
+        if (!indexData.get(i).docId.equals(indexData.get(i + 1).docId)) {
           flag = false;
         }
       }
 
       if (flag) {
-        DocumentIndexed documentIndexed = new DocumentIndexed(indexData.get(0).docId);
+        DocumentIndexed documentIndexed = _indexedDocs.get(indexData.get(0).docId);
         for (int i = 0; i < indexData.size(); i++) {
           documentIndexed.quertTokenCount.put(indexData.get(i).queryToken, indexData.get(i).count);
         }
@@ -269,9 +297,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     String[] tokens = phrase.getToken().split(" ");
 
     while(docId < numberOfDocs) {
-
-      if(docId == 1979)
-        System.out.println("phrase "+ docId);
       List<QueryTokenIndexData> indexData = new Vector<>();
 
 
@@ -330,9 +355,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   //returns next pos of phrase in docId after pos
   private  Integer nextPhraseInSameDoc(QueryToken phrase, Integer docId, int pos){
 
-    if(pos == 15231) {
-      System.out.println(pos);
-    }
     String[] tokens = phrase.getToken().split(" ");
     List<Integer> positions  = new Vector<>();
 
