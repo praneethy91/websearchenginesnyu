@@ -169,7 +169,7 @@ class IndexerFullScan extends Indexer implements Serializable {
    * @throws IOException, ClassNotFoundException
    */
   @Override
-  public void loadIndex() throws IOException, ClassNotFoundException {
+  public void loadIndex(Query query) throws IOException, ClassNotFoundException {
     String indexFile = _options._indexPrefix + "/corpus.idx";
     System.out.println("Load index from: " + indexFile);
 
