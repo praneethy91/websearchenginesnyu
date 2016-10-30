@@ -19,8 +19,11 @@ public class RankerFavorite extends Ranker {
     System.out.println("Using Ranker: " + this.getClass().getSimpleName());
   }
 
+  private HashMap<QueryToken, Double> tokenFrequencyCache = null;
+
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+    tokenFrequencyCache = new HashMap<>();
     Queue<ScoredDocument> rankQueue = new PriorityQueue<ScoredDocument>();
     Document doc = null;
     int docid = -1;
@@ -57,10 +60,20 @@ public class RankerFavorite extends Ranker {
       double queryTokenFrequency = queryTokenEntry.getValue();
 
       // TODO: Need to get the frequency of the token (should support free words and phrases both) in the corpus
-      double frequencyOfTokenInCorpus = _indexer.getQueryTokenCountInCorpus(queryTokenEntry.getKey());
+      double frequencyOfTokenInCorpus = getQueryTokenCountInCorpus(queryTokenEntry.getKey());
       score = score * ((1 - lambda)*queryTokenFrequency/docTokenCount) + (lambda * frequencyOfTokenInCorpus / totalTermFrequencyInCorpus);
     }
 
     return new ScoredDocument(docIndexed, score);
+  }
+
+  private double getQueryTokenCountInCorpus(QueryToken queryToken) {
+    if(!tokenFrequencyCache.containsKey(queryToken)) {
+      tokenFrequencyCache.put(queryToken, (double)_indexer.getQueryTokenCountInCorpus(queryToken));
+      return tokenFrequencyCache.get(queryToken);
+    }
+    else {
+      return tokenFrequencyCache.get(queryToken);
+    }
   }
 }
