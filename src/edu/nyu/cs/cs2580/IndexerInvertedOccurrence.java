@@ -57,6 +57,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           docIndexed.setUrl(wikiParser.getUrl());
           _indexedDocs.add(docIndexed);
 
+          // Updating postings lists
+          for (int pos = 0 ; pos < tokens.size() ; pos++) {
+            String token = tokens.elementAt(pos);
+            insertToken(token, docID, pos,true);
+          }
+
           //Adding later as well formed documents only we should consider
           docID++;
           count++;
@@ -65,15 +71,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         }
         catch(IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
-          tokens = new Vector<>();
         }
-
-        // Updating postings lists
-        for (int pos = 0 ; pos < tokens.size() ; pos++) {
-          String token = tokens.elementAt(pos);
-          insertToken(token, docID, pos,true);
-        }
-
 
         if(count >= 2000){
           WriteToIndexFile(fileNumber);

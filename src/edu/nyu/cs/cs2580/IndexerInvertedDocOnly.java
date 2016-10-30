@@ -51,21 +51,21 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
           docIndexed.setTitle(wikiParser.getTitle());
           docIndexed.setUrl(wikiParser.getUrl());
           _indexedDocs.add(docIndexed);
+
+          // Updating postings lists
+          for (String token : tokens) {
+            if (!_index.containsKey(token)) {
+              _index.put(token, new Vector<>());
+              _index.get(token).add(docID);
+            } else {
+              _index.get(token).add(docID);
+            }
+          }
+
+          docID++;
         }
         catch(IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
-          tokens = new Vector<>();
-          docID++;
-        }
-
-        // Updating postings lists
-        for (String token : tokens) {
-          if (!_index.containsKey(token)) {
-            _index.put(token, new Vector<>());
-            _index.get(token).add(docID);
-          } else {
-            _index.get(token).add(docID);
-          }
         }
       }
 
