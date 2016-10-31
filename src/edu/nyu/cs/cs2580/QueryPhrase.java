@@ -80,7 +80,12 @@ public class QueryPhrase extends Query {
       }
     }
     if(combine) {
-      _tokens.add(new QueryToken(true, String.join(" ", trimmedTokens)));
+      StringBuilder sb = new StringBuilder();
+      for(String trimmedToken: trimmedTokens) {
+        sb.append(trimmedToken).append(" ");
+      }
+      sb.setLength(sb.length() - 1);
+      _tokens.add(new QueryToken(true, sb.toString()));
     }
   }
 

@@ -102,20 +102,20 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       }
     }
 
-    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<>(new Comparator<OccurenceListPointer>() {
+    class DocIDComparator implements Comparator<OccurenceListPointer> {
       @Override
       public int compare(OccurenceListPointer o1, OccurenceListPointer o2) {
-        if(o1._docID > o2._docID) {
+        if (o1._docID > o2._docID) {
           return 1;
-        }
-        else if(o2._docID > o1._docID) {
+        } else if (o2._docID > o1._docID) {
           return -1;
-        }
-        else {
+        } else {
           return 0;
         }
       }
-    });
+    }
+
+    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<OccurenceListPointer>(50, new DocIDComparator());
 
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_options._indexPrefix + "/invertedCompressedIndex.idx" + "_" + word.charAt(0), true)));
     dataOutputStream.writeUTF(word);

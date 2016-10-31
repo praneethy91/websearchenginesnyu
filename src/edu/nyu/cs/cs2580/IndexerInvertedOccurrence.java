@@ -41,6 +41,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     File dir = new File(_wikiCorpusDir);
     File[] directoryListing = dir.listFiles();
+    if(directoryListing == null) {
+      System.out.println("Specify the corpus directory with wiki files/symbolic link in engine.conf.");
+      return;
+    }
     WikiParser wikiParser = null;
     int docID = 0;
     Vector<String> tokens;
@@ -141,15 +145,18 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     }
 
-    System.out.println("Merging the index files...");
+    class StringComparator implements Comparator<PostingListPointer> {
 
-    DataInputStream[] disArr = new DataInputStream[fileNumber];
-    PriorityQueue<PostingListPointer> postingListPQ = new PriorityQueue<>(new Comparator<PostingListPointer>() {
       @Override
       public int compare(PostingListPointer o1, PostingListPointer o2) {
         return o1._word.compareTo(o2._word);
       }
-    });
+    }
+
+    System.out.println("Merging the index files...");
+
+    DataInputStream[] disArr = new DataInputStream[fileNumber];
+    PriorityQueue<PostingListPointer> postingListPQ = new PriorityQueue<PostingListPointer>(50, new StringComparator());
 
     for(int i = 0; i < fileNumber; i++) {
       disArr[i] = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + (i + 1))));
@@ -190,20 +197,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     }
 
-    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<>(new Comparator<OccurenceListPointer>() {
+    class DocIDComparator implements Comparator<OccurenceListPointer> {
       @Override
       public int compare(OccurenceListPointer o1, OccurenceListPointer o2) {
-        if(o1._docID > o2._docID) {
+        if (o1._docID > o2._docID) {
           return 1;
-        }
-        else if(o2._docID > o1._docID) {
+        } else if (o2._docID > o1._docID) {
           return -1;
-        }
-        else {
+        } else {
           return 0;
         }
       }
-    });
+    }
+
+    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<OccurenceListPointer>(50, new DocIDComparator());
 
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
     dataOutputStream.writeUTF(word);
@@ -302,7 +309,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> index ) {
 
     if (!index.containsKey(token)) {
-      index.put(token, new LinkedHashMap<>());
+      index.put(token, new LinkedHashMap<Integer, DocumentWordOccurrence>());
       index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
     } else {
         if(!index.get(token).containsKey(docID)){
@@ -321,7 +328,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   protected void insertToken(String token, int docID, int position, boolean isAbsolutePosition, String s) {
 
     if(!distributedIndex.containsKey(s)){
-      distributedIndex.put(s, new HashMap<>());
+      distributedIndex.put(s, new HashMap<String, LinkedHashMap<Integer,DocumentWordOccurrence>>());
     }
 
     insertToken(token,docID, position,isAbsolutePosition, distributedIndex.get(s));

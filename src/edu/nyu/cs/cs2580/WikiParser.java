@@ -1,8 +1,6 @@
 package edu.nyu.cs.cs2580;
-import com.sun.javaws.exceptions.InvalidArgumentException;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
 
 import java.io.*;
 import java.util.Collection;
@@ -45,7 +43,7 @@ public class WikiParser {
   private String _title;
 
   public WikiParser(File htmlDocument) throws IOException, IllegalArgumentException {
-    _htmlDocument = Jsoup.parse(htmlDocument, "UTF-8");
+    _htmlDocument = org.jsoup.Jsoup.parse(htmlDocument, "UTF-8");
     _title = _htmlDocument.title();
     if (_title == null || _title.equals("")) {
 

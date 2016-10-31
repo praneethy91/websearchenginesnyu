@@ -44,6 +44,10 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
 
     File dir = new File(_wikiCorpusDir);
     File[] directoryListing = dir.listFiles();
+    if(directoryListing == null) {
+      System.out.println("Specify the corpus directory with wiki files/symbolic link in engine.conf.");
+      return;
+    }
     WikiParser wikiParser = null;
     int docID = 0;
     Set<String> tokens;
@@ -79,7 +83,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
           // Updating postings lists
           for (String token : tokens) {
             if (!_index.containsKey(token)) {
-              _index.put(token, new Vector<>());
+              _index.put(token, new Vector<Integer>());
               _index.get(token).add(docID);
             } else {
               _index.get(token).add(docID);
@@ -286,7 +290,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
   private void insertToken(int docID, String s) {
 
     if (!distributedIndex.containsKey(s)) {
-      distributedIndex.put(s, new Vector<>());
+      distributedIndex.put(s, new Vector<Integer>());
     }
 
     distributedIndex.get(s).add(docID);
@@ -392,15 +396,18 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
       }
     }
 
-    System.out.println("Merging the index files...");
+    class StringComparator implements Comparator<PostingListPointer> {
 
-    DataInputStream[] disArr = new DataInputStream[fileNumber];
-    PriorityQueue<PostingListPointer> postingListPQ = new PriorityQueue<>(new Comparator<PostingListPointer>() {
       @Override
       public int compare(PostingListPointer o1, PostingListPointer o2) {
         return o1._word.compareTo(o2._word);
       }
-    });
+    }
+
+    System.out.println("Merging the index files...");
+
+    DataInputStream[] disArr = new DataInputStream[fileNumber];
+    PriorityQueue<PostingListPointer> postingListPQ = new PriorityQueue<PostingListPointer>(50, new StringComparator());
 
     for (int i = 0; i < fileNumber; i++) {
       disArr[i] = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + (i + 1))));
@@ -442,7 +449,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
       }
     }
 
-    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<>(new Comparator<OccurenceListPointer>() {
+    class DocIDComparator implements Comparator<OccurenceListPointer> {
       @Override
       public int compare(OccurenceListPointer o1, OccurenceListPointer o2) {
         if (o1._docID > o2._docID) {
@@ -453,7 +460,9 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
           return 0;
         }
       }
-    });
+    }
+
+    PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<OccurenceListPointer> (50, new DocIDComparator());
 
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
     dataOutputStream.writeUTF(word);
