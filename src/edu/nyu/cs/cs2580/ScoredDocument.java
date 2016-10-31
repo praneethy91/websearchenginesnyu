@@ -9,10 +9,12 @@ package edu.nyu.cs.cs2580;
 class ScoredDocument implements Comparable<ScoredDocument> {
   private Document _doc;
   private double _score;
+  private String _url;
 
   public ScoredDocument(Document doc, double score) {
     _doc = doc;
     _score = score;
+    _url = doc.getUrl();
   }
 
   public String asTextResult() {
@@ -38,6 +40,10 @@ class ScoredDocument implements Comparable<ScoredDocument> {
 
   public int getID() {
     return _doc._docid;
+  }
+
+  public String getUrl() {
+    return _url;
   }
 
   /**
