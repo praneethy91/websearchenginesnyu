@@ -22,6 +22,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
 
+  //Corpus statistics
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
   int totalTokensInCorpus = 0;
   int numberOfDocs = 0;
@@ -346,7 +347,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   public void loadIndex(Set<String> queryTokens) throws IOException{
 
-    long startTime = System.currentTimeMillis();
     _index.clear();
     distributedIndex.clear();
 
@@ -379,7 +379,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     loadCorpusStatistics();
     loadDocumentData();
-    System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
   }
   @Override
   public Document getDoc(int docid) {
