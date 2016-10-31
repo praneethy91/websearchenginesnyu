@@ -1,9 +1,7 @@
 package edu.nyu.cs.cs2580;
 
-import java.util.Collections;
-import java.util.PriorityQueue;
-import java.util.Queue;
-import java.util.Vector;
+import java.io.IOException;
+import java.util.*;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -23,9 +21,18 @@ public class RankerConjunctive extends Ranker {
 
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
-    Queue<ScoredDocument> rankQueue = new PriorityQueue<ScoredDocument>();
-    Document doc = null;
+    Queue<ScoredDocument> rankQueue = new PriorityQueue<>();
+    Document doc;
     int docid = -1;
+
+    try {
+      _indexer.loadIndex(query);
+    } catch (IOException e) {
+      e.printStackTrace();
+    } catch (ClassNotFoundException e) {
+      e.printStackTrace();
+    }
+
     while ((doc = _indexer.nextDoc(query, docid)) != null) {
       rankQueue.add(new ScoredDocument(doc, 1.0));
       if (rankQueue.size() > numResults) {
