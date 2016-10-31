@@ -24,10 +24,66 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
   @Override
   public void loadIndex(Query query) throws IOException {
-    constructDecompressedFiles();
-    super.loadIndex(query);
+
+    if(query == null)
+      return;
+    Set<String> wordsSet = new HashSet<>();
+
+
+    for(QueryToken queryToken : query._tokens){
+      if(queryToken.isPhrase()){
+        for(String querySubTokens : queryToken.getToken().split(" ")){
+          wordsSet.add(querySubTokens);
+        }
+      }else {
+        wordsSet.add(queryToken.getToken());
+      }
+    }
+
+    loadCompressedIndex(wordsSet);
+
   }
 
+
+  public void loadCompressedIndex(Set<String> queryTokens) throws IOException{
+
+    long startTime = System.currentTimeMillis();
+    _index.clear();
+    distributedIndex.clear();
+
+    for(String token : queryTokens) {
+      // Open the file
+      DataInputStream disComp = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile.substring(0,11) + "compressed_"+_indexFile.substring(11) + "_" + token.charAt(0))));
+
+      while (disComp.available() > 0) {
+
+        String term = disComp.readUTF();
+        boolean isQueryToken = term.equals(token) ? true : false;
+        int numOfDocs = getNextInt(disComp);
+        for (int i = 0; i < numOfDocs; i++) {
+          int docId = getNextInt(disComp);
+          int numOfOcc = getNextInt(disComp);
+          for (int j = 0; j < numOfOcc; j++) {
+            int place = getNextInt(disComp);
+            if(isQueryToken){
+              insertToken(term, docId,place,false,token);
+            }
+
+          }
+
+        }
+//        if(isQueryToken) {
+//          break;
+//        }
+      }
+      //Close the input stream
+      disComp.close();
+    }
+
+    loadCorpusStatistics();
+    loadDocumentData();
+    System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
+  }
 
 
   public void constructCompressedIndex() throws IOException {
@@ -200,7 +256,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
   @Override
   public int numDocs() {
-    return 0;
+    return super.numDocs();
   }
 
   @Override
@@ -211,7 +267,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
   @Override
   public Document getDoc(int docid) {
-    return null;
+    return super.getDoc(docid);
   }
 
   /**
@@ -226,17 +282,17 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
   @Override
   public int corpusDocFrequencyByTerm(String term) {
-    return 0;
+    return super.corpusDocFrequencyByTerm(term);
   }
 
   @Override
   public int corpusTermFrequency(String term) {
-    return 0;
+    return super.corpusTermFrequency(term);
   }
 
   @Override
   public int getTokensPerDoc(int docId) {
-    return 0;
+    return super.getTokensPerDoc(docId);
   }
 
   /**
@@ -244,11 +300,11 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
    */
   @Override
   public int documentTermFrequency(String term, int docid) {
-    return 0;
+    return super.documentTermFrequency(term,docid);
   }
 
   @Override
   public int getQueryTokenCountInCorpus(QueryToken token) {
-    return 0;
+    return super.getQueryTokenCountInCorpus(token);
   }
 }
