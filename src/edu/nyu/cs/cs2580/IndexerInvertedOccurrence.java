@@ -49,7 +49,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     File indexDir = new File(_options._indexPrefix);
     File[] foundFiles = indexDir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
-        return name.startsWith("invertedOccurrenceIndex");
+        return true;
       }
     });
 
