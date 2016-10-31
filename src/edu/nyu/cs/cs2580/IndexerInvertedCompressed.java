@@ -60,11 +60,17 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
         String term = disComp.readUTF();
         boolean isQueryToken = term.equals(token) ? true : false;
         int numOfDocs = getNextInt(disComp);
+        int sumTillPrevDocId = 0;
+
         for (int i = 0; i < numOfDocs; i++) {
-          int docId = getNextInt(disComp);
+          int docId = sumTillPrevDocId + getNextInt(disComp);
+          sumTillPrevDocId = docId;
+
           int numOfOcc = getNextInt(disComp);
+          int sumTillPrevOcc = 0;
           for (int j = 0; j < numOfOcc; j++) {
-            int place = getNextInt(disComp);
+            int place = sumTillPrevOcc + getNextInt(disComp);
+            sumTillPrevOcc = place;
             if(isQueryToken){
               insertToken(term, docId,place,false,token);
             }
@@ -72,9 +78,9 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
           }
 
         }
-//        if(isQueryToken) {
-//          break;
-//        }
+        if(isQueryToken) {
+          break;
+        }
       }
       //Close the input stream
       disComp.close();
@@ -117,18 +123,22 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
             int numberOfPostings = dis.readInt();
 
             dataOut.write(Get(numberOfPostings));
-
+            int prevDocId = 0;
             for (int i = 0; i < numberOfPostings; i++) {
               int docID = dis.readInt();
-              dataOut.write(Get(docID));
-
+              int tempDocId = docID;
+              dataOut.write(Get(docID - prevDocId));
+              prevDocId = tempDocId;
 
               int numberOfOccurrencesInThisDoc = dis.readInt();
               dataOut.write(Get(numberOfOccurrencesInThisDoc));
+              int prevPosition = 0;
 
               for (int j = 0; j < numberOfOccurrencesInThisDoc; j++) {
                 int position = dis.readInt();
-                dataOut.write(Get(position));
+                int tempPosition = position;
+                dataOut.write(Get(position - prevPosition));
+                prevPosition = tempPosition;
               }
             }
           }
@@ -168,73 +178,6 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
     return arr;
 
   }
-
-
-  public void constructDecompressedFiles() throws IOException {
-
-    try {
-      File dir = new File(_options._indexPrefix);
-      File[] decompDirectory = dir.listFiles();
-
-      for (File file : decompDirectory) {
-        if (file.isFile()) {
-          if (file.getName().contains("compressed_")) {
-
-            DataInputStream disComp = new DataInputStream(new BufferedInputStream(new FileInputStream(file.getAbsolutePath())));
-
-            File decompFile = new File(_options._indexPrefix + "/"+file.getName().substring(11));
-            DataOutputStream decompDataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(decompFile, true)));
-
-
-            if (decompFile.exists())
-              decompFile.delete();
-
-            decompFile.createNewFile();
-
-
-            while (disComp.available() > 0) {
-
-              String term = disComp.readUTF();
-              decompDataOut.writeUTF(term);
-
-              int numOfDocs = getNextInt(disComp);
-              decompDataOut.writeInt(numOfDocs);
-
-              for (int i = 0; i < numOfDocs; i++) {
-                int docId = getNextInt(disComp);
-                decompDataOut.writeInt(docId);
-
-                int numOfOcc = getNextInt(disComp);
-                decompDataOut.writeInt(numOfOcc);
-
-                for (int j = 0; j < numOfOcc; j++) {
-
-                  int place = getNextInt(disComp);
-                  decompDataOut.writeInt(place);
-                }
-
-              }
-
-            }
-            //Close the input stream
-            decompDataOut.flush();
-            decompDataOut.close();
-            disComp.close();
-            //file.delete();
-          }
-
-        }
-
-      }
-    }catch (Exception e){
-      e.printStackTrace();
-    }
-
-  }
-
-
-
-
 
   private static int getNextInt(DataInputStream dis) throws IOException {
     int partialResult = 0;
