@@ -12,15 +12,15 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   // This is where we will store the index file
-  private final String _indexFile = _options._indexPrefix + "/invertedOccurrenceIndex.idx";
+  protected String _indexFile = _options._indexPrefix + "/invertedOccurrenceIndex.idx";
   private final String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
   private final String _documentStatistics = _options._indexPrefix + "/documentStatistics.idx";
 
   //The wiki corpus directory from where we will load files for constructing index
   private final String _wikiCorpusDir = _options._corpusPrefix;
-  private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
+  protected Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
 
-  private Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
+  protected Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
 
   //Corpus statistics
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
@@ -179,7 +179,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
   }
 
-  private void MergePostingsLists(int[] pointersToMerge, int endIndexPointersToMerge, DataInputStream[] disArr, String word) throws IOException {
+  void MergePostingsLists(int[] pointersToMerge, int endIndexPointersToMerge, DataInputStream[] disArr, String word) throws IOException {
 
     class OccurenceListPointer {
       public int _docID;
@@ -267,7 +267,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   }
 
-  private  void loadCorpusStatistics() throws IOException{
+  protected void loadCorpusStatistics() throws IOException{
     // Open the file
     DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_corpusStatics )));
 
@@ -285,7 +285,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   }
 
-  private  void loadDocumentData() throws IOException{
+  protected void loadDocumentData() throws IOException{
     // Open the file
     DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_documentStatistics)));
 
@@ -318,7 +318,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
 
-  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, String s) {
+  protected void insertToken(String token, int docID, int position, boolean isAbsolutePosition, String s) {
 
     if(!distributedIndex.containsKey(s)){
       distributedIndex.put(s, new HashMap<>());
@@ -610,7 +610,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
 
   @Override
-  public final int totalTermFrequency() {
+  public int totalTermFrequency() {
     return totalTokensInCorpus;
   }
 
