@@ -53,11 +53,7 @@ public class SearchEngine {
     
     // The specific Indexer to be used.
     public String _indexerType = null;
-    
-    // The beta parameters for linear ranking model, used inside RankerLinear.
-    private static final String[] BETA_PARAMS = {
-      "beta_cosine", "beta_ql", "beta_phrase", "beta_numviews"
-    };
+
     public Map<String, Float> _betaValues;
 
     // Additional group specific configuration can be added below.
@@ -95,11 +91,6 @@ public class SearchEngine {
       // Populate specific options.
       _indexerType = options.get("indexer_type");
       Check(_indexerType != null, "Missing option: indexer_type!");
-      
-      _betaValues = new HashMap<String, Float>();
-      for (String s : BETA_PARAMS) {
-        _betaValues.put(s, Float.parseFloat(options.get(s)));
-      }
     }
   }
   public static Options OPTIONS = null;
