@@ -115,7 +115,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       }
     });
 
-    DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
+    DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_options._indexPrefix + "/invertedCompressedIndex.idx" + "_" + word.charAt(0), true)));
     dataOutputStream.writeUTF(word);
     int[] numberOfOccurences = new int[disArr.length];
     int totalOccurences = 0;
