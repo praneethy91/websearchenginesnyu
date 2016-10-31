@@ -125,7 +125,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
     }
 
-    dataOutputStream.writeInt(totalOccurences);
+    dataOutputStream.write(Get(totalOccurences));
     int prevDocID = 0;
     while(!occurenceListPQ.isEmpty()) {
       OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
@@ -134,7 +134,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       prevDocID = currDocID;
       DataInputStream dis = disArr[occurenceListPointer._pointer];
       int occurrences = dis.readInt();
-      dataOutputStream.writeInt(occurrences);
+      dataOutputStream.write(Get(occurrences));
       int prevPosition = 0;
       for(int i = 0; i < occurrences; i++) {
         int currPosition = dis.readInt();
