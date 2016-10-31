@@ -330,6 +330,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   public void loadIndex(Query query) throws IOException {
 
     Set<String> wordsSet = new HashSet<>();
+
     for(QueryToken queryToken : query._tokens){
       if(queryToken.isPhrase()){
         for(String querySubTokens : queryToken.getToken().split(" ")){
@@ -341,6 +342,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     loadIndex(wordsSet);
+
   }
 
 
@@ -611,7 +613,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
 
   @Override
-  public final int totalTermFrequency() {
+  public  int totalTermFrequency() {
     return totalTokensInCorpus;
   }
 
@@ -669,14 +671,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     Integer docId;
   }
 
-  public class DocumentWordOccurrence  implements Serializable {
-    Integer docId;
-    ArrayList<Integer> occurrence;
 
-    DocumentWordOccurrence(Integer docId, int pos){
-      this.docId = docId;
-      this.occurrence = new ArrayList<>();
-      this.occurrence.add(pos);
-    }
-  }
+
+//    private void addAbsolutePosition(Integer pos){
+//        Integer currentPostition = 0;
+////      for(int i = 0 ; i < occurrence.size() ; i++){
+////        currentPostition =currentPostition + occurrence.get(i);
+////      }
+//      this.occurrence.add(pos - currentPostition);
+//    }
+//
+//    private void addRelativePosition(Integer pos){
+//      this.occurrence.add(pos);
+//    }
+
 }
+
+

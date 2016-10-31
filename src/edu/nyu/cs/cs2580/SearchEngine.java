@@ -167,7 +167,7 @@ public class SearchEngine {
     Check(indexer != null,
         "Indexer " + SearchEngine.OPTIONS._indexerType + " not found!");
     QueryHandler handler = new QueryHandler(SearchEngine.OPTIONS, indexer);
-
+    indexer.loadIndex(null);
     // Establish the serving environment
     InetSocketAddress addr = new InetSocketAddress(SearchEngine.PORT);
     HttpServer server = HttpServer.create(addr, -1);
