@@ -69,31 +69,33 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
     try {
       for (File wikiFile : directoryListing) {
         try {
+          if(wikiFile.isDirectory() == false) {
 
-          //Parsing and extracting token;
-          wikiParser = new WikiParser(wikiFile);
-          tokens = wikiParser.ParseTokensNoDuplicates();
+            //Parsing and extracting token;
+            wikiParser = new WikiParser(wikiFile);
+            tokens = wikiParser.ParseTokensNoDuplicates();
 
-          // Populating and adding DocumentIndexed for this document.
-          DocumentIndexed docIndexed = new DocumentIndexed(docID);
-          docIndexed.setTitle(wikiParser.getTitle());
-          docIndexed.setUrl(wikiParser.getUrl());
-          _indexedDocs.add(docIndexed);
+            // Populating and adding DocumentIndexed for this document.
+            DocumentIndexed docIndexed = new DocumentIndexed(docID);
+            docIndexed.setTitle(wikiParser.getTitle());
+            docIndexed.setUrl(wikiParser.getUrl());
+            _indexedDocs.add(docIndexed);
 
-          // Updating postings lists
-          for (String token : tokens) {
-            if (!_index.containsKey(token)) {
-              _index.put(token, new Vector<Integer>());
-              _index.get(token).add(docID);
-            } else {
-              _index.get(token).add(docID);
+            // Updating postings lists
+            for (String token : tokens) {
+              if (!_index.containsKey(token)) {
+                _index.put(token, new Vector<Integer>());
+                _index.get(token).add(docID);
+              } else {
+                _index.get(token).add(docID);
+              }
             }
-          }
 
-          docID++;
-          count++;
-          totalTokensPerDoc.add(tokens.size());
-          totalTokensInCorpus += tokens.size();
+            docID++;
+            count++;
+            totalTokensPerDoc.add(tokens.size());
+            totalTokensInCorpus += tokens.size();
+          }
         } catch (IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
         }

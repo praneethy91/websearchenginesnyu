@@ -67,6 +67,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       for (File wikiFile : directoryListing) {
         try {
 
+          if(wikiFile.isDirectory() == false) {
+
           //Parsing and extracting token;
           wikiParser = new WikiParser(wikiFile);
           tokens = wikiParser.ParseTokens();
@@ -82,7 +84,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           // Updating postings lists
           for (int pos = 0; pos < tokens.size(); pos++) {
             String token = tokens.elementAt(pos);
-            insertToken(token, docID, pos,true,_index);
+            insertToken(token, docID, pos, true, _index);
           }
 
           //Adding later as well formed documents only we should consider
@@ -90,6 +92,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           count++;
           totalTokensPerDoc.add(tokens.size());
           totalTokensInCorpus += tokens.size();
+        }
         }
         catch (IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
