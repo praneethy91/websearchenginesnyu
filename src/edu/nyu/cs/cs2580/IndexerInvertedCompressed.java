@@ -51,7 +51,9 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
     for(String token : queryTokens) {
       // Open the file
-      DataInputStream disComp = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_" + token.charAt(0))));
+      DataInputStream disComp = new DataInputStream(
+              new BufferedInputStream(
+                      new FileInputStream(_options._indexPrefix + "/invertedCompressedIndex.idx" + "_" + token.charAt(0))));
 
       while (disComp.available() > 0) {
 
