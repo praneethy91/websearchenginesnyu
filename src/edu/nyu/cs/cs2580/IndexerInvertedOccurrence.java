@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -19,7 +20,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   private final String _wikiCorpusDir = _options._corpusPrefix;
   private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
 
-  private Map<Character,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
+  private Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
 
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
   int totalTokensInCorpus = 0;
@@ -316,7 +317,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
 
-  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, char s) {
+  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, String s) {
 
     if(!distributedIndex.containsKey(s)){
       distributedIndex.put(s, new HashMap<>());
@@ -328,41 +329,48 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public void loadIndex(Query query) throws IOException {
 
-    Set<Character> firstCharacters = new HashSet<>();
+    Set<String> wordsSet = new HashSet<>();
     for(QueryToken queryToken : query._tokens){
       if(queryToken.isPhrase()){
         for(String querySubTokens : queryToken.getToken().split(" ")){
-          firstCharacters.add(querySubTokens.charAt(0));
+          wordsSet.add(querySubTokens);
         }
       }else {
-        firstCharacters.add(queryToken.getToken().charAt(0));
+        wordsSet.add(queryToken.getToken());
       }
     }
 
-    loadIndex(firstCharacters.toArray(new Character[firstCharacters.size()]));
+    loadIndex(wordsSet);
   }
 
 
-  public void loadIndex(Character[] queryCharacters) throws IOException{
+  public void loadIndex(Set<String> queryTokens) throws IOException{
 
     long startTime = System.currentTimeMillis();
     _index.clear();
     distributedIndex.clear();
 
-    for(char s : queryCharacters) {
+    for(String token : queryTokens) {
       // Open the file
-      DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_" + s)));
+      DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_" + token.charAt(0))));
 
       while (dis.available() > 0) {
         String term = dis.readUTF();
+        boolean isQueryToken = term.equals(token) ? true : false;
         int numberOfPostings = dis.readInt();
         for (int i = 0; i < numberOfPostings; i++) {
           int docID = dis.readInt();
           int numberOfOccurencesInThisDoc = dis.readInt();
           for (int j = 0; j < numberOfOccurencesInThisDoc; j++) {
             int position = dis.readInt();
-            insertToken(term, docID, position, false, s);
+            if(isQueryToken) {
+              insertToken(term, docID, position, false, token);
+            }
           }
+        }
+
+        if(isQueryToken) {
+          break;
         }
       }
       //Close the input stream
@@ -445,10 +453,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
   private QueryTokenIndexData nextDocForWord(QueryToken word, int docId){
-
-    if(!distributedIndex.get(word.getToken().charAt(0)).containsKey(word.getToken()))
-        return null;
-    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = distributedIndex.get(word.getToken().charAt(0)).get(word.getToken());
+    if(!distributedIndex.containsKey(word.getToken())) {
+      return null;
+    }
+    else if(!distributedIndex.get(word.getToken()).containsKey(word.getToken())) {
+      return null;
+    }
+    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = distributedIndex.get(word.getToken()).get(word.getToken());
 
     Set<Integer> keys = wordMap.keySet();
 
@@ -561,7 +572,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private int nextWordPostionInSameDoc(String word, Integer docId, Integer pos){
 
-    List<Integer> occurrence = distributedIndex.get(word.charAt(0)).get(word).get(docId).occurrence;
+    List<Integer> occurrence = distributedIndex.get(word).get(word).get(docId).occurrence;
 
     for(int i = 0 ; i < occurrence.size() ; i++){
       if(occurrence.get(i) > pos){
