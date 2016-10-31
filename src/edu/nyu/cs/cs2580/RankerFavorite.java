@@ -20,7 +20,7 @@ public class RankerFavorite extends Ranker {
     System.out.println("Using Ranker: " + this.getClass().getSimpleName());
   }
 
-  private HashMap<QueryToken, Double> tokenFrequencyCache = null;
+  private HashMap<String, Double> tokenFrequencyCache = null;
 
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
@@ -78,12 +78,12 @@ public class RankerFavorite extends Ranker {
   }
 
   private double getQueryTokenCountInCorpus(QueryToken queryToken) {
-    if(!tokenFrequencyCache.containsKey(queryToken)) {
-      tokenFrequencyCache.put(queryToken, (double)_indexer.getQueryTokenCountInCorpus(queryToken));
-      return tokenFrequencyCache.get(queryToken);
+    if(!tokenFrequencyCache.containsKey(queryToken.getToken())) {
+      tokenFrequencyCache.put(queryToken.getToken(), (double)_indexer.getQueryTokenCountInCorpus(queryToken));
+      return tokenFrequencyCache.get(queryToken.getToken());
     }
     else {
-      return tokenFrequencyCache.get(queryToken);
+      return tokenFrequencyCache.get(queryToken.getToken());
     }
   }
 }

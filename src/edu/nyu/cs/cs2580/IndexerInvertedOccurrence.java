@@ -19,7 +19,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   private final String _wikiCorpusDir = _options._corpusPrefix;
   private Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
 
-  private Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
+  private Map<Character,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
 
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
   int totalTokensInCorpus = 0;
@@ -316,7 +316,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
 
-  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, String s) {
+  private void insertToken(String token, int docID, int position, boolean isAbsolutePosition, char s) {
 
     if(!distributedIndex.containsKey(s)){
       distributedIndex.put(s, new HashMap<>());
@@ -328,28 +328,28 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public void loadIndex(Query query) throws IOException {
 
-    Set<String> firstCharacters = new HashSet<>();
+    Set<Character> firstCharacters = new HashSet<>();
     for(QueryToken queryToken : query._tokens){
       if(queryToken.isPhrase()){
         for(String querySubTokens : queryToken.getToken().split(" ")){
-          firstCharacters.add(querySubTokens.substring(0,1));
+          firstCharacters.add(querySubTokens.charAt(0));
         }
       }else {
-        firstCharacters.add(queryToken.getToken().substring(0,1));
+        firstCharacters.add(queryToken.getToken().charAt(0));
       }
     }
 
-    loadIndex(firstCharacters.toArray(new String[firstCharacters.size()]));
-
+    loadIndex(firstCharacters.toArray(new Character[firstCharacters.size()]));
   }
 
 
-  public void loadIndex(String[] queryCharacters) throws IOException{
+  public void loadIndex(Character[] queryCharacters) throws IOException{
 
     long startTime = System.currentTimeMillis();
+    _index.clear();
+    distributedIndex.clear();
 
-    for(String s : queryCharacters) {
-      _index.clear();
+    for(char s : queryCharacters) {
       // Open the file
       DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_indexFile + "_" + s)));
 
@@ -368,12 +368,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       //Close the input stream
       dis.close();
     }
-        loadCorpusStatistics();
-        loadDocumentData();
+
+    loadCorpusStatistics();
+    loadDocumentData();
     System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
-
-
-
   }
   @Override
   public Document getDoc(int docid) {
@@ -419,11 +417,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
       if (flag) {
         DocumentIndexed documentIndexed = _indexedDocs.get(indexData.get(0).docId);
-        for (int i = 0; i < indexData.size(); i++) {
-          documentIndexed.quertTokenCount.put(indexData.get(i).queryToken, indexData.get(i).count);
+        DocumentIndexed documentIndexedClone = null;
+        try {
+          documentIndexedClone = (DocumentIndexed) documentIndexed.clone();
         }
-        documentIndexed.totalNumberOfTokensInDoc = totalTokensPerDoc.get(documentIndexed._docid);
-        return documentIndexed;
+        catch(Exception e)
+        {
+          e.printStackTrace();
+        }
+        for (int i = 0; i < indexData.size(); i++) {
+          documentIndexedClone.quertTokenCount.put(indexData.get(i).queryToken, indexData.get(i).count);
+        }
+        documentIndexedClone.totalNumberOfTokensInDoc = totalTokensPerDoc.get(documentIndexed._docid);
+        return documentIndexedClone;
       }
 
       int maxDocId = -1;
@@ -440,9 +446,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private QueryTokenIndexData nextDocForWord(QueryToken word, int docId){
 
-    if(!distributedIndex.get(word.getToken().substring(0,1)).containsKey(word.getToken()))
+    if(!distributedIndex.get(word.getToken().charAt(0)).containsKey(word.getToken()))
         return null;
-    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = distributedIndex.get(word.getToken().substring(0,1)).get(word.getToken());
+    LinkedHashMap<Integer,DocumentWordOccurrence> wordMap = distributedIndex.get(word.getToken().charAt(0)).get(word.getToken());
 
     Set<Integer> keys = wordMap.keySet();
 
@@ -555,11 +561,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private int nextWordPostionInSameDoc(String word, Integer docId, Integer pos){
 
-    List<Integer> occurrence = distributedIndex.get(word.substring(0,1)).get(word).get(docId).occurrence;
-    Integer currentPos = 0;
+    List<Integer> occurrence = distributedIndex.get(word.charAt(0)).get(word).get(docId).occurrence;
 
     for(int i = 0 ; i < occurrence.size() ; i++){
-      //currentPos = currentPos + occurrence.get(i);
       if(occurrence.get(i) > pos){
         return occurrence.get(i);
       }
@@ -602,7 +606,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
 
   @Override
-  public int getQueryTokenCountInCorpus(QueryToken token){
+  public int getQueryTokenCountInCorpus (QueryToken token){
       int docId = -1;
       int count = 0;
 
