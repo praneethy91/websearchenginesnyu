@@ -7,9 +7,9 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 /**
  * @CS2580: Implement this class for HW2.
  */
-public class IndexerInvertedDoconly extends Indexer {
+public class IndexerInvertedDocOnly extends Indexer {
 
-  public IndexerInvertedDoconly(Options options) {
+  public IndexerInvertedDocOnly(Options options) {
     super(options);
     System.out.println("Using Indexer: " + this.getClass().getSimpleName());
   }

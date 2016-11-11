@@ -12,7 +12,7 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * 
  * In HW1: instructor's {@link IndexerFullScan} is provided as is.
  * 
- * In HW2: students will implement {@link IndexerInvertedDoconly},
+ * In HW2: students will implement IndexerInvertedDocOnly,
  * {@link IndexerInvertedOccurrence}, and {@link IndexerInvertedCompressed}.
  * See comments below for more info.
  * 
@@ -108,12 +108,12 @@ public abstract class Indexer {
   /**
    * APIs for statistics needed for ranking.
    * 
-   * {@link numDocs} and {@link totalTermFrequency} must return correct results
+   * numDocs and totalTermFrequency must return correct results
    * for the current state whenever they are called, either during index
    * construction or during serving (obviously).
    * 
-   * {@link corpusDocFrequencyByTerm}, {@link corpusTermFrequency}, and
-   * {@link documentTermFrequency} must return correct results during serving.
+   * corpusDocFrequencyByTerm, corpusTermFrequency, and
+   * documentTermFrequency must return correct results during serving.
    */
 
   // Number of documents in the corpus.
@@ -141,7 +141,7 @@ public abstract class Indexer {
       if (options._indexerType.equals("fullscan")) {
         return new IndexerFullScan(options);
       } else if (options._indexerType.equals("inverted-doconly")) {
-        return new IndexerInvertedDoconly(options);
+        return new IndexerInvertedDocOnly(options);
       } else if (options._indexerType.equals("inverted-occurrence")) {
         return new IndexerInvertedOccurrence(options);
       } else if (options._indexerType.equals("inverted-compressed")) {
