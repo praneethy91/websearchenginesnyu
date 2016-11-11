@@ -1,8 +1,6 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
-import java.util.Map;
-import java.util.Vector;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -14,9 +12,12 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * 
  * In HW1: instructor's {@link IndexerFullScan} is provided as is.
  * 
- * In HW2: students will implement {@link IndexerInvertedDocOnly},
+ * In HW2: students will implement {@link IndexerInvertedDoconly},
  * {@link IndexerInvertedOccurrence}, and {@link IndexerInvertedCompressed}.
  * See comments below for more info.
+ * 
+ * In HW3: students will incorporate the corpus analysis and log mining results
+ * into indexing process through {@link CorpusAnalyzer} and {@link LogMiner}.
  *
  * @author congyu
  * @author fdiaz
@@ -25,12 +26,16 @@ public abstract class Indexer {
   // Options to configure each concrete Indexer, do not serialize.
   protected Options _options = null;
 
+  // CorpusAnalyzer and LogMinder that support the indexing process.
+  protected CorpusAnalyzer _corpusAnalyzer = null;
+  protected LogMiner _logMiner = null;
+
   // In-memory data structures populated once for each server. Those fields
   // are populated during index loading time and must not be modified during
   // serving unless they are made thread-safe. For comments, see APIs below.
   // Subclasses should populate those fields properly.
   protected int _numDocs = 0;
-  protected int _totalTermFrequency = 0;
+  protected long _totalTermFrequency = 0;
 
   // Provided for serialization.
   public Indexer() { }
@@ -38,6 +43,8 @@ public abstract class Indexer {
   // The real constructor
   public Indexer(Options options) {
     _options = options;
+    _corpusAnalyzer = CorpusAnalyzer.Factory.getCorpusAnalyzerByOption(options);
+    _logMiner = LogMiner.Factory.getLogMinerByOption(options);
   }
 
   // APIs for document retrieval.
@@ -80,6 +87,9 @@ public abstract class Indexer {
    * be stored (either in a hidden file or in a temporary directory). In serve
    * mode, the constructed index should provide the necessary functionality to
    * support the search tasks.
+   *
+   * In HW3: leverage load() functions from both {@link CorpusAnalyzer} and
+   * {@link LogMiner}.
    */
   public abstract void constructIndex() throws IOException;
 
@@ -93,7 +103,7 @@ public abstract class Indexer {
    * serve mode, it will NOT have access to the corpus, all grading for serve
    * mode will be done with the corpus removed from the machine.
    */
-  public abstract void loadIndex(Query query) throws IOException, ClassNotFoundException;
+  public abstract void loadIndex() throws IOException, ClassNotFoundException;
 
   /**
    * APIs for statistics needed for ranking.
@@ -107,10 +117,10 @@ public abstract class Indexer {
    */
 
   // Number of documents in the corpus.
-  public  abstract int numDocs();
+  public final int numDocs() { return _numDocs; }
   // Number of term occurrences in the corpus. If a term appears 10 times, it
   // will be counted 10 times.
-  public abstract   int totalTermFrequency() ;
+  public final long totalTermFrequency() { return _totalTermFrequency; }
 
   // Number of documents in which {@code term} appeared, over the full corpus.
   public abstract int corpusDocFrequencyByTerm(String term);
@@ -118,8 +128,8 @@ public abstract class Indexer {
   // Number of times {@code term} appeared in corpus. 
   public abstract int corpusTermFrequency(String term);
 
-  public abstract  int  getTokensPerDoc(int docId);
-
+  // Number of times {@code term} appeared in the document {@code docid}.
+  // *** @CS2580: Note the function signature change from url to docid. ***
   public abstract int documentTermFrequency(String term, int docid);
 
   /**
@@ -131,7 +141,7 @@ public abstract class Indexer {
       if (options._indexerType.equals("fullscan")) {
         return new IndexerFullScan(options);
       } else if (options._indexerType.equals("inverted-doconly")) {
-        return new IndexerInvertedDocOnly(options);
+        return new IndexerInvertedDoconly(options);
       } else if (options._indexerType.equals("inverted-occurrence")) {
         return new IndexerInvertedOccurrence(options);
       } else if (options._indexerType.equals("inverted-compressed")) {
@@ -140,6 +150,4 @@ public abstract class Indexer {
       return null;
     }
   }
-
-  public abstract int getQueryTokenCountInCorpus(QueryToken token);
 }

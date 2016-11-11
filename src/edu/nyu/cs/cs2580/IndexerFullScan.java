@@ -1,6 +1,13 @@
 package edu.nyu.cs.cs2580;
 
-import java.io.*;
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -72,11 +79,6 @@ class IndexerFullScan extends Indexer implements Serializable {
 
     String indexFile = _options._indexPrefix + "/corpus.idx";
     System.out.println("Store index to: " + indexFile);
-    File file = new File(indexFile);
-    File parent = file.getParentFile();
-    if(!parent.exists() && !parent.mkdirs()){
-      throw new IllegalStateException("Couldn't create dir: " + parent);
-    }
     ObjectOutputStream writer =
         new ObjectOutputStream(new FileOutputStream(indexFile));
     writer.writeObject(this);
@@ -169,7 +171,7 @@ class IndexerFullScan extends Indexer implements Serializable {
    * @throws IOException, ClassNotFoundException
    */
   @Override
-  public void loadIndex(Query query) throws IOException, ClassNotFoundException {
+  public void loadIndex() throws IOException, ClassNotFoundException {
     String indexFile = _options._indexPrefix + "/corpus.idx";
     System.out.println("Load index from: " + indexFile);
 
@@ -191,16 +193,6 @@ class IndexerFullScan extends Indexer implements Serializable {
 
     System.out.println(Integer.toString(_numDocs) + " documents loaded " +
         "with " + Long.toString(_totalTermFrequency) + " terms!");
-  }
-
-  @Override
-  public int numDocs() {
-    return 0;
-  }
-
-  @Override
-  public int totalTermFrequency() {
-    return 0;
   }
 
   ///// Serving related functions.
@@ -229,18 +221,8 @@ class IndexerFullScan extends Indexer implements Serializable {
   }
 
   @Override
-  public int getTokensPerDoc(int docId) {
-    return 0;
-  }
-
-  @Override
   public int documentTermFrequency(String term, int docid) {
     SearchEngine.Check(false, "Not implemented!");
-    return 0;
-  }
-
-  @Override
-  public int getQueryTokenCountInCorpus(QueryToken token) {
     return 0;
   }
 

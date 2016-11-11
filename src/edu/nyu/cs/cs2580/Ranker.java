@@ -67,14 +67,20 @@ public abstract class Ranker {
         return new RankerConjunctive(options, arguments, indexer);
       case FAVORITE:
         return new RankerFavorite(options, arguments, indexer);
+      case COMPREHENSIVE:
+        return new RankerComprehensive(options, arguments, indexer);
       case COSINE:
-          // Fall through intended
+        // Plug in your cosine Ranker
+        break;
       case QL:
-          // Fall through intended
+        // Plug in your QL Ranker
+        break;
       case PHRASE:
-          // Fall through intended
+        // Plug in your phrase Ranker
+        break;
       case LINEAR:
-          // Fall through intended
+        // Plug in your linear Ranker
+        break;
       case NONE:
         // Fall through intended
       default:

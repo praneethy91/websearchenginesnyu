@@ -2,7 +2,6 @@ package edu.nyu.cs.cs2580;
 
 import java.util.Scanner;
 import java.util.Vector;
-import java.util.regex.Pattern;
 
 /**
  * Representation of a user query.
@@ -14,14 +13,22 @@ import java.util.regex.Pattern;
  * @author congyu
  * @auhtor fdiaz
  */
-public abstract class Query {
+public class Query {
   public String _query = null;
-
-  public Vector<QueryToken> _tokens = new Vector<>();
+  public Vector<String> _tokens = new Vector<String>();
 
   public Query(String query) {
     _query = query;
   }
 
-  public abstract void processQuery();
+  public void processQuery() {
+    if (_query == null) {
+      return;
+    }
+    Scanner s = new Scanner(_query);
+    while (s.hasNext()) {
+      _tokens.add(s.next());
+    }
+    s.close();
+  }
 }
