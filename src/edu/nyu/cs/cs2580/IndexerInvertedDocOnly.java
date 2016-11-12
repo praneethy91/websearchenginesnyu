@@ -56,14 +56,17 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
 
     //Clearing all Index files
     File indexDir = new File(_options._indexPrefix);
+    indexDir.mkdir();
     File[] foundFiles = indexDir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
         return true;
       }
     });
 
-    for (File file : foundFiles) {
-      file.delete();
+    if(foundFiles != null) {
+      for (File file : foundFiles) {
+        file.delete();
+      }
     }
 
     try {
@@ -125,8 +128,10 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
         }
       });
 
-      for (File file : foundFiles) {
-        file.delete();
+      if(foundFiles != null) {
+        for (File file : foundFiles) {
+          file.delete();
+        }
       }
 
       long endTime = System.currentTimeMillis();
