@@ -103,7 +103,7 @@ public abstract class Indexer {
    * serve mode, it will NOT have access to the corpus, all grading for serve
    * mode will be done with the corpus removed from the machine.
    */
-  public abstract void loadIndex() throws IOException, ClassNotFoundException;
+  public abstract void loadIndex(Query query) throws IOException, ClassNotFoundException;
 
   /**
    * APIs for statistics needed for ranking.
@@ -117,10 +117,10 @@ public abstract class Indexer {
    */
 
   // Number of documents in the corpus.
-  public final int numDocs() { return _numDocs; }
+  public abstract int numDocs();
   // Number of term occurrences in the corpus. If a term appears 10 times, it
   // will be counted 10 times.
-  public final long totalTermFrequency() { return _totalTermFrequency; }
+  public abstract int totalTermFrequency();
 
   // Number of documents in which {@code term} appeared, over the full corpus.
   public abstract int corpusDocFrequencyByTerm(String term);
@@ -128,9 +128,13 @@ public abstract class Indexer {
   // Number of times {@code term} appeared in corpus. 
   public abstract int corpusTermFrequency(String term);
 
+  public abstract  int  getTokensPerDoc(int docId);
+
   // Number of times {@code term} appeared in the document {@code docid}.
   // *** @CS2580: Note the function signature change from url to docid. ***
   public abstract int documentTermFrequency(String term, int docid);
+
+  public abstract int getQueryTokenCountInCorpus(QueryToken token);
 
   /**
    * All Indexers must be created through this factory class based on the
