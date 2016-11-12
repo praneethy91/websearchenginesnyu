@@ -15,7 +15,7 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 public class RankerFavorite extends Ranker {
 
   public RankerFavorite(Options options,
-      CgiArguments arguments, Indexer indexer) {
+                        CgiArguments arguments, Indexer indexer) {
     super(options, arguments, indexer);
     System.out.println("Using Ranker: " + this.getClass().getSimpleName());
   }

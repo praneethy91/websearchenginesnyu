@@ -12,9 +12,9 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 /**
  * Handles each incoming query, students do not need to change this class except
  * to provide more query time CGI arguments and the HTML output.
- * 
- * N.B. This class is not thread-safe. 
- * 
+ *
+ * N.B. This class is not thread-safe.
+ *
  * @author congyu
  * @author fdiaz
  */
@@ -33,12 +33,13 @@ class QueryHandler implements HttpHandler {
     public File _queryFile = null;
     // How many results to return
     private int _numResults = 10;
-    
+
     // The type of the ranker we will be using.
     public enum RankerType {
       NONE("Unidentified Ranker"),
       CONJUNCTIVE("Conjunctive Ranker"),
       FAVORITE("Favorite Ranker"),
+      COMPREHENSIVE("Comprehensive Ranker"),
       FULLSCAN("Naive Ranker"),
       COSINE("Cosine Similarity Ranker"),
       QL("Query Likelihood Ranker"),
@@ -56,7 +57,7 @@ class QueryHandler implements HttpHandler {
       }
     }
     public RankerType _rankerType = RankerType.NONE;
-    
+
     // The output format.
     public enum OutputFormat {
       TEXT,
@@ -123,7 +124,7 @@ class QueryHandler implements HttpHandler {
     }
   }
 
-  // For accessing the underlying documents to be used by the Ranker. Since 
+  // For accessing the underlying documents to be used by the Ranker. Since
   // we are not worried about thread-safety here, the Indexer class must take
   // care of thread-safety.
   private static Indexer _indexer;
@@ -133,7 +134,7 @@ class QueryHandler implements HttpHandler {
   }
 
   private void respondWithMsg(HttpExchange exchange, final String message)
-      throws IOException {
+          throws IOException {
     respond(exchange, message, "text/plain");
   }
 
@@ -196,7 +197,7 @@ class QueryHandler implements HttpHandler {
   }
 
   private void constructTextOutput(
-      final Vector<ScoredDocument> docs, StringBuffer response) {
+          final Vector<ScoredDocument> docs, StringBuffer response) {
     for (ScoredDocument doc : docs) {
       response.append(response.length() > 0 ? "\n" : "");
       response.append(doc.asTextResult());
@@ -276,24 +277,24 @@ class QueryHandler implements HttpHandler {
     // Ranking.
     StringBuffer response = new StringBuffer();
     switch (cgiArgs._outputFormat) {
-    case TEXT:
-      for(Query query : processedQueries) {
-        Vector<ScoredDocument> scoredDocs =
-                ranker.runQuery(query, cgiArgs._numResults);
-        constructTextOutput(scoredDocs, response);
-      }
-      break;
-    case HTML:
-      HtmlFormatter formatter = new HtmlFormatter();
-      for(Query query : processedQueries) {
-        Vector<ScoredDocument> scoredDocs =
-                ranker.runQuery(query, cgiArgs._numResults);
-        formatter.AddTable(query, scoredDocs, cgiArgs._rankerType);
-      }
-      response.append(formatter.asHtmlString());
-      break;
-    default:
-      // nothing
+      case TEXT:
+        for(Query query : processedQueries) {
+          Vector<ScoredDocument> scoredDocs =
+                  ranker.runQuery(query, cgiArgs._numResults);
+          constructTextOutput(scoredDocs, response);
+        }
+        break;
+      case HTML:
+        HtmlFormatter formatter = new HtmlFormatter();
+        for(Query query : processedQueries) {
+          Vector<ScoredDocument> scoredDocs =
+                  ranker.runQuery(query, cgiArgs._numResults);
+          formatter.AddTable(query, scoredDocs, cgiArgs._rankerType);
+        }
+        response.append(formatter.asHtmlString());
+        break;
+      default:
+        // nothing
     }
 
     if(cgiArgs._outputType == CgiArguments.OutputType.HTTP)
@@ -311,4 +312,3 @@ class QueryHandler implements HttpHandler {
     System.out.println("Finished processing all queries");
   }
 }
-

@@ -6,11 +6,11 @@ import java.util.regex.Pattern;
 
 /**
  * Representation of a user query.
- * 
+ *
  * In HW1: instructors provide this simple implementation.
- * 
+ *
  * In HW2: students must implement {@link QueryPhrase} to handle phrases.
- * 
+ *
  * @author congyu
  * @auhtor fdiaz
  */

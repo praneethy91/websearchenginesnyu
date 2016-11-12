@@ -15,7 +15,7 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * implement four additional concrete Rankers.
  *
  * In HW2: students will pick a favorite concrete Ranker other than
- * {@link RankerPhrase}, and re-implement it using the more efficient
+ * RankerPhrase, and re-implement it using the more efficient
  * concrete Indexers.
  *
  * 2013-02-16: The instructor's code went through substantial refactoring
@@ -67,14 +67,20 @@ public abstract class Ranker {
         return new RankerConjunctive(options, arguments, indexer);
       case FAVORITE:
         return new RankerFavorite(options, arguments, indexer);
+      case COMPREHENSIVE:
+        return new RankerComprehensive(options, arguments, indexer);
       case COSINE:
-          // Fall through intended
+        // Plug in your cosine Ranker
+        break;
       case QL:
-          // Fall through intended
+        // Plug in your QL Ranker
+        break;
       case PHRASE:
-          // Fall through intended
+        // Plug in your phrase Ranker
+        break;
       case LINEAR:
-          // Fall through intended
+        // Plug in your linear Ranker
+        break;
       case NONE:
         // Fall through intended
       default:

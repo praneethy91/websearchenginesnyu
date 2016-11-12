@@ -53,14 +53,17 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
     //Clearing all Index files
     File indexDir = new File(_options._indexPrefix);
+    indexDir.mkdir();
     File[] foundFiles = indexDir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
         return true;
       }
     });
 
-    for (File file : foundFiles) {
-      file.delete();
+    if(foundFiles != null) {
+      for (File file : foundFiles) {
+        file.delete();
+      }
     }
 
     try {
@@ -69,30 +72,30 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
           if(wikiFile.isDirectory() == false) {
 
-          //Parsing and extracting token;
-          wikiParser = new WikiParser(wikiFile);
-          tokens = wikiParser.ParseTokens();
+            //Parsing and extracting token;
+            wikiParser = new WikiParser(wikiFile);
+            tokens = wikiParser.ParseTokens();
 
-          //TODO: Document Id
-          // Populating and adding DocumentIndexed for this document.
-          DocumentIndexed docIndexed = new DocumentIndexed(docID);
-          docIndexed.setTitle(wikiParser.getTitle());
-          docIndexed.setUrl(wikiParser.getUrl());
-          _indexedDocs.add(docIndexed);
+            //TODO: Document Id
+            // Populating and adding DocumentIndexed for this document.
+            DocumentIndexed docIndexed = new DocumentIndexed(docID);
+            docIndexed.setTitle(wikiParser.getTitle());
+            docIndexed.setUrl(wikiParser.getUrl());
+            _indexedDocs.add(docIndexed);
 
 
-          // Updating postings lists
-          for (int pos = 0; pos < tokens.size(); pos++) {
-            String token = tokens.elementAt(pos);
-            insertToken(token, docID, pos, true, _index);
+            // Updating postings lists
+            for (int pos = 0; pos < tokens.size(); pos++) {
+              String token = tokens.elementAt(pos);
+              insertToken(token, docID, pos, true, _index);
+            }
+
+            //Adding later as well formed documents only we should consider
+            docID++;
+            count++;
+            totalTokensPerDoc.add(tokens.size());
+            totalTokensInCorpus += tokens.size();
           }
-
-          //Adding later as well formed documents only we should consider
-          docID++;
-          count++;
-          totalTokensPerDoc.add(tokens.size());
-          totalTokensInCorpus += tokens.size();
-        }
         }
         catch (IllegalArgumentException e) {
           // A random non-wiki file, just skip this document
@@ -124,8 +127,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
         }
       });
 
-      for (File file : foundFiles) {
-        file.delete();
+      if(foundFiles != null) {
+        for (File file : foundFiles) {
+          file.delete();
+        }
       }
 
       long endTime = System.currentTimeMillis();
@@ -315,14 +320,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       index.put(token, new LinkedHashMap<Integer, DocumentWordOccurrence>());
       index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
     } else {
-        if(!index.get(token).containsKey(docID)){
-             index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
-        }else {
-          if(isAbsolutePosition)
-            index.get(token).get(docID).occurrence.add(position);
-          else
-            index.get(token).get(docID).occurrence.add(position);
-        }
+      if(!index.get(token).containsKey(docID)){
+        index.get(token).put(docID, new DocumentWordOccurrence(docID, position));
+      }else {
+        if(isAbsolutePosition)
+          index.get(token).get(docID).occurrence.add(position);
+        else
+          index.get(token).get(docID).occurrence.add(position);
+      }
     }
 
   }
@@ -560,7 +565,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       int nextPosition  = nextWordPostionInSameDoc(token,docId,pos);
       //return -1 if any one of the token in the phrase is not in the doc
       if(nextPosition == -1)
-          return -1;
+        return -1;
 
       positions.add(nextPosition);
     }
@@ -627,23 +632,23 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   @Override
   public int getQueryTokenCountInCorpus (QueryToken token){
-      int docId = -1;
-      int count = 0;
+    int docId = -1;
+    int count = 0;
 
-      Query newQuery = new QueryPhrase("");
-      newQuery._tokens.clear();
-      newQuery._tokens.add(token);
+    Query newQuery = new QueryPhrase("");
+    newQuery._tokens.clear();
+    newQuery._tokens.add(token);
 
-      DocumentIndexed documentIndexed = this.nextDoc(newQuery, docId);
-      count = documentIndexed.quertTokenCount.get(token);
+    DocumentIndexed documentIndexed = this.nextDoc(newQuery, docId);
+    count = documentIndexed.quertTokenCount.get(token);
 
-      while(documentIndexed != null){
-        documentIndexed = this.nextDoc(newQuery, documentIndexed._docid);
-        if(documentIndexed != null )
-          count += documentIndexed.quertTokenCount.get(token);
-      }
+    while(documentIndexed != null){
+      documentIndexed = this.nextDoc(newQuery, documentIndexed._docid);
+      if(documentIndexed != null )
+        count += documentIndexed.quertTokenCount.get(token);
+    }
 
-      return count;
+    return count;
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

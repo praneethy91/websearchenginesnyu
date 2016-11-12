@@ -30,11 +30,11 @@ package edu.nyu.cs.cs2580;
  from Brian Goetz of Quiotix Corporation (brian@quiotix.com).
 
  Release 4
-**/
+ **/
 
 /**
  * Stemmer, implementing the Porter Stemming Algorithm
- * 
+ *
  * The Stemmer class transforms a word into its root form. The input word can be
  * provided a character at time (by calling add()), or at once by calling one of
  * the various stem(something) methods.
@@ -115,16 +115,16 @@ public class Stemmer {
 
   private final boolean cons(int i) {
     switch (b[i]) {
-    case 'a':
-    case 'e':
-    case 'i':
-    case 'o':
-    case 'u':
-      return false;
-    case 'y':
-      return (i == 0) ? true : !cons(i - 1);
-    default:
-      return true;
+      case 'a':
+      case 'e':
+      case 'i':
+      case 'o':
+      case 'u':
+        return false;
+      case 'y':
+        return (i == 0) ? true : !cons(i - 1);
+      default:
+        return true;
     }
   }
 
@@ -132,7 +132,7 @@ public class Stemmer {
    * m() measures the number of consonant sequences between 0 and j. if c is a
    * consonant sequence and v a vowel sequence, and <..> indicates arbitrary
    * presence,
-   * 
+   *
    * <c><v> gives 0 <c>vc<v> gives 1 <c>vcvc<v> gives 2 <c>vcvcvc<v> gives 3
    * ....
    */
@@ -193,7 +193,7 @@ public class Stemmer {
    * cvc(i) is true <=> i-2,i-1,i has the form consonant - vowel - consonant and
    * also if the second c is not w,x or y. this is used when trying to restore
    * an e at the end of a short word. e.g.
-   * 
+   *
    * cav(e), lov(e), hop(e), crim(e), but snow, box, tray.
    */
 
@@ -241,14 +241,14 @@ public class Stemmer {
 
   /*
    * step1() gets rid of plurals and -ed or -ing. e.g.
-   * 
+   *
    * caresses -> caress ponies -> poni ties -> ti caress -> caress cats -> cat
-   * 
+   *
    * feed -> feed agreed -> agree disabled -> disable
-   * 
+   *
    * matting -> mat mating -> mate meeting -> meet milling -> mill messing ->
    * mess
-   * 
+   *
    * meetings -> meet
    */
 
@@ -301,105 +301,105 @@ public class Stemmer {
     if (k == 0)
       return; /* For Bug 1 */
     switch (b[k - 1]) {
-    case 'a':
-      if (ends("ational")) {
-        r("ate");
+      case 'a':
+        if (ends("ational")) {
+          r("ate");
+          break;
+        }
+        if (ends("tional")) {
+          r("tion");
+          break;
+        }
         break;
-      }
-      if (ends("tional")) {
-        r("tion");
+      case 'c':
+        if (ends("enci")) {
+          r("ence");
+          break;
+        }
+        if (ends("anci")) {
+          r("ance");
+          break;
+        }
         break;
-      }
-      break;
-    case 'c':
-      if (ends("enci")) {
-        r("ence");
+      case 'e':
+        if (ends("izer")) {
+          r("ize");
+          break;
+        }
         break;
-      }
-      if (ends("anci")) {
-        r("ance");
+      case 'l':
+        if (ends("bli")) {
+          r("ble");
+          break;
+        }
+        if (ends("alli")) {
+          r("al");
+          break;
+        }
+        if (ends("entli")) {
+          r("ent");
+          break;
+        }
+        if (ends("eli")) {
+          r("e");
+          break;
+        }
+        if (ends("ousli")) {
+          r("ous");
+          break;
+        }
         break;
-      }
-      break;
-    case 'e':
-      if (ends("izer")) {
-        r("ize");
+      case 'o':
+        if (ends("ization")) {
+          r("ize");
+          break;
+        }
+        if (ends("ation")) {
+          r("ate");
+          break;
+        }
+        if (ends("ator")) {
+          r("ate");
+          break;
+        }
         break;
-      }
-      break;
-    case 'l':
-      if (ends("bli")) {
-        r("ble");
+      case 's':
+        if (ends("alism")) {
+          r("al");
+          break;
+        }
+        if (ends("iveness")) {
+          r("ive");
+          break;
+        }
+        if (ends("fulness")) {
+          r("ful");
+          break;
+        }
+        if (ends("ousness")) {
+          r("ous");
+          break;
+        }
         break;
-      }
-      if (ends("alli")) {
-        r("al");
+      case 't':
+        if (ends("aliti")) {
+          r("al");
+          break;
+        }
+        if (ends("iviti")) {
+          r("ive");
+          break;
+        }
+        if (ends("biliti")) {
+          r("ble");
+          break;
+        }
         break;
-      }
-      if (ends("entli")) {
-        r("ent");
-        break;
-      }
-      if (ends("eli")) {
-        r("e");
-        break;
-      }
-      if (ends("ousli")) {
-        r("ous");
-        break;
-      }
-      break;
-    case 'o':
-      if (ends("ization")) {
-        r("ize");
-        break;
-      }
-      if (ends("ation")) {
-        r("ate");
-        break;
-      }
-      if (ends("ator")) {
-        r("ate");
-        break;
-      }
-      break;
-    case 's':
-      if (ends("alism")) {
-        r("al");
-        break;
-      }
-      if (ends("iveness")) {
-        r("ive");
-        break;
-      }
-      if (ends("fulness")) {
-        r("ful");
-        break;
-      }
-      if (ends("ousness")) {
-        r("ous");
-        break;
-      }
-      break;
-    case 't':
-      if (ends("aliti")) {
-        r("al");
-        break;
-      }
-      if (ends("iviti")) {
-        r("ive");
-        break;
-      }
-      if (ends("biliti")) {
-        r("ble");
-        break;
-      }
-      break;
-    case 'g':
-      if (ends("logi")) {
-        r("log");
-        break;
-      }
+      case 'g':
+        if (ends("logi")) {
+          r("log");
+          break;
+        }
     }
   }
 
@@ -407,42 +407,42 @@ public class Stemmer {
 
   private final void step4() {
     switch (b[k]) {
-    case 'e':
-      if (ends("icate")) {
-        r("ic");
+      case 'e':
+        if (ends("icate")) {
+          r("ic");
+          break;
+        }
+        if (ends("ative")) {
+          r("");
+          break;
+        }
+        if (ends("alize")) {
+          r("al");
+          break;
+        }
         break;
-      }
-      if (ends("ative")) {
-        r("");
+      case 'i':
+        if (ends("iciti")) {
+          r("ic");
+          break;
+        }
         break;
-      }
-      if (ends("alize")) {
-        r("al");
+      case 'l':
+        if (ends("ical")) {
+          r("ic");
+          break;
+        }
+        if (ends("ful")) {
+          r("");
+          break;
+        }
         break;
-      }
-      break;
-    case 'i':
-      if (ends("iciti")) {
-        r("ic");
+      case 's':
+        if (ends("ness")) {
+          r("");
+          break;
+        }
         break;
-      }
-      break;
-    case 'l':
-      if (ends("ical")) {
-        r("ic");
-        break;
-      }
-      if (ends("ful")) {
-        r("");
-        break;
-      }
-      break;
-    case 's':
-      if (ends("ness")) {
-        r("");
-        break;
-      }
-      break;
     }
   }
 
@@ -452,73 +452,73 @@ public class Stemmer {
     if (k == 0)
       return; /* for Bug 1 */
     switch (b[k - 1]) {
-    case 'a':
-      if (ends("al"))
-        break;
-      return;
-    case 'c':
-      if (ends("ance"))
-        break;
-      if (ends("ence"))
-        break;
-      return;
-    case 'e':
-      if (ends("er"))
-        break;
-      return;
-    case 'i':
-      if (ends("ic"))
-        break;
-      return;
-    case 'l':
-      if (ends("able"))
-        break;
-      if (ends("ible"))
-        break;
-      return;
-    case 'n':
-      if (ends("ant"))
-        break;
-      if (ends("ement"))
-        break;
-      if (ends("ment"))
-        break;
+      case 'a':
+        if (ends("al"))
+          break;
+        return;
+      case 'c':
+        if (ends("ance"))
+          break;
+        if (ends("ence"))
+          break;
+        return;
+      case 'e':
+        if (ends("er"))
+          break;
+        return;
+      case 'i':
+        if (ends("ic"))
+          break;
+        return;
+      case 'l':
+        if (ends("able"))
+          break;
+        if (ends("ible"))
+          break;
+        return;
+      case 'n':
+        if (ends("ant"))
+          break;
+        if (ends("ement"))
+          break;
+        if (ends("ment"))
+          break;
       /* element etc. not stripped before the m */
-      if (ends("ent"))
-        break;
-      return;
-    case 'o':
-      if (ends("ion") && j >= 0 && (b[j] == 's' || b[j] == 't'))
-        break;
+        if (ends("ent"))
+          break;
+        return;
+      case 'o':
+        if (ends("ion") && j >= 0 && (b[j] == 's' || b[j] == 't'))
+          break;
       /* j >= 0 fixes Bug 2 */
-      if (ends("ou"))
-        break;
-      return;
+        if (ends("ou"))
+          break;
+        return;
       /* takes care of -ous */
-    case 's':
-      if (ends("ism"))
-        break;
-      return;
-    case 't':
-      if (ends("ate"))
-        break;
-      if (ends("iti"))
-        break;
-      return;
-    case 'u':
-      if (ends("ous"))
-        break;
-      return;
-    case 'v':
-      if (ends("ive"))
-        break;
-      return;
-    case 'z':
-      if (ends("ize"))
-        break;
-      return;
-    default:
-      return;
+      case 's':
+        if (ends("ism"))
+          break;
+        return;
+      case 't':
+        if (ends("ate"))
+          break;
+        if (ends("iti"))
+          break;
+        return;
+      case 'u':
+        if (ends("ous"))
+          break;
+        return;
+      case 'v':
+        if (ends("ive"))
+          break;
+        return;
+      case 'z':
+        if (ends("ize"))
+          break;
+        return;
+      default:
+        return;
     }
     if (m() > 1)
       k = j;
