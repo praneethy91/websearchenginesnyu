@@ -22,4 +22,9 @@ public class RankerComprehensive extends Ranker {
   public Vector<ScoredDocument> runQuery(Query query, int numResults) {
     return null;
   }
+
+  @Override
+  public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) {
+    throw new UnsupportedOperationException("This ranker does not support the Query Similarity model");
+  }
 }

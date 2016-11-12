@@ -3,6 +3,7 @@ package edu.nyu.cs.cs2580;
 import java.io.*;
 import java.util.Vector;
 
+import com.sun.javaws.exceptions.InvalidArgumentException;
 import com.sun.net.httpserver.Headers;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpHandler;
@@ -33,6 +34,8 @@ class QueryHandler implements HttpHandler {
     public File _queryFile = null;
     // How many results to return
     private int _numResults = 10;
+    private int _numDocs = -1;
+    private int _numTerms = -1;
 
     // The type of the ranker we will be using.
     public enum RankerType {
@@ -99,6 +102,19 @@ class QueryHandler implements HttpHandler {
               _numResults = Integer.parseInt(val);
             }
           } catch (NumberFormatException e) {
+            // Ignored, search engine should never fail upon invalid user input.
+          }
+
+        } else if (key.equals("numdocs")) {
+          try {
+            _numDocs = Integer.parseInt(val);
+          } catch (IllegalArgumentException e) {
+            // Ignored, search engine should never fail upon invalid user input.
+          }
+        } else if (key.equals("numterms")) {
+          try {
+            _numTerms = Integer.parseInt(val);
+          } catch (IllegalArgumentException e) {
             // Ignored, search engine should never fail upon invalid user input.
           }
         } else if (key.equals("ranker")) {
@@ -205,6 +221,17 @@ class QueryHandler implements HttpHandler {
     response.append(response.length() > 0 ? "\n" : "No result returned!");
   }
 
+  private void constructTextOutputForQueryRepresentation(
+          final Vector<TermProbability> termProbabilities, StringBuffer response) {
+    for (TermProbability tp : termProbabilities) {
+      response.append(tp.asTextResult());
+      response.append("\n");
+    }
+    if(response.length() == 0) {
+      throw new UnsupportedOperationException("No term probabilities found for Query representation");
+    }
+  }
+
   public void handle(HttpExchange exchange) throws IOException {
     String requestMethod = exchange.getRequestMethod();
     if (!requestMethod.equalsIgnoreCase("GET")) { // GET requests only.
@@ -225,15 +252,27 @@ class QueryHandler implements HttpHandler {
     if (uriPath == null || uriQuery == null) {
       respondWithMsg(exchange, "Something wrong with the URI!");
     }
-    if (!uriPath.equals("/search")) {
-      respondWithMsg(exchange, "Only /search is handled!");
+    if (!uriPath.equals("/search") && !uriPath.equals("/prf")) {
+      respondWithMsg(exchange, "Only /search and /prf is handled!");
     }
     System.out.println("Query: " + uriQuery);
 
     // Process the CGI arguments.
     CgiArguments cgiArgs = new CgiArguments(uriQuery);
-    if (cgiArgs._query.isEmpty() && cgiArgs._queryFile == null) {
+    if (uriPath.equals("/search") && cgiArgs._query.isEmpty() && cgiArgs._queryFile == null) {
       respondWithMsg(exchange, "No query or query file is given to search!");
+    }
+
+    if(uriPath.equals("/prf")) {
+      if(cgiArgs._query.isEmpty()) {
+        respondWithMsg(exchange, "No 'query' is given for computing query representation");
+      }
+      if(cgiArgs._numDocs == -1) {
+        respondWithMsg(exchange, "No 'numdocs' is given for computing query representation");
+      }
+      if(cgiArgs._numTerms == -1) {
+        respondWithMsg(exchange, "No 'numterms' is given for computing query representation");
+      }
     }
 
     // Create the ranker.
@@ -247,8 +286,8 @@ class QueryHandler implements HttpHandler {
     Vector<String> queries = new Vector<>();
     BufferedReader reader = null;
 
-    //Processing the query from query file if exists and valid
-    if(cgiArgs._queryFile != null) {
+    //Processing the query from query file if exists and valid only on /search path
+    if(uriPath.equals("/search") && cgiArgs._queryFile != null) {
       try {
         reader = new BufferedReader(new FileReader(cgiArgs._queryFile));
         String query = null;
@@ -274,8 +313,22 @@ class QueryHandler implements HttpHandler {
       processedQueries.add(processedQuery);
     }
 
-    // Ranking.
     StringBuffer response = new StringBuffer();
+
+    // Query representation for the /prf path
+    if(uriPath.equals("/prf")) {
+      for(Query query : processedQueries) {
+        Vector<TermProbability> termProbabilities =
+                ranker.querySimilarity(query, cgiArgs._numDocs, cgiArgs._numTerms);
+        constructTextOutputForQueryRepresentation(termProbabilities, response);
+        respondWithMsg(exchange, response.toString());
+      }
+
+      System.out.println("Finished computing the Query representation");
+      return;
+    }
+
+    // Ranking for the /search path.
     switch (cgiArgs._outputFormat) {
       case TEXT:
         for(Query query : processedQueries) {

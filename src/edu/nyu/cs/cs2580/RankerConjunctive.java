@@ -49,4 +49,9 @@ public class RankerConjunctive extends Ranker {
     Collections.sort(results, Collections.reverseOrder());
     return results;
   }
+
+  @Override
+  public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) {
+    throw new UnsupportedOperationException("This ranker does not support the Query Similarity model");
+  }
 }
