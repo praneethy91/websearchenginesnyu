@@ -221,7 +221,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<OccurenceListPointer>(50, new DocIDComparator());
 
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
-    dataOutputStream.writeUTF(word);
+
     int[] numberOfOccurences = new int[disArr.length];
     int totalOccurences = 0;
     for(int i = 0; i <= endIndexPointersToMerge; i++) {
@@ -230,21 +230,37 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
     }
 
-    dataOutputStream.writeInt(totalOccurences);
-    while(!occurenceListPQ.isEmpty()) {
-      OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
-      dataOutputStream.writeInt(occurenceListPointer._docID);
-      DataInputStream dis = disArr[occurenceListPointer._pointer];
-      int occurrences = dis.readInt();
-      dataOutputStream.writeInt(occurrences);
-      for(int i = 0; i < occurrences; i++) {
-        int position = dis.readInt();
-        dataOutputStream.writeInt(position);
+    // This condition is for skipping stop words in corpus which appear more than 1% of times
+    if(((double)totalOccurences)/totalTokensInCorpus > 0.01) {
+      while (!occurenceListPQ.isEmpty()) {
+        OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+        DataInputStream dis = disArr[occurenceListPointer._pointer];
+        for(int j = 0; j < numberOfOccurences[occurenceListPointer._pointer]; j++) {
+          int occurrences = dis.readInt();
+          for (int i = 0; i < occurrences; i++) {
+            dis.readInt(); // position in the occurrence
+          }
+        }
       }
+    }
+    else {
+      dataOutputStream.writeUTF(word);
+      dataOutputStream.writeInt(totalOccurences);
+      while (!occurenceListPQ.isEmpty()) {
+        OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+        dataOutputStream.writeInt(occurenceListPointer._docID);
+        DataInputStream dis = disArr[occurenceListPointer._pointer];
+        int occurrences = dis.readInt();
+        dataOutputStream.writeInt(occurrences);
+        for (int i = 0; i < occurrences; i++) {
+          int position = dis.readInt();
+          dataOutputStream.writeInt(position);
+        }
 
-      numberOfOccurences[occurenceListPointer._pointer]--;
-      if(numberOfOccurences[occurenceListPointer._pointer] != 0) {
-        occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        numberOfOccurences[occurenceListPointer._pointer]--;
+        if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
+          occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        }
       }
     }
 

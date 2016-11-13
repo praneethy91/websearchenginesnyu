@@ -118,9 +118,8 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
     }
 
     PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<OccurenceListPointer>(50, new DocIDComparator());
-
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_options._indexPrefix + "/invertedCompressedIndex.idx" + "_" + word.charAt(0), true)));
-    dataOutputStream.writeUTF(word);
+
     int[] numberOfOccurences = new int[disArr.length];
     int totalOccurences = 0;
     for (int i = 0; i <= endIndexPointersToMerge; i++) {
@@ -129,20 +128,23 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
     }
 
-    dataOutputStream.write(Get(totalOccurences));
     int prevDocID = 0;
+    int sumOccurrencesOfTerm = 0;
+    Vector<Byte> toWrite = new Vector<Byte>();
+    toWrite.addAll(Get(totalOccurences));
     while (!occurenceListPQ.isEmpty()) {
       OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
       int currDocID = occurenceListPointer._docID;
-      dataOutputStream.write(Get(currDocID - prevDocID));
+      toWrite.addAll(Get(currDocID - prevDocID));
       prevDocID = currDocID;
       DataInputStream dis = disArr[occurenceListPointer._pointer];
       int occurrences = dis.readInt();
-      dataOutputStream.write(Get(occurrences));
+      sumOccurrencesOfTerm += occurrences;
+      toWrite.addAll(Get(occurrences));
       int prevPosition = 0;
       for (int i = 0; i < occurrences; i++) {
         int currPosition = dis.readInt();
-        dataOutputStream.write(Get(currPosition - prevPosition));
+        toWrite.addAll(Get(currPosition - prevPosition));
         prevPosition = currPosition;
       }
 
@@ -152,11 +154,22 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       }
     }
 
+    // This condition is for skipping stop words in corpus which appear more than 0.5% of times
+    if(((double)sumOccurrencesOfTerm)/totalTokensInCorpus < 0.005) {
+      dataOutputStream.writeUTF(word);
+      byte[] buffer = new byte[toWrite.size()];
+      int count = 0;
+      for (byte b : toWrite) {
+        buffer[count++] = b;
+      }
+      dataOutputStream.write(buffer);
+    }
+
     dataOutputStream.flush();
     dataOutputStream.close();
   }
 
-  public static byte[] Get(int num) throws IOException {
+  public static LinkedList<Byte> Get(int num) throws IOException {
 
     LinkedList<Byte> bytePos = new LinkedList<>();
     int x = ((1 << 7) | (num & ((1 << 7) - 1)));
@@ -168,12 +181,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       num = num >> 7;
     }
 
-    byte[] arr = new byte[bytePos.size()];
-    int i = 0;
-    for (Byte by : bytePos) {
-      arr[i++] = by;
-    }
-    return arr;
+    return bytePos;
 
   }
 
