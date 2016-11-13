@@ -13,7 +13,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   // This is where we will store the index file
   protected String _indexFile = _options._indexPrefix + "/invertedOccurrenceIndex.idx";
-  private final String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
+  protected String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
   private final String _documentStatistics = _options._indexPrefix + "/documentStatistics.idx";
 
   //The wiki corpus directory from where we will load files for constructing index
@@ -297,7 +297,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     }
     dis.close();
-
   }
 
   protected void loadDocumentData() throws IOException{
@@ -649,6 +648,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     return count;
+  }
+
+  @Override
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
+    throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

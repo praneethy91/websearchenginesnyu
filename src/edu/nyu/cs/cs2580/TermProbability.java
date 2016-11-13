@@ -19,6 +19,10 @@ public class TermProbability {
     return _probability;
   }
 
+  public void setProbability(double probability) {
+    _probability = probability;
+  }
+
   public String asTextResult() {
     return _term + "\t" + _probability;
   }

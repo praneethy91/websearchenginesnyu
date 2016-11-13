@@ -79,7 +79,13 @@ public class RankerFavorite extends Ranker {
 
   @Override
   public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) {
-    throw new UnsupportedOperationException("This ranker does not support the Query Similarity model");
+    Vector<ScoredDocument> documents = runQuery(query, numDocs);
+    Vector<Integer> docIds = new Vector<>();
+    for(ScoredDocument document: documents) {
+      docIds.add(document.getID());
+    }
+    Collections.sort(docIds);
+    return _indexer.getHighestTermProbabilitiesForDocs(docIds, numTerms);
   }
 
   private double getQueryTokenCountInCorpus(QueryToken queryToken) {

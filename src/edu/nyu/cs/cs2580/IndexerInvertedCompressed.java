@@ -3,6 +3,7 @@ package edu.nyu.cs.cs2580;
 import java.io.*;
 import java.util.*;
 
+import com.sun.xml.internal.ws.policy.privateutil.PolicyUtils;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 /**
@@ -23,17 +24,17 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
   @Override
   public void loadIndex(Query query) throws IOException {
 
-    if(query == null)
+    if (query == null)
       return;
     Set<String> wordsSet = new HashSet<>();
 
 
-    for(QueryToken queryToken : query._tokens){
-      if(queryToken.isPhrase()){
-        for(String querySubTokens : queryToken.getToken().split(" ")){
+    for (QueryToken queryToken : query._tokens) {
+      if (queryToken.isPhrase()) {
+        for (String querySubTokens : queryToken.getToken().split(" ")) {
           wordsSet.add(querySubTokens);
         }
-      }else {
+      } else {
         wordsSet.add(queryToken.getToken());
       }
     }
@@ -43,13 +44,13 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
   }
 
 
-  public void loadCompressedIndex(Set<String> queryTokens) throws IOException{
+  public void loadCompressedIndex(Set<String> queryTokens) throws IOException {
 
     long startTime = System.currentTimeMillis();
     _index.clear();
     distributedIndex.clear();
 
-    for(String token : queryTokens) {
+    for (String token : queryTokens) {
       // Open the file
       DataInputStream disComp = new DataInputStream(
               new BufferedInputStream(
@@ -71,14 +72,14 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
           for (int j = 0; j < numOfOcc; j++) {
             int place = sumTillPrevOcc + getNextInt(disComp);
             sumTillPrevOcc = place;
-            if(isQueryToken){
-              insertToken(term, docId,place,false,token);
+            if (isQueryToken) {
+              insertToken(term, docId, place, false, token);
             }
 
           }
 
         }
-        if(isQueryToken) {
+        if (isQueryToken) {
           break;
         }
       }
@@ -88,14 +89,15 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
     loadCorpusStatistics();
     loadDocumentData();
-    System.out.println("Time taken for loading index is "+ String.valueOf((System.currentTimeMillis() - startTime)/1000));
+    System.out.println("Time taken for loading index is " + String.valueOf((System.currentTimeMillis() - startTime) / 1000));
   }
 
   @Override
-  void MergePostingsLists(int[] pointersToMerge,int endIndexPointersToMerge, DataInputStream[] disArr, String word) throws IOException {
+  void MergePostingsLists(int[] pointersToMerge, int endIndexPointersToMerge, DataInputStream[] disArr, String word) throws IOException {
     class OccurenceListPointer {
       public int _docID;
       public int _pointer;
+
       public OccurenceListPointer(int docID, int pointer) {
         this._docID = docID;
         this._pointer = pointer;
@@ -121,7 +123,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
     dataOutputStream.writeUTF(word);
     int[] numberOfOccurences = new int[disArr.length];
     int totalOccurences = 0;
-    for(int i = 0; i <= endIndexPointersToMerge; i++) {
+    for (int i = 0; i <= endIndexPointersToMerge; i++) {
       numberOfOccurences[pointersToMerge[i]] = disArr[pointersToMerge[i]].readInt();
       totalOccurences += numberOfOccurences[pointersToMerge[i]];
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
@@ -129,7 +131,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
     dataOutputStream.write(Get(totalOccurences));
     int prevDocID = 0;
-    while(!occurenceListPQ.isEmpty()) {
+    while (!occurenceListPQ.isEmpty()) {
       OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
       int currDocID = occurenceListPointer._docID;
       dataOutputStream.write(Get(currDocID - prevDocID));
@@ -138,14 +140,14 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       int occurrences = dis.readInt();
       dataOutputStream.write(Get(occurrences));
       int prevPosition = 0;
-      for(int i = 0; i < occurrences; i++) {
+      for (int i = 0; i < occurrences; i++) {
         int currPosition = dis.readInt();
         dataOutputStream.write(Get(currPosition - prevPosition));
         prevPosition = currPosition;
       }
 
       numberOfOccurences[occurenceListPointer._pointer]--;
-      if(numberOfOccurences[occurenceListPointer._pointer] != 0) {
+      if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
         occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
       }
     }
@@ -215,7 +217,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
 
   @Override
   public DocumentIndexed nextDoc(Query query, int docid) {
-    return super.nextDoc(query,docid);
+    return super.nextDoc(query, docid);
 
   }
 
@@ -239,11 +241,128 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
    */
   @Override
   public int documentTermFrequency(String term, int docid) {
-    return super.documentTermFrequency(term,docid);
+    return super.documentTermFrequency(term, docid);
   }
 
   @Override
   public int getQueryTokenCountInCorpus(QueryToken token) {
     return super.getQueryTokenCountInCorpus(token);
+  }
+
+  @Override
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> sortedDocIds, int numTerms){
+
+    Vector<TermProbability> result = new Vector<TermProbability>();
+
+    class TermProbabilityComparator implements Comparator<TermProbability> {
+      @Override
+      public int compare(TermProbability p1, TermProbability p2) {
+        if (p1.getProbability() > p2.getProbability()) {
+          return 1;
+        } else if (p2.getProbability() > p1.getProbability()) {
+          return -1;
+        } else {
+          return 0;
+        }
+      }
+    }
+
+    PriorityQueue<TermProbability> termProbabilitiesPQ = new PriorityQueue<TermProbability>(5, new TermProbabilityComparator());
+
+    try {
+      DataInputStream dis = new DataInputStream(new BufferedInputStream(new FileInputStream(_corpusStatics)));
+      int docIdsTotalTerms = 0;
+      outerLoop:
+      while (dis.available() > 0) {
+        dis.readInt(); //number of docs
+        dis.readInt(); //total tokens in corpus
+        int size = dis.readInt();
+        int sortedDocIdIndex = 0;
+        for (int i = 0; i < size; i++) {
+          if(sortedDocIdIndex >= sortedDocIds.size()) {
+            break outerLoop;
+          }
+          int totalDocTerms = dis.readInt();
+          if(i == sortedDocIds.get(sortedDocIdIndex)) {
+            sortedDocIdIndex++;
+            docIdsTotalTerms += totalDocTerms;
+          }
+        }
+      }
+
+      dis.close();
+
+      File indexDir = new File(_options._indexPrefix);
+      final String indexFilesPrefix = "invertedCompressedIndex.idx" + "_";
+      File[] foundFiles = indexDir.listFiles(new FilenameFilter() {
+        public boolean accept(File dir, String name) {
+          return name.startsWith(indexFilesPrefix);
+        }
+      });
+
+      if(foundFiles == null) {
+        return result;
+      }
+
+      for(File foundFile : foundFiles) {
+        DataInputStream disComp = new DataInputStream(
+                new BufferedInputStream(
+                        new FileInputStream(foundFile)));
+        while (disComp.available() > 0) {
+
+          int sortedDocIdIndex = 0;
+          int termOccurrencesInDocs = 0;
+          String term = disComp.readUTF();
+
+          int numOfDocs = getNextInt(disComp);
+          int sumTillPrevDocId = 0;
+          for (int i = 0; i < numOfDocs; i++) {
+            int docId = sumTillPrevDocId + getNextInt(disComp);
+            sumTillPrevDocId = docId;
+            int numOfOcc = getNextInt(disComp);
+            if(sortedDocIdIndex < sortedDocIds.size() &&
+                    docId == sortedDocIds.get(sortedDocIdIndex)) {
+              sortedDocIdIndex++;
+              termOccurrencesInDocs += numOfOcc;
+            }
+            for (int j = 0; j < numOfOcc; j++) {
+              getNextInt(disComp);
+            }
+          }
+          if(termOccurrencesInDocs != 0) {
+            double probability = ((double)termOccurrencesInDocs)/docIdsTotalTerms;
+            termProbabilitiesPQ.add(new TermProbability(term, probability));
+          }
+          if(termProbabilitiesPQ.size() > numTerms) {
+            termProbabilitiesPQ.poll();
+          }
+        }
+        //Close the input stream
+        disComp.close();
+      }
+    }
+    catch (FileNotFoundException ex) {
+      return result;
+    }
+    catch (IOException ex) {
+      return result;
+    }
+
+    double sumProbabilities = 0.0;
+    while(!termProbabilitiesPQ.isEmpty()) {
+      TermProbability termProbability = termProbabilitiesPQ.poll();
+      sumProbabilities+= termProbability.getProbability();
+      result.add(termProbability);
+    }
+
+    Collections.reverse(result);
+
+    //Normalizing the probabilities
+    for(int i = 0; i < result.size(); i++) {
+      TermProbability termProbability = result.get(i);
+      termProbability.setProbability(termProbability.getProbability()/sumProbabilities);
+    }
+
+    return result;
   }
 }

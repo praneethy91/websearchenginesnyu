@@ -244,6 +244,11 @@ class IndexerFullScan extends Indexer implements Serializable {
     return 0;
   }
 
+  @Override
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
+    throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
+  }
+
   ///// Utility
 
   public Vector<String> getTermVector(Vector<Integer> tokens) {

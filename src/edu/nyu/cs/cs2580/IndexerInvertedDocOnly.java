@@ -294,6 +294,11 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
     return 0;
   }
 
+  @Override
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
+    throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
+  }
+
   private void insertToken(int docID, String s) {
 
     if (!distributedIndex.containsKey(s)) {
