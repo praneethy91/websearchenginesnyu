@@ -230,16 +230,19 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
     }
 
-    // This condition is for skipping stop words in corpus which appear more than 1% of times
-    if(((double)totalOccurences)/totalTokensInCorpus > 0.01) {
+    // This condition is for skipping stop words in corpus which appear in more than 50% of docs
+    if(((double)totalOccurences)/totalTokensInCorpus > 0.5) {
       while (!occurenceListPQ.isEmpty()) {
         OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
         DataInputStream dis = disArr[occurenceListPointer._pointer];
-        for(int j = 0; j < numberOfOccurences[occurenceListPointer._pointer]; j++) {
-          int occurrences = dis.readInt();
-          for (int i = 0; i < occurrences; i++) {
-            dis.readInt(); // position in the occurrence
-          }
+        int occurrences = dis.readInt();
+        for (int i = 0; i < occurrences; i++) {
+          dis.readInt(); // position in the occurrence
+        }
+
+        numberOfOccurences[occurenceListPointer._pointer]--;
+        if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
+          occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
         }
       }
     }

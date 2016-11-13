@@ -227,9 +227,9 @@ class QueryHandler implements HttpHandler {
       response.append(tp.asTextResult());
       response.append("\n");
     }
-    if(response.length() == 0) {
-      throw new UnsupportedOperationException("No term probabilities found for Query representation");
-    }
+    //if(response.length() == 0) {
+    //  throw new UnsupportedOperationException("No term probabilities found for Query representation");
+    //}
   }
 
   public void handle(HttpExchange exchange) throws IOException {

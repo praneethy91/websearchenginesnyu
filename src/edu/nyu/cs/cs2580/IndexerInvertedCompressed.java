@@ -128,48 +128,53 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
     }
 
-    int prevDocID = 0;
-    int sumOccurrencesOfTerm = 0;
-    Vector<Byte> toWrite = new Vector<Byte>();
-    toWrite.addAll(Get(totalOccurences));
-    while (!occurenceListPQ.isEmpty()) {
-      OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
-      int currDocID = occurenceListPointer._docID;
-      toWrite.addAll(Get(currDocID - prevDocID));
-      prevDocID = currDocID;
-      DataInputStream dis = disArr[occurenceListPointer._pointer];
-      int occurrences = dis.readInt();
-      sumOccurrencesOfTerm += occurrences;
-      toWrite.addAll(Get(occurrences));
-      int prevPosition = 0;
-      for (int i = 0; i < occurrences; i++) {
-        int currPosition = dis.readInt();
-        toWrite.addAll(Get(currPosition - prevPosition));
-        prevPosition = currPosition;
-      }
+    // This condition is for skipping stop words in corpus which appear in more than 50% of docs
+    if(((double)totalOccurences)/numDocs() > 0.5) {
+      while (!occurenceListPQ.isEmpty()) {
+        OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+        DataInputStream dis = disArr[occurenceListPointer._pointer];
+        int occurrences = dis.readInt();
+        for (int i = 0; i < occurrences; i++) {
+          dis.readInt(); // position in the occurrence
+        }
 
-      numberOfOccurences[occurenceListPointer._pointer]--;
-      if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
-        occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        numberOfOccurences[occurenceListPointer._pointer]--;
+        if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
+          occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        }
       }
     }
-
-    // This condition is for skipping stop words in corpus which appear more than 0.5% of times
-    if(((double)sumOccurrencesOfTerm)/totalTokensInCorpus < 0.005) {
+    else {
+      int prevDocID = 0;
       dataOutputStream.writeUTF(word);
-      byte[] buffer = new byte[toWrite.size()];
-      int count = 0;
-      for (byte b : toWrite) {
-        buffer[count++] = b;
+      dataOutputStream.write(Get(totalOccurences));
+      while (!occurenceListPQ.isEmpty()) {
+        OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+        int currDocID = occurenceListPointer._docID;
+        dataOutputStream.write(Get(currDocID - prevDocID));
+        prevDocID = currDocID;
+        DataInputStream dis = disArr[occurenceListPointer._pointer];
+        int occurrences = dis.readInt();
+        dataOutputStream.write(Get(occurrences));
+        int prevPosition = 0;
+        for (int i = 0; i < occurrences; i++) {
+          int currPosition = dis.readInt();
+          dataOutputStream.write(Get(currPosition - prevPosition));
+          prevPosition = currPosition;
+        }
+
+        numberOfOccurences[occurenceListPointer._pointer]--;
+        if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
+          occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        }
       }
-      dataOutputStream.write(buffer);
     }
 
     dataOutputStream.flush();
     dataOutputStream.close();
   }
 
-  public static LinkedList<Byte> Get(int num) throws IOException {
+  public static byte[] Get(int num) throws IOException {
 
     LinkedList<Byte> bytePos = new LinkedList<>();
     int x = ((1 << 7) | (num & ((1 << 7) - 1)));
@@ -181,7 +186,12 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       num = num >> 7;
     }
 
-    return bytePos;
+    byte[] arr = new byte[bytePos.size()];
+    int i = 0;
+    for (Byte by : bytePos) {
+      arr[i++] = by;
+    }
+    return arr;
 
   }
 
