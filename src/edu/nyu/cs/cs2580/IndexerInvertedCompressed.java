@@ -268,7 +268,12 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
   }
 
   @Override
-  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> sortedDocIds, int numTerms){
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Query query, Vector<Integer> sortedDocIds, int numTerms){
+
+    Set<String> queryTokensSet = new HashSet<String>();
+    for(QueryToken queryToken: query._tokens) {
+      queryTokensSet.add(queryToken.getToken());
+    }
 
     Vector<TermProbability> result = new Vector<TermProbability>();
 
@@ -347,7 +352,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
               getNextInt(disComp);
             }
           }
-          if(termOccurrencesInDocs != 0) {
+          if(termOccurrencesInDocs != 0 && !queryTokensSet.contains(term)) {
             double probability = ((double)termOccurrencesInDocs)/docIdsTotalTerms;
             termProbabilitiesPQ.add(new TermProbability(term, probability));
           }

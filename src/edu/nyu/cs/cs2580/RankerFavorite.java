@@ -85,7 +85,7 @@ public class RankerFavorite extends Ranker {
       docIds.add(document.getID());
     }
     Collections.sort(docIds);
-    return _indexer.getHighestTermProbabilitiesForDocs(docIds, numTerms);
+    return _indexer.getHighestTermProbabilitiesForDocs(query, docIds, numTerms);
   }
 
   private double getQueryTokenCountInCorpus(QueryToken queryToken) {
