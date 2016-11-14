@@ -670,7 +670,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
   @Override
-  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Query query, Vector<Integer> docIds, int numTerms) {
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
     throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
   }
 

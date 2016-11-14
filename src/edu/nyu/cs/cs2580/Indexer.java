@@ -137,7 +137,7 @@ public abstract class Indexer {
 
   public abstract int getQueryTokenCountInCorpus(QueryToken token);
 
-  public abstract Vector<TermProbability> getHighestTermProbabilitiesForDocs(Query query, Vector<Integer> docIds, int numTerms);
+  public abstract Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms);
 
   /**
    * All Indexers must be created through this factory class based on the
