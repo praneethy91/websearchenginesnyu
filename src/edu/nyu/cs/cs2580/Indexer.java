@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
+import java.util.Vector;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -135,6 +136,8 @@ public abstract class Indexer {
   public abstract int documentTermFrequency(String term, int docid);
 
   public abstract int getQueryTokenCountInCorpus(QueryToken token);
+
+  public abstract Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms);
 
   /**
    * All Indexers must be created through this factory class based on the

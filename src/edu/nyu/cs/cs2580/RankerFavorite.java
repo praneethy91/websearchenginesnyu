@@ -77,6 +77,17 @@ public class RankerFavorite extends Ranker {
     return new ScoredDocument(docIndexed, score);
   }
 
+  @Override
+  public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) {
+    Vector<ScoredDocument> documents = runQuery(query, numDocs);
+    Vector<Integer> docIds = new Vector<>();
+    for(ScoredDocument document: documents) {
+      docIds.add(document.getID());
+    }
+    Collections.sort(docIds);
+    return _indexer.getHighestTermProbabilitiesForDocs(docIds, numTerms);
+  }
+
   private double getQueryTokenCountInCorpus(QueryToken queryToken) {
     if(!tokenFrequencyCache.containsKey(queryToken.getToken())) {
       tokenFrequencyCache.put(queryToken.getToken(), (double)_indexer.getQueryTokenCountInCorpus(queryToken));

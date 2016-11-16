@@ -13,7 +13,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   // This is where we will store the index file
   protected String _indexFile = _options._indexPrefix + "/invertedOccurrenceIndex.idx";
-  private final String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
+  protected String _corpusStatics = _options._indexPrefix + "/corpusStatistics.idx";
   private final String _documentStatistics = _options._indexPrefix + "/documentStatistics.idx";
 
   //The wiki corpus directory from where we will load files for constructing index
@@ -221,7 +221,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     PriorityQueue<OccurenceListPointer> occurenceListPQ = new PriorityQueue<OccurenceListPointer>(50, new DocIDComparator());
 
     DataOutputStream dataOutputStream = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(_indexFile + "_" + word.charAt(0), true)));
-    dataOutputStream.writeUTF(word);
+
     int[] numberOfOccurences = new int[disArr.length];
     int totalOccurences = 0;
     for(int i = 0; i <= endIndexPointersToMerge; i++) {
@@ -230,21 +230,40 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       occurenceListPQ.add(new OccurenceListPointer(disArr[pointersToMerge[i]].readInt(), pointersToMerge[i]));
     }
 
-    dataOutputStream.writeInt(totalOccurences);
-    while(!occurenceListPQ.isEmpty()) {
-      OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
-      dataOutputStream.writeInt(occurenceListPointer._docID);
-      DataInputStream dis = disArr[occurenceListPointer._pointer];
-      int occurrences = dis.readInt();
-      dataOutputStream.writeInt(occurrences);
-      for(int i = 0; i < occurrences; i++) {
-        int position = dis.readInt();
-        dataOutputStream.writeInt(position);
-      }
+    // This condition is for skipping stop words in corpus which appear in more than 50% of docs
+    if(((double)totalOccurences)/totalTokensInCorpus > 0.5) {
+      while (!occurenceListPQ.isEmpty()) {
+        OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+        DataInputStream dis = disArr[occurenceListPointer._pointer];
+        int occurrences = dis.readInt();
+        for (int i = 0; i < occurrences; i++) {
+          dis.readInt(); // position in the occurrence
+        }
 
-      numberOfOccurences[occurenceListPointer._pointer]--;
-      if(numberOfOccurences[occurenceListPointer._pointer] != 0) {
-        occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        numberOfOccurences[occurenceListPointer._pointer]--;
+        if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
+          occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        }
+      }
+    }
+    else {
+      dataOutputStream.writeUTF(word);
+      dataOutputStream.writeInt(totalOccurences);
+      while (!occurenceListPQ.isEmpty()) {
+        OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
+        dataOutputStream.writeInt(occurenceListPointer._docID);
+        DataInputStream dis = disArr[occurenceListPointer._pointer];
+        int occurrences = dis.readInt();
+        dataOutputStream.writeInt(occurrences);
+        for (int i = 0; i < occurrences; i++) {
+          int position = dis.readInt();
+          dataOutputStream.writeInt(position);
+        }
+
+        numberOfOccurences[occurenceListPointer._pointer]--;
+        if (numberOfOccurences[occurenceListPointer._pointer] != 0) {
+          occurenceListPQ.add(new OccurenceListPointer(disArr[occurenceListPointer._pointer].readInt(), occurenceListPointer._pointer));
+        }
       }
     }
 
@@ -297,7 +316,6 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       }
     }
     dis.close();
-
   }
 
   protected void loadDocumentData() throws IOException{
@@ -649,6 +667,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     return count;
+  }
+
+  @Override
+  public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
+    throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

@@ -53,6 +53,8 @@ public abstract class Ranker {
    */
   public abstract Vector<ScoredDocument> runQuery(Query query, int numResults);
 
+  public abstract Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms);
+
   /**
    * All Rankers must be created through this factory class based on the
    * provided {@code arguments}.

@@ -1,6 +1,8 @@
 package edu.nyu.cs.cs2580;
 
-import java.io.IOException;
+import java.io.*;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -8,6 +10,14 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * @CS2580: Implement this class for HW3.
  */
 public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
+
+  ArrayList<String> docNameList = new ArrayList<>();
+  HashMap<String, Integer> docNameToDocId = new HashMap<>();
+
+  final String docIDIndexFile = _options._indexPrefix + "/docIDIndex.idx";
+
+  ArrayList<ArrayList<Integer>> graph = new ArrayList<>();
+
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
   }
@@ -34,8 +44,35 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public void prepare() throws IOException {
     System.out.println("Preparing " + this.getClass().getName());
+
+    long startTime  = System.currentTimeMillis();
+    File folder = new File(_options._corpusPrefix);
+
+    loadDocIDIndex();
+    int docIndex = 0;
+
+      for (final File fileEntry : folder.listFiles()) {
+
+        ArrayList<Integer> outlinkDocIDs = new ArrayList<>();
+        if (!fileEntry.isDirectory()) {
+            HeuristicLinkExtractor extractor =  new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
+            String docName = extractor.getNextInCorpusLinkTarget();
+
+            while(docName != null){
+              outlinkDocIDs.add(docNameToDocId.get(docName));
+              docName = extractor.getNextInCorpusLinkTarget();
+            }
+        }
+        graph.add(outlinkDocIDs);
+        docIndex++;
+
+      }
+      System.out.println((System.currentTimeMillis() - startTime)/1000);
+
     return;
   }
+
+
 
   /**
    * This function computes the PageRank based on the internal graph generated
@@ -50,12 +87,73 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
    *
    * @throws IOException
    */
+
+
+
   @Override
   public void compute() throws IOException {
     System.out.println("Computing using " + this.getClass().getName());
     return;
   }
 
+  private void createDocIdIndex() {
+
+    File fout = new File(docIDIndexFile);
+    FileOutputStream fos = null;
+
+    try {
+      fos = new FileOutputStream(fout);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+
+
+
+    int docIDIndex = 0;
+    File folder = new File(_options._corpusPrefix);
+
+    for (final File fileEntry : folder.listFiles()) {
+      if (!fileEntry.isDirectory()) {
+        try {
+          bw.write(docIDIndex+":"+fileEntry.getName());
+          bw.newLine();
+          docIDIndex++;
+        } catch (IOException e) {
+          e.printStackTrace();
+        }
+      }
+    }
+
+    try {
+      bw.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
+  public void loadDocIDIndex() throws IOException {
+
+    // Open the file
+    FileInputStream fstream = new FileInputStream(docIDIndexFile);
+    BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+    String strLine;
+
+  //Read File Line By Line
+    while ((strLine = br.readLine()) != null)   {
+      // Print the content on the console
+      String[] lineArray  = strLine.split(":");
+      docNameList.add(Integer.parseInt(lineArray[0]),lineArray[1]);
+      docNameToDocId.put(lineArray[1],Integer.parseInt(lineArray[0]));
+
+    }
+
+  //Close the input stream
+    br.close();
+
+  }
   /**
    * During indexing mode, this function loads the PageRank values computed
    * during mining mode to be used by the indexer.

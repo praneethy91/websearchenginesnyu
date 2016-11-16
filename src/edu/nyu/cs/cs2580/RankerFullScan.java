@@ -5,6 +5,7 @@ import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * This Ranker makes a full scan over all the documents in the index. It is the
@@ -33,6 +34,11 @@ class RankerFullScan extends Ranker {
       results.add(all.get(i));
     }
     return results;
+  }
+
+  @Override
+  public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) {
+    throw new UnsupportedOperationException("This ranker does not support the Query Similarity model");
   }
 
   private ScoredDocument scoreDocument(Query query, int did) {
