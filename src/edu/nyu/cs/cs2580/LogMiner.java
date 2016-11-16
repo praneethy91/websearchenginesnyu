@@ -35,8 +35,13 @@ public abstract class LogMiner {
    */
   public static class Factory {
     public static LogMiner getLogMinerByOption(Options options) {
-      if (options._logMinerType.equals("numviews")) {
-        return new LogMinerNumviews(options);
+
+      try {
+        if (options._logMinerType.equals("numviews")) {
+          return new LogMinerNumviews(options);
+        }
+      }catch (Exception e){
+        e.printStackTrace();
       }
       return null;
     }

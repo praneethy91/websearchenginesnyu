@@ -37,13 +37,13 @@ public class LogMinerNumviews extends LogMiner {
     HashMap<String, Integer> docNames = new HashMap<>();
 
     File f;
-    File[] files;
+    f = new File(_options._corpusPrefix);
 
-    f = new File("/Users/mansivirani/websearchenginesnyu/data/wiki");
+    File[] files;
     files = f.listFiles();
     String fileName;
 
-    //Store all document names in the corpus to the map and set their numviews to 0
+    //Store all document names present in the corpus to the map and set their numviews to 0
     for (File file : files) {
 
       if (!file.isDirectory() && !file.isHidden()) {
@@ -53,46 +53,11 @@ public class LogMinerNumviews extends LogMiner {
       }
     }
 
+    File log = new File(_options._logPrefix);
+    File[] logFiles;
+    logFiles = log.listFiles();
 
-    FileInputStream fis = new FileInputStream("/Users/mansivirani/websearchenginesnyu/data/log/20160601-160000.log");
-    Scanner sc = new Scanner(fis);
-
-
-
-    //Write the doc name and count to file repeat above step.
-
-    /*
-    ** Run through the files in the log, decode them and for each file check if it's name exists in the map,
-    ** if it exists, then increment its numviews to the count from the log
-    */
-
-    while (sc.hasNextLine()) {
-
-      String line = sc.nextLine();
-      String[] tokens = line.split(" ");
-
-      try {
-
-        String article = tokens[1];
-        article = article.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
-        article = article.replaceAll("\\+", "%2B");
-        article = java.net.URLDecoder.decode(article, "UTF-8");
-
-        //article = article.trim();
-        //article = article.replaceAll("\\s", "_");
-
-        int numViews = Integer.parseInt(tokens[2]);
-
-        if(docNames.containsKey(article))
-          docNames.put(article, docNames.get(article) + numViews);
-
-      } catch (Exception e2) {
-        e2.printStackTrace();
-
-      }
-    }
-
-    File newFile = new File("/Users/mansivirani/websearchenginesnyu/data/docsandnumviews");
+    File newFile = new File(_options._indexPrefix+ "/numViewsIndex.tsv");
 
     // if file doesn't exist, then create it
     if (!newFile.exists()) {
@@ -102,14 +67,40 @@ public class LogMinerNumviews extends LogMiner {
     FileWriter fw = new FileWriter(newFile.getAbsoluteFile());
     BufferedWriter bw = new BufferedWriter(fw);
 
-    //writing filenames with numviews other than 0 to the new file
-    for (String docname : docNames.keySet()) {
-      if(docNames.get(docname) != 0)
-        bw.write(docname + "\t" + docNames.get(docname).toString() + "\n");
+      for (File file: logFiles) {
 
-    }
+        if (!file.isDirectory() && !file.isHidden()) {
 
-    fis.close();
+          BufferedReader br2 = new BufferedReader(new FileReader(file));
+          String line;
+          String[] tokens;
+
+          while ((line = br2.readLine()) != null) {
+
+            try {
+
+                tokens = line.split(" ");
+                String article = tokens[1];
+                article = article.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+                article = article.replaceAll("\\+", "%2B");
+                article = java.net.URLDecoder.decode(article, "UTF-8");
+
+                int numViews = Integer.parseInt(tokens[2]);
+
+                if (docNames.containsKey(article))
+                  bw.write(article + "\t" + numViews + "\n");
+
+                //docNames.put(article, docNames.get(article) + numViews);
+
+            } catch (Exception e2) {
+              e2.printStackTrace();
+
+            }
+          }
+        }
+      }
+
+
     bw.close();
 
   }
@@ -122,12 +113,24 @@ public class LogMinerNumviews extends LogMiner {
    * @throws IOException
    */
   @Override
-  public Object load() throws IOException {
+  public HashMap<String, Integer> load() throws IOException {
     System.out.println("Loading using " + this.getClass().getName());
+    BufferedReader br = new BufferedReader(new FileReader(_options._indexPrefix+ "/numViewsIndex.tsv"));
 
+    HashMap<String, Integer> numViewIndex = new HashMap<>();
+    String line;
+    String tokens[];
 
-    return null;
+    while ((line = br.readLine()) != null){
+      tokens = line.split("\t");
+      numViewIndex.put(tokens[0], Integer.parseInt(tokens[1]));
+
+    }
+
+    return numViewIndex;
 
     //Load all values from the new file and put into a hashmap back in a way that indexer can use it
   }
+
+
 }
