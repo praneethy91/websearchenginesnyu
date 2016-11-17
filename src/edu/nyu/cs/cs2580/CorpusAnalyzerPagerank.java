@@ -15,8 +15,9 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   HashMap<String, Integer> docNameToDocId = new HashMap<>();
 
   final String docIDIndexFile = _options._indexPrefix + "/docIDIndex.idx";
+  final String pageRankFile = _options._indexPrefix + "/pageRank.idx";
 
-  ArrayList<ArrayList<Integer>> graph = new ArrayList<>();
+  double[][] graph ;
 
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
@@ -43,32 +44,33 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
    */
   @Override
   public void prepare() throws IOException {
-    System.out.println("Preparing " + this.getClass().getName());
 
-    long startTime  = System.currentTimeMillis();
+    System.out.println("Preparing " + this.getClass().getName());
     File folder = new File(_options._corpusPrefix);
 
     loadDocIDIndex();
-    int docIndex = 0;
+    graph = new double[docNameList.size()+1][docNameList.size()+1];
 
       for (final File fileEntry : folder.listFiles()) {
-
-        ArrayList<Integer> outlinkDocIDs = new ArrayList<>();
-        if (!fileEntry.isDirectory()) {
+        if (!fileEntry.isDirectory() ) {
+            ArrayList<Integer> linkedNodes = new ArrayList<>();
             HeuristicLinkExtractor extractor =  new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
             String docName = extractor.getNextInCorpusLinkTarget();
 
-            while(docName != null){
-              outlinkDocIDs.add(docNameToDocId.get(docName));
+
+          while(docName != null){
+
+            if(docNameToDocId.get(docName) != null)
+              linkedNodes.add(docNameToDocId.get(docName));
               docName = extractor.getNextInCorpusLinkTarget();
             }
+
+          double value = (double)1/linkedNodes.size();
+          for(int i  = 0 ; i < linkedNodes.size() ; i++){
+            graph[linkedNodes.get(i)][ docNameToDocId.get(fileEntry.getName())] += value;
+          }
         }
-        graph.add(outlinkDocIDs);
-        docIndex++;
-
       }
-      System.out.println((System.currentTimeMillis() - startTime)/1000);
-
     return;
   }
 
@@ -93,8 +95,54 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public void compute() throws IOException {
     System.out.println("Computing using " + this.getClass().getName());
+    double lambda = 0.1;
+    int totalNumberOfDocs = docNameList.size();
+    for(int i = 0 ; i < totalNumberOfDocs ; i++){
+
+      for(int j = 0; j < totalNumberOfDocs ; j++){
+        graph[i][j] = lambda*graph[i][j] + (1-lambda)/totalNumberOfDocs;
+      }
+    }
+    savePageRankToFile(graph);
     return;
   }
+
+  private void savePageRankToFile(double[][] graph) {
+
+    File fout = new File(pageRankFile);
+    FileOutputStream fos = null;
+
+    try {
+      fos = new FileOutputStream(fout);
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    }
+    BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
+
+
+    int totalNumberOfDocs = docNameList.size();
+    for(int i = 0 ; i < totalNumberOfDocs ; i++){
+      double pageRank = 0.0;
+
+      for(int j = 0; j < totalNumberOfDocs ; j++){
+        pageRank += graph[i][j];
+
+      }
+      try {
+        bw.write(i+":"+pageRank);
+        bw.newLine();
+      } catch (IOException e) {
+        e.printStackTrace();
+      }
+    }
+    try {
+      bw.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+
+  }
+
 
   private void createDocIdIndex() {
 
@@ -107,8 +155,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
       e.printStackTrace();
     }
     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-
-
 
     int docIDIndex = 0;
     File folder = new File(_options._corpusPrefix);
@@ -147,13 +193,13 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
       String[] lineArray  = strLine.split(":");
       docNameList.add(Integer.parseInt(lineArray[0]),lineArray[1]);
       docNameToDocId.put(lineArray[1],Integer.parseInt(lineArray[0]));
-
     }
 
   //Close the input stream
     br.close();
 
   }
+
   /**
    * During indexing mode, this function loads the PageRank values computed
    * during mining mode to be used by the indexer.
@@ -164,5 +210,9 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   public Object load() throws IOException {
     System.out.println("Loading using " + this.getClass().getName());
     return null;
+  }
+
+  public void buildTransitionMatrix(){
+
   }
 }
