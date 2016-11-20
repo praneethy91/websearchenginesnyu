@@ -48,29 +48,31 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     System.out.println("Preparing " + this.getClass().getName());
     File folder = new File(_options._corpusPrefix);
 
+    createDocIdIndex();
     loadDocIDIndex();
     graph = new double[docNameList.size()+1][docNameList.size()+1];
 
-      for (final File fileEntry : folder.listFiles()) {
-        if (!fileEntry.isDirectory() ) {
-            ArrayList<Integer> linkedNodes = new ArrayList<>();
-            HeuristicLinkExtractor extractor =  new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
-            String docName = extractor.getNextInCorpusLinkTarget();
+    for (final File fileEntry : folder.listFiles()) {
+      if (!fileEntry.isDirectory() &&!fileEntry.isHidden()) {
+        ArrayList<Integer> linkedNodes = new ArrayList<>();
+        HeuristicLinkExtractor extractor =  new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
+        String docName = extractor.getNextInCorpusLinkTarget();
 
 
-          while(docName != null){
+        while(docName != null){
 
-            if(docNameToDocId.get(docName) != null)
-              linkedNodes.add(docNameToDocId.get(docName));
-              docName = extractor.getNextInCorpusLinkTarget();
-            }
+          if(docNameToDocId.get(docName) != null)
+            linkedNodes.add(docNameToDocId.get(docName));
+            docName = extractor.getNextInCorpusLinkTarget();
+        }
 
-          double value = (double)1/linkedNodes.size();
-          for(int i  = 0 ; i < linkedNodes.size() ; i++){
-            graph[linkedNodes.get(i)][ docNameToDocId.get(fileEntry.getName())] += value;
-          }
+        double value = (double)1/linkedNodes.size();
+        for(int i  = 0 ; i < linkedNodes.size() ; i++) {
+          graph[linkedNodes.get(i)][ docNameToDocId.get(fileEntry.getName())] += value;
         }
       }
+    }
+
     return;
   }
 
@@ -118,7 +120,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
       e.printStackTrace();
     }
     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
-
 
     int totalNumberOfDocs = docNameList.size();
     for(int i = 0 ; i < totalNumberOfDocs ; i++){
@@ -212,7 +213,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     return null;
   }
 
-  public void buildTransitionMatrix(){
-
+  public void buildTransitionMatrix() {
+    
   }
 }
