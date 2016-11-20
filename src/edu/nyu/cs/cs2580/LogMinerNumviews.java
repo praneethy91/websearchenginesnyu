@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
+import java.util.regex.Pattern;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -67,39 +68,52 @@ public class LogMinerNumviews extends LogMiner {
     FileWriter fw = new FileWriter(newFile.getAbsoluteFile());
     BufferedWriter bw = new BufferedWriter(fw);
 
-      for (File file: logFiles) {
+
+
+    for (File file: logFiles) {
 
         if (!file.isDirectory() && !file.isHidden()) {
 
           BufferedReader br2 = new BufferedReader(new FileReader(file));
           String line;
           String[] tokens;
+          String integerRegex = "([0-9]{0,9})";
 
           while ((line = br2.readLine()) != null) {
+            tokens = line.split(" ");
 
-            try {
-
-                tokens = line.split(" ");
-                String article = tokens[1];
-                article = article.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
-                article = article.replaceAll("\\+", "%2B");
-                article = java.net.URLDecoder.decode(article, "UTF-8");
-
-                int numViews = Integer.parseInt(tokens[2]);
-
-                if (docNames.containsKey(article))
-                  bw.write(article + "\t" + numViews + "\n");
-
-                //docNames.put(article, docNames.get(article) + numViews);
-
-            } catch (Exception e2) {
-              e2.printStackTrace();
-
+            //Checking if line is formatted properly
+            if(tokens.length < 3) {
+              continue;
             }
+
+            //Checking if the number of views is an Integer
+            String article = tokens[1];
+            int numViews;
+            try {
+               numViews = Integer.parseInt(tokens[2]);
+            }
+            catch(NumberFormatException ex) {
+              continue;
+            }
+
+            article = article.replaceAll("\\+", "%2B");
+            article = article.replaceAll("%(?![0-9a-fA-F]{2})", "%25");
+            article = java.net.URLDecoder.decode(article, "UTF-8");
+            article = article.trim();
+
+            if (docNames.containsKey(article))
+              docNames.put(article, docNames.get(article) + numViews);
           }
         }
       }
 
+    for (String docname: docNames.keySet()) {
+
+      if(docNames.get(docname) != 0)
+        bw.write(docname + "\t" + docNames.get(docname).toString() + "\n");
+
+    }
 
     bw.close();
 
@@ -113,7 +127,7 @@ public class LogMinerNumviews extends LogMiner {
    * @throws IOException
    */
   @Override
-  public HashMap<String, Integer> load() throws IOException {
+  public Object load() throws IOException {
     System.out.println("Loading using " + this.getClass().getName());
     BufferedReader br = new BufferedReader(new FileReader(_options._indexPrefix+ "/numViewsIndex.tsv"));
 
