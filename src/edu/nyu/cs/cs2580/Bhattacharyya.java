@@ -2,7 +2,6 @@ package edu.nyu.cs.cs2580;
 
 import java.io.*;
 import java.security.InvalidParameterException;
-import java.util.DoubleSummaryStatistics;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
@@ -15,6 +14,7 @@ public class Bhattacharyya {
     if(args == null || args.length != 2) {
       throw new InvalidParameterException("Pass in the input and output file paths to compute the coefficient");
     }
+
     String inputFilePath = args[0];
     String outputFilePath = args[1];
     Vector<HashMap<String, Double>> queryRepMaps = new Vector<HashMap<String, Double>>();
@@ -24,21 +24,17 @@ public class Bhattacharyya {
     BufferedReader bufInput = new BufferedReader(new InputStreamReader(is));
 
     String line = null;
-    while((line = bufInput.readLine()) != null && !line.isEmpty()) {
+    while((line = bufInput.readLine()) != null && !line.trim().isEmpty()) {
       String[] lineSplitArr;
-      if((lineSplitArr = line.split(":")).length > 1) {
-        String queryRepTerm = lineSplitArr[0];
-        String[] repTermPair = lineSplitArr[1].split("\t");
-        String repTerm = repTermPair[0];
-        double repTermProb = Double.parseDouble(repTermPair[1]);
-
-        queryRepTerms.add(queryRepTerm);
-        HashMap<String, Double> map =  new HashMap<String, Double>();
-        map.put(repTerm, repTermProb);
-        queryRepMaps.add(map);
-      }
-      else {
-        String[] repTermPair = lineSplitArr[0].split("\t");
+      lineSplitArr = line.split(":");
+      String queryRepTerm = lineSplitArr[0];
+      queryRepTerms.add(queryRepTerm);
+      HashMap<String, Double> map =  new HashMap<String, Double>();
+      queryRepMaps.add(map);
+      InputStream is2 = new FileInputStream(lineSplitArr[1]);
+      BufferedReader bufInput2 = new BufferedReader(new InputStreamReader(is2));
+      while((line = bufInput2.readLine()) != null && !line.trim().isEmpty()){
+        String[] repTermPair = line.split("\t");
         String repTerm = repTermPair[0];
         double repTermProb = Double.parseDouble(repTermPair[1]);
         queryRepMaps.get(queryRepMaps.size() - 1).put(repTerm, repTermProb);
