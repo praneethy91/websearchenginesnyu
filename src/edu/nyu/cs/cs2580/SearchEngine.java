@@ -173,8 +173,11 @@ public class SearchEngine {
         SearchEngine.OPTIONS);
     Check(analyzer != null,
         "Analyzer " + SearchEngine.OPTIONS._corpusAnalyzerType + " not found!");
+
+    long startTime  = System.currentTimeMillis();
     analyzer.prepare();
     analyzer.compute();
+    System.out.println((System.currentTimeMillis() - startTime)/1000);
 
     LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
     Check(miner != null,
