@@ -1,10 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Scanner;
+import java.util.*;
 import java.util.regex.Pattern;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -35,7 +32,7 @@ public class LogMinerNumviews extends LogMiner {
   public void compute() throws IOException {
     System.out.println("Computing using " + this.getClass().getName());
 
-    HashMap<String, Integer> docNames = new HashMap<>();
+    TreeMap<String, Integer> docNames = new TreeMap<>();
 
     File f;
     f = new File(_options._corpusPrefix);
@@ -58,14 +55,15 @@ public class LogMinerNumviews extends LogMiner {
     File[] logFiles;
     logFiles = log.listFiles();
 
-    File newFile = new File(_options._indexPrefix+ "/numViewsIndex.tsv");
+    File newFile = new File(_options._indexPrefix+ "/numViewsIndex.idx");
+
 
     // if file doesn't exist, then create it
     if (!newFile.exists()) {
       newFile.createNewFile();
     }
 
-    FileWriter fw = new FileWriter(newFile.getAbsoluteFile());
+    FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
     BufferedWriter bw = new BufferedWriter(fw);
 
 
@@ -108,15 +106,26 @@ public class LogMinerNumviews extends LogMiner {
         }
       }
 
+    //List sortedKeys = new ArrayList(docNames.keySet());
+
+
     for (String docname: docNames.keySet()) {
 
-      if(docNames.get(docname) != 0)
-        bw.write(docname + "\t" + docNames.get(docname).toString() + "\n");
+
+      //if(docNames.get(docname) != 0)
+        //bw.write(docname + "\t" + docNames.get(docname).toString() + "\n");
+      try {
+        new WikiParser(new File(_options._corpusPrefix, docname));
+      }
+      catch(Exception e) {
+        continue;
+      }
+
+      bw.write(docNames.get(docname) + " ");
 
     }
 
     bw.close();
-
   }
 
 
@@ -129,22 +138,14 @@ public class LogMinerNumviews extends LogMiner {
   @Override
   public Object load() throws IOException {
     System.out.println("Loading using " + this.getClass().getName());
-    BufferedReader br = new BufferedReader(new FileReader(_options._indexPrefix+ "/numViewsIndex.tsv"));
+    Scanner sc = new Scanner(new File(_options._indexPrefix+ "/numViewsIndex.idx"));
 
-    HashMap<String, Integer> numViewIndex = new HashMap<>();
-    String line;
-    String tokens[];
-
-    while ((line = br.readLine()) != null){
-      tokens = line.split("\t");
-      numViewIndex.put(tokens[0], Integer.parseInt(tokens[1]));
+    Vector<Integer> numViewIndex = new Vector<Integer>();
+    while (sc.hasNext()){
+      numViewIndex.add(Integer.parseInt(sc.next()));
 
     }
 
     return numViewIndex;
-
-    //Load all values from the new file and put into a hashmap back in a way that indexer can use it
   }
-
-
 }
