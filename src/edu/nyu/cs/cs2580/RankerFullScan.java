@@ -5,7 +5,6 @@ import java.util.Vector;
 
 import edu.nyu.cs.cs2580.QueryHandler.CgiArguments;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
-import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * This Ranker makes a full scan over all the documents in the index. It is the
