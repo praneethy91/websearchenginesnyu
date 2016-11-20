@@ -1,7 +1,10 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -10,6 +13,14 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  * @CS2580: Implement this class for HW3.
  */
 public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
+
+  class FileComparator implements Comparator<File> {
+
+    @Override
+    public int compare(File f1, File f2) {
+      return f1.getName().compareTo(f2.getName());
+    }
+  }
 
   ArrayList<String> docNameList = new ArrayList<>();
   HashMap<String, Integer> docNameToDocId = new HashMap<>();
@@ -51,9 +62,18 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     createDocIdIndex();
     loadDocIDIndex();
     graph = new double[docNameList.size()+1][docNameList.size()+1];
+    File[] directoryListing = folder.listFiles();
+    Arrays.sort(directoryListing, new FileComparator());
 
-    for (final File fileEntry : folder.listFiles()) {
+    for (final File fileEntry : directoryListing) {
       if (!fileEntry.isDirectory() &&!fileEntry.isHidden()) {
+        try {
+          new WikiParser(fileEntry);
+        }
+        catch (Exception e) {
+          continue;
+        }
+
         ArrayList<Integer> linkedNodes = new ArrayList<>();
         HeuristicLinkExtractor extractor =  new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
         String docName = extractor.getNextInCorpusLinkTarget();
@@ -115,7 +135,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     FileOutputStream fos = null;
 
     try {
-      fos = new FileOutputStream(fout);
+      fos = new FileOutputStream(fout, false);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
@@ -151,7 +171,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     FileOutputStream fos = null;
 
     try {
-      fos = new FileOutputStream(fout);
+      fos = new FileOutputStream(fout, false);
     } catch (FileNotFoundException e) {
       e.printStackTrace();
     }
@@ -160,8 +180,18 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     int docIDIndex = 0;
     File folder = new File(_options._corpusPrefix);
 
-    for (final File fileEntry : folder.listFiles()) {
-      if (!fileEntry.isDirectory()) {
+    File[] directoryListing = folder.listFiles();
+    Arrays.sort(directoryListing, new FileComparator());
+
+    for (final File fileEntry : directoryListing) {
+      if (!fileEntry.isDirectory() && !fileEntry.isHidden()) {
+        try {
+          new WikiParser(fileEntry);
+        }
+        catch (Exception e) {
+          continue;
+        }
+
         try {
           bw.write(docIDIndex+":"+fileEntry.getName());
           bw.newLine();
@@ -214,6 +244,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   }
 
   public void buildTransitionMatrix() {
-    
+
   }
 }

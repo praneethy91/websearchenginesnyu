@@ -3,6 +3,7 @@ package edu.nyu.cs.cs2580;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -40,6 +41,14 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
 
   @Override
   public void constructIndex() throws IOException {
+    class FileComparator implements Comparator<File> {
+
+      @Override
+      public int compare(File f1, File f2) {
+        return f1.getName().compareTo(f2.getName());
+      }
+    }
+
     long startTime = System.currentTimeMillis();
 
     File dir = new File(_wikiCorpusDir);
@@ -48,6 +57,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
       System.out.println("Specify the corpus directory with wiki files/symbolic link in engine.conf.");
       return;
     }
+    Arrays.sort(directoryListing, new FileComparator());
     WikiParser wikiParser = null;
     int docID = 0;
     Set<String> tokens;
@@ -59,7 +69,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
     indexDir.mkdir();
     File[] foundFiles = indexDir.listFiles(new FilenameFilter() {
       public boolean accept(File dir, String name) {
-        return true;
+        return name.startsWith("inverted");
       }
     });
 
