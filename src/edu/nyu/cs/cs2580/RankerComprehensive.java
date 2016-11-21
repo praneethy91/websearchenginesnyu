@@ -81,7 +81,9 @@ public class RankerComprehensive extends Ranker {
     while ((scoredDoc = rankQueue.poll()) != null) {
       double score = scoredDoc.getScore();
       double numViews = _indexer._numViews.get(scoredDoc.getID());
+      scoredDoc.setNumViews(numViews);
       double pageRank = _indexer._pageRanks.get(scoredDoc.getID());
+      scoredDoc.setPageRank(pageRank);
       double finalScore = 0.9*(score - minScore)/scoreNm + 0.05*(numViews - minNumViews)/numviewsNm + 0.05*(pageRank - minPageRank)/pageRankNm;
       scoredDoc.setScore(finalScore);
       results.add(scoredDoc);
