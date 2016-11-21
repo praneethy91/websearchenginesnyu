@@ -17,8 +17,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     ArrayList<String> docNameList = new ArrayList<>();
     HashMap<String, Integer> docNameToDocId = new HashMap<>();
     Vector<Double> pageRank = new Vector<>();
-    double lambda = 0.1;
-    boolean squareGoogleMatrix = false;
+    Vector<Double> pageRankSquared = new Vector<>();
+
+    double lambda = 0.9;
+    boolean squareGoogleMatrix = true;
     HashMap<Integer, HashMap<Integer, Double>> graph = new HashMap<>();
 
     public CorpusAnalyzerPagerank(Options options) {
@@ -44,6 +46,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
      *
      * @throws IOException
      */
+
     @Override
     public void prepare() throws IOException {
 
@@ -63,7 +66,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
                     continue;
                 }
 
-                ArrayList<Integer> linkedNodes = new ArrayList<>();
+                Set<Integer> linkedNodes = new HashSet<Integer>();
                 HeuristicLinkExtractor extractor = new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
                 String docName = extractor.getNextInCorpusLinkTarget();
 
@@ -74,11 +77,13 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
                 }
                 double value = (double) 1 / linkedNodes.size();
 
+                List<Integer> linkedNodesList = new ArrayList<Integer>(linkedNodes);
+
                 for (int i = 0; i < linkedNodes.size(); i++) {
-                    if (!graph.containsKey(linkedNodes.get(i))) {
-                        graph.put(linkedNodes.get(i), new HashMap<Integer, Double>());
+                    if (!graph.containsKey(linkedNodesList.get(i))) {
+                        graph.put(linkedNodesList.get(i), new HashMap<Integer, Double>());
                     }
-                    HashMap<Integer, Double> temp = graph.get(linkedNodes.get(i));
+                    HashMap<Integer, Double> temp = graph.get(linkedNodesList.get(i));
                     temp.put(docNameToDocId.get(fileEntry.getName()), value);
                 }
             }
@@ -117,11 +122,8 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
                 link.setValue(lambda * link.getValue() + (1 - lambda) / totalNumberOfDocs);
             }
         }
-        if (squareGoogleMatrix) {
-            squareGoogleMatrix(graph);
-        } else {
-            savePageRankToFile(graph);
-        }
+
+        savePageRankToFile(graph);
 
         return;
     }
@@ -147,11 +149,40 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
             }
             pageRank += (1 - lambda) * (docNameList.size() - incomingLink.getValue().size()) / totalNumberOfDocs;
             try {
-                bw.write(incomingLink.getKey() + ":" + pageRank);
-                bw.newLine();
+                if (squareGoogleMatrix)
+                    pageRankSquared.add(incomingLink.getKey(), pageRank);
+                else {
+                    bw.write(incomingLink.getKey() + ":" + pageRank);
+                    bw.newLine();
+                }
             } catch (IOException e) {
                 e.printStackTrace();
             }
+        }
+
+        if (squareGoogleMatrix) {
+
+            for (Map.Entry<Integer, HashMap<Integer, Double>> incomingLink : graph.entrySet()) {
+                double pageRankValue = 0.0;
+                int[] cache = new int[graph.size()];
+                for (Map.Entry<Integer, Double> link : incomingLink.getValue().entrySet()) {
+                    pageRankValue += (link.getValue() * pageRankSquared.get(link.getKey()));
+                    cache[link.getKey()] = 1;
+                }
+                for(int i = 0; i < pageRank.size(); i++) {
+                    if(! (cache[i] == 1))
+                    pageRankValue += pageRankSquared.get(i)*(1-lambda)/graph.size();
+                }
+                try {
+
+                    bw.write(incomingLink.getKey() + ":" + pageRankValue);
+                    bw.newLine();
+
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+
         }
 
         try {
@@ -284,17 +315,15 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
             dataOut.writeInt(graph.size());
 
             for (int i = 0; i < graph.size(); ++i) {
+                double sum = 0.0;
                 System.out.println(i);
                 for (int j = 0; j < graph.size(); ++j) {
 
-                    double sum = 0.0;
-                    Iterator it = graph.get(i).entrySet().iterator();
-                    while(it.hasNext()){
-                        Map.Entry pair = (Map.Entry)it.next();
-                        int k = (int)pair.getKey();
-//                    }
-//                    for (int k = 0; k < graph.size(); ++k) {
 
+                    Iterator it = graph.get(i).entrySet().iterator();
+                    while (it.hasNext()) {
+                        Map.Entry pair = (Map.Entry) it.next();
+                        int k = (int) pair.getKey();
                         double a, b;
                         if (!graph.containsKey(i)) {
                             a = (1 - lambda) / graph.size();
@@ -302,7 +331,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
                             if (!graph.get(i).containsKey(k)) {
                                 a = (1 - lambda) / graph.size();
                             } else {
-                                a = graph.get(i).get(k);
+                                a = graph.get(i).get(k) + (1 - lambda) / graph.size();
                             }
                         }
 
@@ -312,15 +341,16 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
                             if (!graph.get(k).containsKey(j)) {
                                 b = (1 - lambda) / graph.size();
                             } else {
-                                b = graph.get(k).get(j);
+                                b = graph.get(k).get(j) * lambda + (1 - lambda) / graph.size();
                             }
                         }
                         sum += a * b;
                     }
-                    dataOut.writeDouble(sum);
+                    //dataOut.writeDouble(sum);
                 }
+                sum += ((graph.size() - graph.get(i).size()) * (1 - lambda)) / graph.size();
+                System.out.println("Sum:" + sum);
             }
-
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
