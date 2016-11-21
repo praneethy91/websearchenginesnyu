@@ -174,6 +174,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     File fout = new File(docIDIndexFile);
     FileOutputStream fos = null;
 
+    //Make the index directory if not exists
+    File indexDir = new File(_options._indexPrefix);
+    indexDir.mkdir();
+
     try {
       fos = new FileOutputStream(fout, false);
     } catch (FileNotFoundException e) {
