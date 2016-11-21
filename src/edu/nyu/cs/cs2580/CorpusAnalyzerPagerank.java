@@ -2,6 +2,7 @@ package edu.nyu.cs.cs2580;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.Exchanger;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -23,7 +24,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
   final String docIDIndexFile = _options._indexPrefix + "/docIDIndex.idx";
   final String pageRankFile = _options._indexPrefix + "/pageRank.idx";
-  Vector<Integer> pageRank = new Vector<>();
+  Vector<Double> pageRank = new Vector<>();
   double lambda = 0.1;
   HashMap<Integer,HashMap<Integer,Double>> graph = new HashMap<>();
 
@@ -217,9 +218,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     File f = new File(fileName);
     f.delete();
   }
-  public void loadDocIDIndex() throws IOException {
+  public void loadDocIDIndex()  {
 
-    // Open the file
+    try {
+      // Open the file
     FileInputStream fstream = new FileInputStream(docIDIndexFile);
     BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
@@ -235,7 +237,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     }
 
   //Close the input stream
-    br.close();
+      br.close();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
 
   }
 
@@ -258,7 +263,15 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     while ((strLine = br.readLine()) != null)   {
       // Print the content on the console
       String[] lineArray  = strLine.split(":");
-      pageRank.add(Integer.parseInt(lineArray[0]),Integer.parseInt(lineArray[1]));
+      int docIndex = Integer.parseInt(lineArray[0]);
+      while (docIndex > pageRank.size()){
+        pageRank.add(pageRank.size(), 0.0);
+      }
+      if(docIndex > pageRank.size()){
+
+      }
+      pageRank.add(Integer.parseInt(lineArray[0]), Double.parseDouble(lineArray[1]));
+
     }
 
     //Close the input stream
