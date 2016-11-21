@@ -22,6 +22,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   protected Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
 
+  protected StopWords stopWords;
+
   //Corpus statistics
   private Vector<Integer> totalTokensPerDoc =new Vector<>();
   int totalTokensInCorpus = 0;
@@ -32,6 +34,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   public IndexerInvertedOccurrence(Options options) {
     super(options);
+    stopWords = new StopWords();
     System.out.println("Using Indexer: " + this.getClass().getSimpleName());
   }
 
@@ -241,7 +244,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     // This condition is for skipping stop words in corpus which appear in more than 50% of docs
-    if(((double)totalOccurences)/totalTokensInCorpus > 0.5) {
+    if(((double)totalOccurences)/totalTokensInCorpus > 0.5 || stopWords.contains(word)) {
       while (!occurenceListPQ.isEmpty()) {
         OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
         DataInputStream dis = disArr[occurenceListPointer._pointer];
