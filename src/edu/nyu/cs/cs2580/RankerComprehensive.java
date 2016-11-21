@@ -35,6 +35,15 @@ public class RankerComprehensive extends Ranker {
       e.printStackTrace();
     }
 
+    while ((doc = _indexer.nextDoc(query, docid)) != null) {
+      ScoredDocument scoredDocument = scoreDocument(query, doc);
+      rankQueue.add(scoredDocument);
+      if (rankQueue.size() > numResults) {
+        rankQueue.poll();
+      }
+      docid = doc._docid;
+    }
+
     double minScore = Integer.MAX_VALUE;
     double maxScore = Integer.MIN_VALUE;
 
@@ -44,8 +53,9 @@ public class RankerComprehensive extends Ranker {
     double minNumViews = Integer.MAX_VALUE;
     double maxNumViews = Integer.MIN_VALUE;
 
-    while ((doc = _indexer.nextDoc(query, docid)) != null) {
-      ScoredDocument scoredDocument = scoreDocument(query, doc);
+    Vector<ScoredDocument> results = new Vector<ScoredDocument>();
+    ScoredDocument scoredDocument;
+    while((scoredDocument = rankQueue.poll()) != null) {
       if(minScore > scoredDocument.getScore()) {
         minScore = scoredDocument.getScore();
       }
@@ -53,40 +63,32 @@ public class RankerComprehensive extends Ranker {
         maxScore = scoredDocument.getScore();
       }
       if(minPageRank > _indexer._pageRanks.get(scoredDocument.getID())) {
-        minScore = _indexer._pageRanks.get(scoredDocument.getID());
+        minPageRank = _indexer._pageRanks.get(scoredDocument.getID());
       }
       if(maxPageRank < _indexer._pageRanks.get(scoredDocument.getID())) {
-        maxScore = _indexer._pageRanks.get(scoredDocument.getID());
+        maxPageRank = _indexer._pageRanks.get(scoredDocument.getID());
       }
       if(minNumViews > _indexer._numViews.get(scoredDocument.getID())) {
-        minScore = _indexer._numViews.get(scoredDocument.getID());
+        minNumViews = _indexer._numViews.get(scoredDocument.getID());
       }
       if(maxNumViews < _indexer._numViews.get(scoredDocument.getID())) {
-        maxScore = _indexer._numViews.get(scoredDocument.getID());
+        maxNumViews = _indexer._numViews.get(scoredDocument.getID());
       }
-
-      rankQueue.add(scoredDocument);
-      if (rankQueue.size() > numResults) {
-        rankQueue.poll();
-      }
-      docid = doc._docid;
+      results.add(scoredDocument);
     }
 
-    Vector<ScoredDocument> results = new Vector<ScoredDocument>();
-    ScoredDocument scoredDoc = null;
     double scoreNm = maxScore - minScore;
     double pageRankNm = maxPageRank - minPageRank;
     double numviewsNm = maxNumViews - minNumViews;
 
-    while ((scoredDoc = rankQueue.poll()) != null) {
+    for (ScoredDocument scoredDoc : results) {
       double score = scoredDoc.getScore();
       double numViews = _indexer._numViews.get(scoredDoc.getID());
       scoredDoc.setNumViews(numViews);
       double pageRank = _indexer._pageRanks.get(scoredDoc.getID());
       scoredDoc.setPageRank(pageRank);
-      double finalScore = 0.9*(score - minScore)/scoreNm + 0.05*(numViews - minNumViews)/numviewsNm + 0.05*(pageRank - minPageRank)/pageRankNm;
+      double finalScore = 0.33*(score - minScore)/scoreNm + 0.33*(numViews - minNumViews)/numviewsNm + 0.33*(pageRank - minPageRank)/pageRankNm;
       scoredDoc.setScore(finalScore);
-      results.add(scoredDoc);
     }
 
     Collections.sort(results, Collections.reverseOrder());
