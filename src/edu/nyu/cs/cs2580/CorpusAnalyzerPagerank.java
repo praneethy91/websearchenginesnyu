@@ -1,7 +1,6 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -26,7 +25,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   final String pageRankFile = _options._indexPrefix + "/pageRank.idx";
 
   //double[][] graph ;
-
+  double lambda = 0.1;
   HashMap<Integer,HashMap<Integer,Double>> graph = new HashMap<>();
 
   public CorpusAnalyzerPagerank(Options options) {
@@ -119,7 +118,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public void compute() throws IOException {
     System.out.println("Computing using " + this.getClass().getName());
-    double lambda = 0.1;
     int totalNumberOfDocs = docNameList.size();
 
     for(Map.Entry<Integer, HashMap<Integer, Double>> incomingLink : graph.entrySet()){
@@ -133,7 +131,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   }
 
   private void savePageRankToFile(HashMap<Integer,HashMap<Integer,Double>> graph) {
-
+    deleteFileIfExists(pageRankFile);
     File fout = new File(pageRankFile);
     FileOutputStream fos = null;
 
@@ -151,6 +149,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
       for(Map.Entry<Integer,Double> link : incomingLink.getValue().entrySet()){
         pageRank += link.getValue();
       }
+      pageRank += (1-lambda)*(docNameList.size() - incomingLink.getValue().size())/totalNumberOfDocs;
       try {
         bw.write(incomingLink.getKey()+":"+pageRank);
         bw.newLine();
@@ -170,6 +169,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
   private void createDocIdIndex() {
 
+    deleteFileIfExists(docIDIndexFile);
     File fout = new File(docIDIndexFile);
     FileOutputStream fos = null;
 
@@ -213,6 +213,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
   }
 
+  public void deleteFileIfExists(String fileName){
+    File f = new File(fileName);
+    f.delete();
+  }
   public void loadDocIDIndex() throws IOException {
 
     // Open the file
