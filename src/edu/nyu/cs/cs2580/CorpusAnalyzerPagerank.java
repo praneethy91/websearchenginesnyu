@@ -23,8 +23,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
   final String docIDIndexFile = _options._indexPrefix + "/docIDIndex.idx";
   final String pageRankFile = _options._indexPrefix + "/pageRank.idx";
-
-  //double[][] graph ;
+  Vector<Integer> pageRank = new Vector<>();
   double lambda = 0.1;
   HashMap<Integer,HashMap<Integer,Double>> graph = new HashMap<>();
 
@@ -127,6 +126,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     }
 
     savePageRankToFile(graph);
+    load();
     return;
   }
 
@@ -248,10 +248,23 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public Object load() throws IOException {
     System.out.println("Loading using " + this.getClass().getName());
+
+    // Open the file
+    FileInputStream fstream = new FileInputStream(pageRankFile);
+    BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
+
+    String strLine;
+    //Read File Line By Line
+    while ((strLine = br.readLine()) != null)   {
+      // Print the content on the console
+      String[] lineArray  = strLine.split(":");
+      pageRank.add(Integer.parseInt(lineArray[0]),Integer.parseInt(lineArray[1]));
+    }
+
+    //Close the input stream
+    br.close();
     return null;
   }
 
-  public void buildTransitionMatrix() {
 
-  }
 }
