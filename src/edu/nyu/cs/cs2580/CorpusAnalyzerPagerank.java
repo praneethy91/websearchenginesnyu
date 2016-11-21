@@ -84,6 +84,12 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
         }
       }
     }
+
+    for(int i  =0 ; i < docNameToDocId.size() ; i++){
+      if(!graph.containsKey(i)){
+        graph.put(i,new HashMap<Integer, Double>());
+      }
+    }
     return;
   }
 

@@ -38,12 +38,12 @@ public class Spearman {
         double denominatorPageRank = 0.0;
         double denominatorNumView  = 0.0;
 
-        for(int i = 0 ; i < size ; i++){
+        for(int i = 8223 ; i < size ; i++){
             int numViewRank = new ArrayList<Integer>(numViewMap.keySet()).indexOf(i);
             int pageRankRank = new ArrayList<Integer>(pageRankMap.keySet()).indexOf(i);
             numerator += ((numViewRank - z)*(pageRankRank - z));
             denominatorNumView +=  ((numViewRank - z)*(numViewRank - z));
-            denominatorPageRank = ((pageRankRank - z)*(pageRankRank - z));
+            denominatorPageRank += ((pageRankRank - z)*(pageRankRank - z));
         }
         double denominator = denominatorNumView*denominatorPageRank;
         System.out.println("value:" + numerator/denominator);
