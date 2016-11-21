@@ -55,6 +55,10 @@ public class LogMinerNumviews extends LogMiner {
     File[] logFiles;
     logFiles = log.listFiles();
 
+    //Make the index directory if not exists
+    File indexDir = new File(_options._indexPrefix);
+    indexDir.mkdir();
+
     File newFile = new File(_options._indexPrefix+ "/numViewsIndex.idx");
 
 
@@ -140,9 +144,9 @@ public class LogMinerNumviews extends LogMiner {
     System.out.println("Loading using " + this.getClass().getName());
     Scanner sc = new Scanner(new File(_options._indexPrefix+ "/numViewsIndex.idx"));
 
-    Vector<Integer> numViewIndex = new Vector<Integer>();
+    Vector<Double> numViewIndex = new Vector<Double>();
     while (sc.hasNext()){
-      numViewIndex.add(Integer.parseInt(sc.next()));
+      numViewIndex.add((double)Integer.parseInt(sc.next()));
 
     }
 

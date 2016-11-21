@@ -198,6 +198,7 @@ public class SearchEngine {
     Indexer indexer = Indexer.Factory.getIndexerByOption(SearchEngine.OPTIONS);
     Check(indexer != null,
         "Indexer " + SearchEngine.OPTIONS._indexerType + " not found!");
+    indexer.loadIndex();
     QueryHandler handler = new QueryHandler(SearchEngine.OPTIONS, indexer);
 
     // Establish the serving environment

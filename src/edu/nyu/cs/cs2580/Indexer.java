@@ -38,6 +38,9 @@ public abstract class Indexer {
   protected int _numDocs = 0;
   protected long _totalTermFrequency = 0;
 
+  public Vector<Double> _pageRanks;
+  public Vector<Double> _numViews;
+
   // Provided for serialization.
   public Indexer() { }
 
@@ -105,6 +108,18 @@ public abstract class Indexer {
    * mode will be done with the corpus removed from the machine.
    */
   public abstract void loadIndex(Query query) throws IOException, ClassNotFoundException;
+
+  /**
+   * Called exactly once when the SearchEngine is in {@code Mode.SERVE} mode.
+   * Subclass must load the index at {@code index_prefix} to be ready for
+   * serving the search traffic.
+   *
+   * You must load the index from the constructed index above, do NOT try to
+   * reconstruct the index from the corpus. When the search engine is run in
+   * serve mode, it will NOT have access to the corpus, all grading for serve
+   * mode will be done with the corpus removed from the machine.
+   */
+  public abstract void loadIndex() throws IOException, ClassNotFoundException;
 
   /**
    * APIs for statistics needed for ranking.

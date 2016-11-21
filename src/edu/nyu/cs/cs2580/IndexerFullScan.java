@@ -194,6 +194,11 @@ class IndexerFullScan extends Indexer implements Serializable {
   }
 
   @Override
+  public void loadIndex() throws IOException, ClassNotFoundException {
+    return;
+  }
+
+  @Override
   public int numDocs() {
     return 0;
   }

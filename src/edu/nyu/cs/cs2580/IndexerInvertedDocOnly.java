@@ -169,6 +169,11 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
     loadIndex(wordsSet);
   }
 
+  @Override
+  public void loadIndex() throws IOException, ClassNotFoundException {
+    return;
+  }
+
   public void loadIndex(Set<String> queryTokens) throws IOException {
 
     _index.clear();

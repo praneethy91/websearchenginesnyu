@@ -77,7 +77,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
         for(int i  = 0 ; i < linkedNodes.size() ; i++) {
           if(!graph.containsKey(linkedNodes.get(i))){
-            graph.put(linkedNodes.get(i),new HashMap<>());
+            graph.put(linkedNodes.get(i),new HashMap<Integer, Double>());
           }
           HashMap<Integer, Double> temp = graph.get(linkedNodes.get(i));
           temp.put(docNameToDocId.get(fileEntry.getName()), value);
@@ -163,6 +163,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     deleteFileIfExists(docIDIndexFile);
     File fout = new File(docIDIndexFile);
     FileOutputStream fos = null;
+
+    //Make the index directory if not exists
+    File indexDir = new File(_options._indexPrefix);
+    indexDir.mkdir();
 
     try {
       fos = new FileOutputStream(fout, false);
