@@ -149,8 +149,12 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
             }
             pageRank += (1 - lambda) * (docNameList.size() - incomingLink.getValue().size()) / totalNumberOfDocs;
             try {
-                if (squareGoogleMatrix)
+                if (squareGoogleMatrix) {
+                    while (incomingLink.getKey() > pageRankSquared.size()) {
+                        pageRankSquared.add(pageRankSquared.size(), 0.0);
+                    }
                     pageRankSquared.add(incomingLink.getKey(), pageRank);
+                }
                 else {
                     bw.write(incomingLink.getKey() + ":" + pageRank);
                     bw.newLine();

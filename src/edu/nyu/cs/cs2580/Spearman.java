@@ -48,7 +48,7 @@ public class Spearman {
             denominatorPageRank += ((pageRankRank - z)*(pageRankRank - z));
         }
         double denominator = Math.sqrt(denominatorNumView*denominatorPageRank);
-        System.out.println("value:" + numerator/denominator);
+        System.out.println("Spearman rank  correlation coefficient is :" + numerator/denominator);
     }
 
 
