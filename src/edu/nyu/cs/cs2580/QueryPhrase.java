@@ -24,8 +24,11 @@ public class QueryPhrase extends Query {
     super(query);
   }
 
+  private StopWords stopWords;
+
   @Override
   public void processQuery() {
+    stopWords = new StopWords();
     if(_query == null) {
       _query = "";
       return;
@@ -67,7 +70,7 @@ public class QueryPhrase extends Query {
     String[] trimmedTokens = token.split("[\\p{Punct}\\s]+");
     for(int i = 0; i < trimmedTokens.length; i++) {
       String trimmedToken = trimmedTokens[i].trim();
-      if (!trimmedToken.equals("") && trimmedToken.length() > 1) {
+      if (!stopWords.contains(trimmedToken) && !trimmedToken.equals("") && trimmedToken.length() > 1) {
         String finalToken = Stemmer.StemToken(trimmedToken);
         if (!finalToken.equals("") && finalToken.matches("^[a-zA-Z0-9]*$")) {
           if(!combine) {
@@ -78,14 +81,22 @@ public class QueryPhrase extends Query {
           }
         }
       }
+      else {
+        trimmedTokens[i] = "";
+      }
     }
     if(combine) {
       StringBuilder sb = new StringBuilder();
       for(String trimmedToken: trimmedTokens) {
-        sb.append(trimmedToken).append(" ");
+        if(!trimmedToken.equals("")) {
+          sb.append(trimmedToken).append(" ");
+        }
       }
-      sb.setLength(sb.length() - 1);
-      _tokens.add(new QueryToken(true, sb.toString()));
+
+      if(sb.length() > 1) {
+        sb.setLength(sb.length() - 1);
+        _tokens.add(new QueryToken(true, sb.toString()));
+      }
     }
   }
 
