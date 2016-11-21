@@ -390,6 +390,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     loadIndex(wordsSet);
   }
 
+  @Override
+  public void loadIndex() throws IOException, ClassNotFoundException {
+    CorpusAnalyzer analyzer = CorpusAnalyzer.Factory.getCorpusAnalyzerByOption(
+            _options);
+    LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
+    _pageRanks = (Vector<Double>) analyzer.load();
+    _numViews = (Vector<Double>) miner.load();
+  }
 
   public void loadIndex(Set<String> queryTokens) throws IOException{
 

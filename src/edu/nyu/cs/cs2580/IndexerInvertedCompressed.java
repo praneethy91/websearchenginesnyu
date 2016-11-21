@@ -27,7 +27,6 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
       return;
     Set<String> wordsSet = new HashSet<>();
 
-
     for (QueryToken queryToken : query._tokens) {
       if (queryToken.isPhrase()) {
         for (String querySubTokens : queryToken.getToken().split(" ")) {
