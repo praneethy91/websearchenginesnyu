@@ -55,6 +55,10 @@ public class LogMinerNumviews extends LogMiner {
     File[] logFiles;
     logFiles = log.listFiles();
 
+    //Make the index directory if not exists
+    File indexDir = new File(_options._indexPrefix);
+    indexDir.mkdir();
+    
     File newFile = new File(_options._indexPrefix+ "/numViewsIndex.idx");
 
 
