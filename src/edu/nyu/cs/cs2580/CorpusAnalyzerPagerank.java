@@ -1,11 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
+import java.util.*;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -28,7 +24,9 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   final String docIDIndexFile = _options._indexPrefix + "/docIDIndex.idx";
   final String pageRankFile = _options._indexPrefix + "/pageRank.idx";
 
-  double[][] graph ;
+  //double[][] graph ;
+  double lambda = 0.1;
+  HashMap<Integer,HashMap<Integer,Double>> graph = new HashMap<>();
 
   public CorpusAnalyzerPagerank(Options options) {
     super(options);
@@ -61,7 +59,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
     createDocIdIndex();
     loadDocIDIndex();
-    graph = new double[docNameList.size()+1][docNameList.size()+1];
     File[] directoryListing = folder.listFiles();
     Arrays.sort(directoryListing, new FileComparator());
 
@@ -85,10 +82,14 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
             linkedNodes.add(docNameToDocId.get(docName));
             docName = extractor.getNextInCorpusLinkTarget();
         }
-
         double value = (double)1/linkedNodes.size();
+
         for(int i  = 0 ; i < linkedNodes.size() ; i++) {
-          graph[linkedNodes.get(i)][ docNameToDocId.get(fileEntry.getName())] += value;
+          if(!graph.containsKey(linkedNodes.get(i))){
+            graph.put(linkedNodes.get(i),new HashMap<>());
+          }
+          HashMap<Integer, Double> temp = graph.get(linkedNodes.get(i));
+          temp.put(docNameToDocId.get(fileEntry.getName()), value);
         }
       }
     }
@@ -117,20 +118,20 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
   @Override
   public void compute() throws IOException {
     System.out.println("Computing using " + this.getClass().getName());
-    double lambda = 0.1;
     int totalNumberOfDocs = docNameList.size();
-    for(int i = 0 ; i < totalNumberOfDocs ; i++){
 
-      for(int j = 0; j < totalNumberOfDocs ; j++){
-        graph[i][j] = lambda*graph[i][j] + (1-lambda)/totalNumberOfDocs;
+    for(Map.Entry<Integer, HashMap<Integer, Double>> incomingLink : graph.entrySet()){
+      for(Map.Entry<Integer,Double> link : incomingLink.getValue().entrySet()){
+          link.setValue(lambda*link.getValue() + (1-lambda)/totalNumberOfDocs);
       }
     }
+
     savePageRankToFile(graph);
     return;
   }
 
-  private void savePageRankToFile(double[][] graph) {
-
+  private void savePageRankToFile(HashMap<Integer,HashMap<Integer,Double>> graph) {
+    deleteFileIfExists(pageRankFile);
     File fout = new File(pageRankFile);
     FileOutputStream fos = null;
 
@@ -142,20 +143,21 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(fos));
 
     int totalNumberOfDocs = docNameList.size();
-    for(int i = 0 ; i < totalNumberOfDocs ; i++){
+
+    for(Map.Entry<Integer, HashMap<Integer, Double>> incomingLink : graph.entrySet()){
       double pageRank = 0.0;
-
-      for(int j = 0; j < totalNumberOfDocs ; j++){
-        pageRank += graph[i][j];
-
+      for(Map.Entry<Integer,Double> link : incomingLink.getValue().entrySet()){
+        pageRank += link.getValue();
       }
+      pageRank += (1-lambda)*(docNameList.size() - incomingLink.getValue().size())/totalNumberOfDocs;
       try {
-        bw.write(i+":"+pageRank);
+        bw.write(incomingLink.getKey()+":"+pageRank);
         bw.newLine();
       } catch (IOException e) {
         e.printStackTrace();
       }
     }
+
     try {
       bw.close();
     } catch (IOException e) {
@@ -167,6 +169,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
   private void createDocIdIndex() {
 
+    deleteFileIfExists(docIDIndexFile);
     File fout = new File(docIDIndexFile);
     FileOutputStream fos = null;
 
@@ -210,6 +213,10 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
   }
 
+  public void deleteFileIfExists(String fileName){
+    File f = new File(fileName);
+    f.delete();
+  }
   public void loadDocIDIndex() throws IOException {
 
     // Open the file
@@ -217,7 +224,8 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
     String strLine;
-
+    docNameList.clear();
+    docNameToDocId.clear();
   //Read File Line By Line
     while ((strLine = br.readLine()) != null)   {
       // Print the content on the console
