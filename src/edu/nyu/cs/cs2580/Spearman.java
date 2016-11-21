@@ -38,14 +38,16 @@ public class Spearman {
         double denominatorPageRank = 0.0;
         double denominatorNumView  = 0.0;
 
-        for(int i = 8223 ; i < size ; i++){
+        for(int i = 0 ; i < size ; i++){
             int numViewRank = new ArrayList<Integer>(numViewMap.keySet()).indexOf(i);
             int pageRankRank = new ArrayList<Integer>(pageRankMap.keySet()).indexOf(i);
+            numViewRank++;
+            pageRankRank++;
             numerator += ((numViewRank - z)*(pageRankRank - z));
             denominatorNumView +=  ((numViewRank - z)*(numViewRank - z));
             denominatorPageRank += ((pageRankRank - z)*(pageRankRank - z));
         }
-        double denominator = denominatorNumView*denominatorPageRank;
+        double denominator = Math.sqrt(denominatorNumView*denominatorPageRank);
         System.out.println("value:" + numerator/denominator);
     }
 
@@ -92,6 +94,9 @@ public class Spearman {
 
             @Override
             public int compare(Object o1, Object o2) {
+                if( ((Comparable) ((Map.Entry) (o2)).getValue()) == (((Map.Entry) (o1)).getValue())){
+                    return ((Comparable) ((Map.Entry) (o2)).getKey()).compareTo(((Map.Entry) (o1)).getKey());
+                }
                 return ((Comparable) ((Map.Entry) (o2)).getValue()).compareTo(((Map.Entry) (o1)).getValue());
             }
         });
