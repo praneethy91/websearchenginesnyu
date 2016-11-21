@@ -86,7 +86,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
         for(int i  = 0 ; i < linkedNodes.size() ; i++) {
           if(!graph.containsKey(linkedNodes.get(i))){
-            graph.put(linkedNodes.get(i),new HashMap<>());
+            graph.put(linkedNodes.get(i),new HashMap<Integer, Double>());
           }
           HashMap<Integer, Double> temp = graph.get(linkedNodes.get(i));
           temp.put(docNameToDocId.get(fileEntry.getName()), value);
