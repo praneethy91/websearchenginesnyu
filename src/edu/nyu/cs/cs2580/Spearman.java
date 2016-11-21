@@ -8,21 +8,25 @@ import java.util.*;
  */
 public class Spearman {
 
-    final String pageRankFile = "data/index/pageRank.idx";
 
     HashMap<Integer,Double> pageRank = new HashMap<>();
     HashMap<Integer,Double> numViewIndex = new HashMap<>();
 
     public static void main(String[] args){
+
+        if(args.length != 2){
+            System.out.println("Incorrect arguments. Please enter file path to pagerank and numview index file");
+        }
+
         Spearman spearman = new Spearman();
+
         try {
-            spearman.load();
+            spearman.load(args);
         } catch (IOException e) {
             e.printStackTrace();
         }
+
         double z ;
-
-
 
         LinkedHashMap pageRankMap  = (LinkedHashMap) sortByValue(spearman.pageRank);
         LinkedHashMap numViewMap  = (LinkedHashMap) sortByValue(spearman.numViewIndex);
@@ -37,19 +41,18 @@ public class Spearman {
         for(int i = 0 ; i < size ; i++){
             int numViewRank = new ArrayList<Integer>(numViewMap.keySet()).indexOf(i);
             int pageRankRank = new ArrayList<Integer>(pageRankMap.keySet()).indexOf(i);
-
             numerator += ((numViewRank - z)*(pageRankRank - z));
             denominatorNumView +=  ((numViewRank - z)*(numViewRank - z));
             denominatorPageRank = ((pageRankRank - z)*(pageRankRank - z));
         }
-        System.out.println("value:" + numerator/(denominatorNumView*denominatorPageRank));
+        double denominator = denominatorNumView*denominatorPageRank;
+        System.out.println("value:" + numerator/denominator);
     }
 
 
-    public void load() throws IOException {
-        System.out.println("Loading using " + this.getClass().getName());
+    public void load(String[] args) throws IOException {
         // Open the file
-        FileInputStream fstream = new FileInputStream(pageRankFile);
+        FileInputStream fstream = new FileInputStream(args[0]);
         BufferedReader br = new BufferedReader(new InputStreamReader(fstream));
 
         String strLine;
@@ -66,11 +69,12 @@ public class Spearman {
             }
             pageRank.put(java.lang.Integer.parseInt(lineArray[0]), java.lang.Double.parseDouble(lineArray[1]));
         }
+
         //Close the input stream
         br.close();
 
         System.out.println("Loading using " + this.getClass().getName());
-        Scanner sc = new Scanner(new File("data/index/numViewsIndex.idx"));
+        Scanner sc = new Scanner(new File(args[1]));
 
         int docid = 0;
         while (sc.hasNext()){

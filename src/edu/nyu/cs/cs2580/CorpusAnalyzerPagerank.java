@@ -11,21 +11,14 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
-  class FileComparator implements Comparator<File> {
-
-    @Override
-    public int compare(File f1, File f2) {
-      return f1.getName().compareTo(f2.getName());
-    }
-  }
-
-  ArrayList<String> docNameList = new ArrayList<>();
-  HashMap<String, Integer> docNameToDocId = new HashMap<>();
-
   final String docIDIndexFile = _options._indexPrefix + "/docIDIndex.idx";
   final String pageRankFile = _options._indexPrefix + "/pageRank.idx";
+  final String googleMatrix = _options._indexPrefix +"/googleMatrix.idx";
+  ArrayList<String> docNameList = new ArrayList<>();
+  HashMap<String, Integer> docNameToDocId = new HashMap<>();
   Vector<Double> pageRank = new Vector<>();
-  double lambda = 0.1;
+  double lambda = 0.9;
+  boolean squareGoogleMatrix = false;
   HashMap<Integer,HashMap<Integer,Double>> graph = new HashMap<>();
 
   public CorpusAnalyzerPagerank(Options options) {
@@ -37,13 +30,13 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
    * and extracts the "internal" graph structure from the pages inside the
    * corpus. Internal means we only store links between two pages that are both
    * inside the corpus.
-   * 
+   *
    * Note that you will not be implementing a real crawler. Instead, the corpus
    * you are processing can be simply read from the disk. All you need to do is
    * reading the files one by one, parsing them, extracting the links for them,
    * and computing the graph composed of all and only links that connect two
    * pages that are both in the corpus.
-   * 
+   *
    * Note that you will need to design the data structure for storing the
    * resulting graph, which will be used by the {@link compute} function. Since
    * the graph may be large, it may be necessary to store partial graphs to
@@ -63,7 +56,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     Arrays.sort(directoryListing, new FileComparator());
 
     for (final File fileEntry : directoryListing) {
-      if (!fileEntry.isDirectory() &&!fileEntry.isHidden()) {
+      if (!fileEntry.isDirectory() && !fileEntry.isHidden()) {
         try {
           new WikiParser(fileEntry);
         }
@@ -75,9 +68,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
         HeuristicLinkExtractor extractor =  new CorpusAnalyzerPagerank.HeuristicLinkExtractor(fileEntry);
         String docName = extractor.getNextInCorpusLinkTarget();
 
-
         while(docName != null){
-
           if(docNameToDocId.get(docName) != null)
             linkedNodes.add(docNameToDocId.get(docName));
             docName = extractor.getNextInCorpusLinkTarget();
@@ -93,17 +84,14 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
         }
       }
     }
-
     return;
   }
-
-
 
   /**
    * This function computes the PageRank based on the internal graph generated
    * by the {@link prepare} function, and stores the PageRank to be used for
    * ranking.
-   * 
+   *
    * Note that you will have to store the computed PageRank with each document
    * the same way you do the indexing for HW2. I.e., the PageRank information
    * becomes part of the index and can be used for ranking in serve mode. Thus,
@@ -125,9 +113,12 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
           link.setValue(lambda*link.getValue() + (1-lambda)/totalNumberOfDocs);
       }
     }
+    if(squareGoogleMatrix){
+      squareGoogleMatrix(graph);
+    }else {
+      savePageRankToFile(graph);
+    }
 
-    savePageRankToFile(graph);
-    load();
     return;
   }
 
@@ -166,7 +157,6 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     }
 
   }
-
 
   private void createDocIdIndex() {
 
@@ -218,6 +208,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
     File f = new File(fileName);
     f.delete();
   }
+
   public void loadDocIDIndex()  {
 
     try {
@@ -276,8 +267,60 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
     //Close the input stream
     br.close();
-    return null;
+    return pageRank;
   }
 
+  private void squareGoogleMatrix(HashMap<Integer,HashMap<Integer,Double>> graph){
+    try {
+      DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream(googleMatrix, false)));
 
+      dataOut.writeInt(graph.size());
+
+    for (int i=0; i<graph.size(); ++i) {
+      System.out.println(i);
+      for (int j = 0; j < graph.size(); ++j) {
+
+        double sum = 0.0;
+        for (int k = 0; k < graph.size(); ++k) {
+
+          double a, b;
+          if (!graph.containsKey(i)) {
+            a = (1 - lambda) / graph.size();
+          } else {
+            if (!graph.get(i).containsKey(k)) {
+              a = (1 - lambda) / graph.size();
+            } else {
+              a = graph.get(i).get(k);
+            }
+          }
+
+          if (!graph.containsKey(k)) {
+            b = (1 - lambda) / graph.size();
+          } else {
+            if (!graph.get(k).containsKey(j)) {
+              b = (1 - lambda) / graph.size();
+            } else {
+              b = graph.get(k).get(j);
+            }
+          }
+          sum += a * b;
+        }
+        dataOut.writeDouble(sum);
+      }
+    }
+
+    } catch (FileNotFoundException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+  }
+
+  class FileComparator implements Comparator<File> {
+
+    @Override
+    public int compare(File f1, File f2) {
+      return f1.getName().compareTo(f2.getName());
+    }
+  }
 }
