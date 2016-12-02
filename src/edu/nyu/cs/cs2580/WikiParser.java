@@ -1,8 +1,8 @@
 package edu.nyu.cs.cs2580;
-import org.jsoup.Jsoup;
 import org.jsoup.nodes.Element;
 
 import java.io.*;
+import java.net.URL;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
@@ -44,6 +44,16 @@ public class WikiParser {
 
   public WikiParser(File htmlDocument) throws IOException, IllegalArgumentException {
     _htmlDocument = org.jsoup.Jsoup.parse(htmlDocument, "UTF-8");
+    InitiateParser();
+  }
+
+  public WikiParser(File url, boolean h) throws IOException {
+    _htmlDocument = org.jsoup.Jsoup.parse(url, "UTF-8");
+    _title = _htmlDocument.title();
+    _url = url.toString();
+  }
+
+  private void InitiateParser() {
     _title = _htmlDocument.title();
     if (_title == null || _title.equals("")) {
 
@@ -67,6 +77,13 @@ public class WikiParser {
     return _url;
   }
 
+  public Vector<String> ParseGeneralTokens() {
+    Vector<String> tokens = new Vector<>();
+    Element contentElement = _htmlDocument.body();
+    DFSGeneralParse(contentElement, tokens);
+    return tokens;
+  }
+
   public Vector<String> ParseTokens() {
     Vector<String> tokens = new Vector<>();
     Parse(tokens);
@@ -81,10 +98,10 @@ public class WikiParser {
 
   private void Parse(Collection<String> tokens) {
     Element contentElement = _htmlDocument.select("div#content").first();
-    DFSParse(contentElement, tokens);
+    DFSWikiParse(contentElement, tokens);
   }
 
-  private void DFSParse(Element element, Collection<String> tokens) {
+  private void DFSWikiParse(Element element, Collection<String> tokens) {
     Element elementParent = element.parent();
 
     if(elementParent.attr("class").equals("references")) {
@@ -95,6 +112,14 @@ public class WikiParser {
       return;
     }
 
+    Parse(element, tokens);
+
+    for(Element childrenElements: element.children()) {
+      DFSWikiParse(childrenElements, tokens);
+    }
+  }
+
+  private void Parse(Element element, Collection<String> tokens) {
     String[] tokensArr = element.ownText().toLowerCase().split("[\\p{Punct}\\s]+");
     for(String token : tokensArr) {
       String trimmedToken = token.trim();
@@ -105,9 +130,12 @@ public class WikiParser {
         }
       }
     }
+  }
 
+  private void DFSGeneralParse(Element element, Collection<String> tokens) {
+    Parse(element, tokens);
     for(Element childrenElements: element.children()) {
-      DFSParse(childrenElements, tokens);
+      DFSGeneralParse(childrenElements, tokens);
     }
   }
 }
