@@ -3,7 +3,6 @@ package edu.nyu.cs.cs2580;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 /**
@@ -58,7 +57,7 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
       return;
     }
     Arrays.sort(directoryListing, new FileComparator());
-    WikiParser wikiParser = null;
+    HtmlParser htmlParser = null;
     int docID = 0;
     Set<String> tokens;
     int count = 0;
@@ -85,13 +84,13 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
           if(wikiFile.isDirectory() == false) {
 
             //Parsing and extracting token;
-            wikiParser = new WikiParser(wikiFile);
-            tokens = wikiParser.ParseTokensNoDuplicates();
+            htmlParser = new HtmlParser(wikiFile);
+            tokens = htmlParser.ParseTokensNoDuplicates();
 
             // Populating and adding DocumentIndexed for this document.
             DocumentIndexed docIndexed = new DocumentIndexed(docID);
-            docIndexed.setTitle(wikiParser.getTitle());
-            docIndexed.setUrl(wikiParser.getUrl());
+            docIndexed.setTitle(htmlParser.getTitle());
+            docIndexed.setUrl(htmlParser.getUrl());
             _indexedDocs.add(docIndexed);
 
             // Updating postings lists

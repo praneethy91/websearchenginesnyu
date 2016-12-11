@@ -1,7 +1,6 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
@@ -58,7 +57,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
     Arrays.sort(directoryListing, new FileComparator());
 
-    WikiParser wikiParser = null;
+    HtmlParser htmlParser = null;
     int docID = 0;
     Vector<String> tokens;
     int count = 0;
@@ -86,14 +85,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           if(wikiFile.isDirectory() == false) {
 
             //Parsing and extracting token;
-            wikiParser = new WikiParser(wikiFile);
-            tokens = wikiParser.ParseTokens();
+            htmlParser = new HtmlParser(wikiFile);
+            tokens = htmlParser.ParseTokens();
 
             //TODO: Document Id
             // Populating and adding DocumentIndexed for this document.
             DocumentIndexed docIndexed = new DocumentIndexed(docID);
-            docIndexed.setTitle(wikiParser.getTitle());
-            docIndexed.setUrl(wikiParser.getUrl());
+            docIndexed.setTitle(htmlParser.getTitle());
+            docIndexed.setUrl(htmlParser.getUrl());
             _indexedDocs.add(docIndexed);
 
 

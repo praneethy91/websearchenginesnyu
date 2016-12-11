@@ -2,7 +2,6 @@ package edu.nyu.cs.cs2580;
 
 import java.io.*;
 import java.util.*;
-import java.util.concurrent.Exchanger;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -61,7 +60,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
         for (final File fileEntry : directoryListing) {
             if (!fileEntry.isDirectory() && !fileEntry.isHidden()) {
                 try {
-                    new WikiParser(fileEntry);
+                    new HtmlParser(fileEntry);
                 } catch (Exception e) {
                     continue;
                 }
@@ -223,7 +222,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
         for (final File fileEntry : directoryListing) {
             if (!fileEntry.isDirectory() && !fileEntry.isHidden()) {
                 try {
-                    new WikiParser(fileEntry);
+                    new HtmlParser(fileEntry);
                 } catch (Exception e) {
                     continue;
                 }

@@ -1,166 +1,76 @@
 package edu.nyu.cs.cs2580;
 
 import de.bwaldvogel.liblinear.*;
-import weka.classifiers.Classifier;
-import weka.classifiers.functions.LibSVM;
-import weka.core.*;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FilenameFilter;
-import java.sql.Array;
+import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
-/**
- * Created by Praneeth on 11/30/2016.
- */
 public class NewsClassificationModel {
-  private static HashMap<String, Integer> termsToIntRepresentationMap = new HashMap<String, Integer>();
-  private static HashMap<Integer, HashSet<String>> docToCategoryMap = new HashMap<Integer, HashSet<String>>();
-  private static HashMap<String, Integer> termsToNumDocsMap = new HashMap<String, Integer>();
-  private static int totalDocs = 0;
-  private static int newsPredictionsFailed;
-  private static int newsPredictionsPassed;
-  private static int nonNewsPredictionsFailed;
-  private static int nonNewsPredictionsPassed;
-  private static double[] predictOutputArray;
-  private static FeatureNode[][] trainingSet;
-  private static int numFeatures;
-  private static int numberOfTrainingExamples;
-  private static final String modelDir = "data\\model";
+  private HashMap<String, Integer> termsToIntRepresentationMap = new HashMap<String, Integer>();
+  private HashMap<String, Integer> termsToNumDocsMap = new HashMap<String, Integer>();
 
-  public static void main(String[] args) throws Exception {
-    ComputeSVMForDocuments();
+  private String _binaryClassifierCategory;
+
+  private int totalDocs = 0;
+  private int totalBinaryclassifierCategoryArticles = 0;
+  private int falseNegatives = 0;
+  private int truePositives = 0;
+  private int falsePositives = 0;
+  private int trueNegatives = 0;
+  private final double trainingDocumentsRatio = 0.7;
+  private final double C = 32; // cost of constraints violation, got by lots of experimentation
+  private final double eps = 0.01; // stopping criteria, got by lots of experimentation
+  private int numFeatures = 0;
+  private int numberOfTrainingExamples = 0;
+
+  private double[] predictOutputArray;
+  private FeatureNode[][] trainingSet;
+
+  private final String modelDir = "data\\model";
+  private final String fileDirString =  "data\\HTMLDocs";
+
+  public static final String[] newsCategories = {"arts", "business", "food", "health", "politics", "science", "technology", "travel"};
+  public static final String[] newsCompanies = {"fox", "nytimes"};
+  private static HashSet<String> newsCategoriesSet = new HashSet<String>();
+
+  public NewsClassificationModel() {
+    for(String category: newsCategories) {
+      newsCategoriesSet.add(category);
+    }
   }
 
-  public static void ComputeSVMForDocuments() throws Exception {
-    HashMap<String, Integer> categoryToInt = new HashMap<String, Integer>();
-    categoryToInt.put("GHEA", 1);
-    categoryToInt.put("GSCI", 2);
-    categoryToInt.put("GSPO", 3);
-    categoryToInt.put("GPOL", 4);
-    categoryToInt.put("GVOTE", 4);
-    categoryToInt.put("GCRIM", 5);
-    categoryToInt.put("GDEF", 5);
-    categoryToInt.put("GDIP", 5);
-    categoryToInt.put("GDIS", 5);
-    categoryToInt.put("GJOB", 5);
-    categoryToInt.put("GMIL", 5);
-    categoryToInt.put("GODD", 5);
-    categoryToInt.put("GWELF", 5);
-    categoryToInt.put("GENT", 6);
-    categoryToInt.put("GFAS", 6);
-    categoryToInt.put("GPRO", 7);
-    categoryToInt.put("GOBIT", 7);
-    categoryToInt.put("GREL", 8);
-    categoryToInt.put("GVIO", 9);
-    categoryToInt.put("GENV", 10);
-    categoryToInt.put("GTOUR", 10);
-    categoryToInt.put("GWEA", 10);
+  public static void main(String[] args) throws Exception {
+    for(String category: newsCategories) {
+      NewsClassificationModel newsClassificationModel = new NewsClassificationModel();
+      newsClassificationModel.ComputeAndSaveMLModel(category);
+      newsClassificationModel.TestMLModelAndPrintStatistics(category);
+    }
+  }
 
-    String fileDirString =  "data\\reuters";
-    File corpusDir = new File(fileDirString);
-    File[] foundFiles = corpusDir.listFiles(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return name.startsWith("rcv1");
-      }
-    });
+  public void ComputeAndSaveMLModel(String binaryClassifierCategory) throws Exception {
+    _binaryClassifierCategory = binaryClassifierCategory;
 
-    for(File file: foundFiles) {
-      BufferedReader br = new BufferedReader(new FileReader(file));
-      String line;
-      while((line = br.readLine()) != null) {
-        if(line.trim().equals("")) {
-          continue;
-        }
-
-        String[] split = line.split("\\s+");
-        String category = split[0].trim();
-        if(categoryToInt.containsKey(category)) {
-          String docIDString = split[1].trim();
-          int docID = Integer.parseInt(docIDString);
-          if (!docToCategoryMap.containsKey(docID)) {
-            HashSet<String> categories = new HashSet<String>();
-            categories.add(category);
-            docToCategoryMap.put(docID, categories);
-          } else {
-            docToCategoryMap.get(docID).add(category);
-          }
-        }
+    for(String category : newsCategoriesSet) {
+      for(String newsCompany: newsCompanies){
+        TrainingSetProcessor(category, newsCompany);
       }
     }
 
-    corpusDir = new File(fileDirString);
-    foundFiles = corpusDir.listFiles(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return name.contains("lyrl2004_tokens_test_pt0")
-                || name.contains("lyrl2004_tokens_test_pt1")
-                || name.contains("lyrl2004_tokens_test_pt2")
-                || name.contains("train");
-      }
-    });
-
-    for (File file: foundFiles) {
-      BufferedReader br = new BufferedReader(new FileReader(file));
-      String line;
-      while((line = br.readLine()) != null) {
-        if(line.trim().equals("")) {
-          continue;
-        }
-
-        if(line.charAt(0) == '.' && line.charAt(1) == 'I') {
-          Integer docID = Integer.parseInt(line.substring(3).trim());
-          if(!docToCategoryMap.containsKey(docID))
-          {
-            continue;
-          }
-
-          totalDocs++;
-          br.readLine(); // skip .W
-          String[] wordsInDoc = br.readLine().split("\\s+");
-          String prev = wordsInDoc[0].trim();
-          for(String word : wordsInDoc) {
-            word = word.trim();
-            if(!termsToIntRepresentationMap.containsKey(word)) {
-              termsToIntRepresentationMap.put(word, termsToIntRepresentationMap.size());
-            }
-            if(!prev.equals(word)) {
-              if(!termsToNumDocsMap.containsKey(prev)) {
-                termsToNumDocsMap.put(prev, 1);
-              }
-              else {
-                termsToNumDocsMap.put(prev, termsToNumDocsMap.get(prev) + 1);
-              }
-            }
-            prev = word;
-          }
-          termsToNumDocsMap.put(prev, 1);
-        }
-      }
-    }
-
-    //Start of Weka classification
-    //Add words as feature attributes
+    //Start of building classification model
+    //Add words as feature attributes with tf-idf feature values
     numFeatures = termsToIntRepresentationMap.size();
     numberOfTrainingExamples = totalDocs;
 
     predictOutputArray = new double[numberOfTrainingExamples];
     trainingSet = new FeatureNode[numberOfTrainingExamples][];
 
-    //Filling the training set with instances now.
-    foundFiles = corpusDir.listFiles(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return name.contains("lyrl2004_tokens_test_pt0")
-                || name.contains("lyrl2004_tokens_test_pt1")
-                || name.contains("lyrl2004_tokens_test_pt2")
-                || name.contains("train");
-      }
-    });
-
     int index = 0;
-    for (File file: foundFiles) {
-      index = PopulateTrainingSet(file, index, true, null);
+    for(String category : newsCategoriesSet) {
+      for(String newsCompany: newsCompanies){
+        index = CreateModelData(category, newsCompany, binaryClassifierCategory, index);
+      }
     }
 
     Problem problem = new Problem();
@@ -169,145 +79,198 @@ public class NewsClassificationModel {
     problem.x = trainingSet;
     problem.y = predictOutputArray;
 
-    SolverType solver = SolverType.L2R_L2LOSS_SVC_DUAL; // -s 2
-    double C = 32; // cost of constraints violation
-    double eps = 0.01; // stopping criteria
+    SolverType solver = SolverType.L2R_L2LOSS_SVC_DUAL;
 
     Parameter parameter = new Parameter(solver, C, eps);
+    double ratio1 = (totalBinaryclassifierCategoryArticles*1.0)/totalDocs;
+    parameter.setWeights(new double[] {ratio1, 1 - ratio1},new int[] {0, 1});
     Model model = Linear.train(problem, parameter);
-    File modelSaveFile = new File(modelDir + "\\EnvironmentNatureTravelTourism");
+    File modelSaveFile = new File(modelDir + "\\" + binaryClassifierCategory);
     modelSaveFile.getParentFile().mkdirs();
     modelSaveFile.createNewFile();
     model.save(modelSaveFile);
-    model = model.load(modelSaveFile);
-
-    //Evaluating the test data now
-    foundFiles = corpusDir.listFiles(new FilenameFilter() {
-      public boolean accept(File dir, String name) {
-        return name.contains("lyrl2004_tokens_test_pt3");
-      }
-    });
-
-    boolean h = false;
-    index = 0;
-    for (File file: foundFiles) {
-      if(!h) {
-        index = PopulateTrainingSet(file, index, false, model);
-      }
-      h = true;
-    }
-
-    //Evaluation
-    //Evaluation eval = new Evaluation(isTrainingSet);
-    //eval.evaluateModel(cModel, isTestingSet);
-
-    //Print evaluation summary
-    //String strSummary = eval.toSummaryString();
-    //System.out.println(strSummary);
-
-    System.out.print(nonNewsPredictionsPassed + " ");
-    System.out.print(nonNewsPredictionsFailed);
-    System.out.println();
-    System.out.print(newsPredictionsFailed + " ");
-    System.out.print(newsPredictionsPassed);
-
-
-    // double[][] cmMatrix = eval.confusionMatrix();
-    /*for (int i = 0; i < cmMatrix.length; i++) {
-      for (int j = 0; j < cmMatrix[i].length; j++) {
-        System.out.print(cmMatrix[i][j] + " ");
-      }
-      System.out.println();
-    }*/
-
-    //TODO: (confusion matrix) double[][] cmMatrix = eTest.confusionMatrix();
   }
 
-  private static int PopulateTrainingSet(File file, int index, boolean isTrain, Model model) throws Exception {
-    BufferedReader br = new BufferedReader(new FileReader(file));
-    String line;
-    HashSet<String> categories = new HashSet<String>(Arrays.asList("GENV", "GTOUR", "GWEA"));
-    while((line = br.readLine()) != null) {
-      if(line.trim().equals("")) {
+  public void TestMLModelAndPrintStatistics(String binaryClassifierCategory) throws Exception {
+    File modelLoadFile = new File(modelDir + "\\" + binaryClassifierCategory);
+    Model model = Model.load(modelLoadFile);
+
+    int index = 0;
+    for(String category : newsCategories) {
+      for(String newsCompany : newsCompanies) {
+        index = TestingSetProcessor(category, newsCompany, binaryClassifierCategory, model, index);
+      }
+    }
+
+    PrintConfusionMatrix();
+    PrintAverageErrorRate(); //Also known as average accuracy
+  }
+
+  private int CreateModelData(String category, String newsCompany, String binaryClassifierCategory, int index) throws Exception {
+    Path corpusPathFox = Paths.get(fileDirString, category, newsCompany);
+    File[] foundFiles = corpusPathFox.toFile().listFiles();
+    int begin = 0;
+    int end = (int)Math.floor(foundFiles.length * trainingDocumentsRatio);
+    SortFiles(foundFiles);
+    for(int i = begin; i <= end; i++) {
+      index = PopulateModelData(foundFiles[i], index, binaryClassifierCategory, true, null);
+    }
+    return index;
+  }
+
+  private void TrainingSetProcessor(String category, String newsCompany) throws IOException {
+    Path corpusPathFox = Paths.get(fileDirString, category, newsCompany);
+    File[] foundFiles = corpusPathFox.toFile().listFiles();
+    int begin = 0;
+    int end = (int)Math.floor(foundFiles.length * trainingDocumentsRatio);
+    SortFiles(foundFiles);
+    for(int i = begin; i <= end; i++) {
+      ProcessFile(foundFiles[i]);
+    }
+  }
+
+  private int TestingSetProcessor(String category, String newsCompany, String binaryClassifierCategory, Model model, int index) throws Exception {
+    Path corpusPathFox = Paths.get(fileDirString, category, newsCompany);
+    File[] foundFiles = corpusPathFox.toFile().listFiles();
+    int begin = (int)Math.floor(foundFiles.length * trainingDocumentsRatio) + 1;
+    int end = foundFiles.length - 1;
+    SortFiles(foundFiles);
+    for(int i = begin; i <= end; i++) {
+      index = PopulateModelData(foundFiles[i], index, binaryClassifierCategory, false, model);
+    }
+    return index;
+  }
+
+  private void SortFiles(File[] foundFiles) {
+    class FileComparator implements Comparator<File>{
+      public int compare(File a, File b) {
+        return a.getName().compareTo(b.getName());
+      }
+    }
+    Arrays.sort(
+            foundFiles,
+            new FileComparator());
+  }
+
+  private void ProcessFile(File file) throws IOException {
+    HtmlParser parser = new HtmlParser(file, true);
+    Vector<String> wordsInDoc = parser.ParseGeneralTokens();
+    if(wordsInDoc == null || wordsInDoc.size() == 0) {
+      return;
+    }
+    String prev = wordsInDoc.get(0);
+    boolean flag = true;
+    for(String word : wordsInDoc) {
+      if(!termsToIntRepresentationMap.containsKey(word)) {
+        termsToIntRepresentationMap.put(word, termsToIntRepresentationMap.size());
+      }
+      if(!prev.equals(word)) {
+        if(!termsToNumDocsMap.containsKey(prev)) {
+          termsToNumDocsMap.put(prev, 1);
+        }
+        else if(flag) {
+          termsToNumDocsMap.put(prev, termsToNumDocsMap.get(prev) + 1);
+          flag = false;
+        }
+      }
+      prev = word;
+    }
+    termsToNumDocsMap.put(prev, 1);
+    totalDocs++;
+    if(file.getParentFile().getParentFile().getName().equals(_binaryClassifierCategory)) {
+      totalBinaryclassifierCategoryArticles++;
+    }
+  }
+
+  private int PopulateModelData(File file, int index, String binaryClassifierCategory, boolean isTrain, Model model) throws Exception {
+    HtmlParser parser = new HtmlParser(file, true);
+    Vector<String> wordsInDoc = parser.ParseGeneralTokens();
+    List<FeatureNode> featureNodes = new LinkedList<FeatureNode>();
+    if(wordsInDoc == null || wordsInDoc.size() == 0) {
+      return index;
+    }
+
+    String docClass = file.getParentFile().getParentFile().getName();
+    double docCategoryFeature = docClass.equals(binaryClassifierCategory) ? 1 : 0;
+
+    if(isTrain) {
+      //Storing in label
+      predictOutputArray[index] = docCategoryFeature;
+    }
+
+    HashMap<String, Integer> docWordFrequency = new HashMap<String, Integer>();
+    for(String word : wordsInDoc) {
+      if(!docWordFrequency.containsKey(word)) {
+        docWordFrequency.put(word, 1);
+      }
+      else {
+        docWordFrequency.put(word, docWordFrequency.get(word) + 1);
+      }
+    }
+
+    for(String word: docWordFrequency.keySet()) {
+      double termFrequency = docWordFrequency.get(word);
+      if(!termsToIntRepresentationMap.containsKey(word)) {
         continue;
       }
 
-      if(line.charAt(0) == '.' && line.charAt(1) == 'I') {
-        Integer docID = Integer.parseInt(line.substring(3).trim());
-        if (!docToCategoryMap.containsKey(docID)) {
-          continue;
-        }
+      Integer wordId = termsToIntRepresentationMap.get(word);
+      double termsInDoc = wordsInDoc.size();
+      double wordInNumDocs = termsToNumDocsMap.get(word);
+      //TF-IDF term
+      double featureWeight = (termFrequency/termsInDoc)*Math.log(totalDocs/wordInNumDocs)/5;
 
-        br.readLine(); // Skip .W line
-        String[] wordsInDoc = br.readLine().split("\\s+");
-        List<FeatureNode> featureNodes = new LinkedList<FeatureNode>();
+      //Storing in the index the label
+      featureNodes.add(new FeatureNode(wordId + 1, featureWeight));
+    }
 
-        //TODO: Get way to get classification for each specific label
-        HashSet<String> intersection = new HashSet<>(categories);
-        intersection.retainAll(docToCategoryMap.get(docID));
-        double docCategoryFeature = intersection.size() > 0 ? 1 : 0;
+    Collections.sort(featureNodes, new Comparator<FeatureNode>() {
+      @Override
+      public int compare(FeatureNode o1, FeatureNode o2) {
+        return o1.getIndex() > o2.getIndex() ? 1 : -1;
+      }
+    });
 
-        if(isTrain) {
-          //Storing in label
-          predictOutputArray[index] = docCategoryFeature;
-        }
+    FeatureNode[] featuresArr = featureNodes.toArray(new FeatureNode[featureNodes.size()]);
 
-        int i = 0;
-        while(i < wordsInDoc.length) {
-          String word = wordsInDoc[i].trim();
-          int j = i;
-          double termFrequency = 1;
-          while(j + 1 < wordsInDoc.length && wordsInDoc[j + 1].equals(word)) {
-            termFrequency++;
-            j++;
-          }
+    if(isTrain) {
+      trainingSet[index] = featuresArr;
+    }
+    else {
+      Feature[] toPredictInstance = featuresArr;
+      double actualDocClass = docCategoryFeature;
+      double predictedDocClass = Linear.predict(model, toPredictInstance);
 
-          i = ++j;
-          if(!termsToIntRepresentationMap.containsKey(word)) {
-            continue;
-          }
-
-          Integer wordId = termsToIntRepresentationMap.get(word);
-          double termsInDoc = wordsInDoc.length;
-          double wordInNumDocs = termsToNumDocsMap.get(word);
-          //TF-IDF term
-          double featureWeight = (termFrequency/termsInDoc)*Math.log(totalDocs/wordInNumDocs)/5;
-
-          //Storing in the index the label
-          featureNodes.add(new FeatureNode(wordId + 1, featureWeight));
-        }
-
-        Collections.sort(featureNodes, new Comparator<FeatureNode>() {
-          @Override
-          public int compare(FeatureNode o1, FeatureNode o2) {
-            return o1.getIndex() > o2.getIndex() ? 1 : -1;
-          }
-        });
-
-        FeatureNode[] featuresArr = featureNodes.toArray(new FeatureNode[featureNodes.size()]);
-
-        if(isTrain) {
-          trainingSet[index] = featuresArr;
-        }
-        else {
-          Feature[] toPredictInstance = featuresArr;
-          double actualDocClass = docCategoryFeature;
-          double predictedDocClass = Linear.predict(model, toPredictInstance);
-
-          if (actualDocClass == 1.0 && predictedDocClass == 1.0) {
-            newsPredictionsPassed++;
-          } else if (actualDocClass == 1.0 && predictedDocClass == 0.0) {
-            newsPredictionsFailed++;
-          } else if (actualDocClass == 0.0 && predictedDocClass == 0.0) {
-            nonNewsPredictionsPassed++;
-          } else if (actualDocClass == 0.0 && predictedDocClass == 1.0) {
-            nonNewsPredictionsFailed++;
-          }
-        }
-        index++;
-
+      if (actualDocClass == 1.0 && predictedDocClass == 1.0) {
+        truePositives++;
+      } else if (actualDocClass == 1.0 && predictedDocClass == 0.0) {
+        falseNegatives++;
+      } else if (actualDocClass == 0.0 && predictedDocClass == 0.0) {
+        trueNegatives++;
+      } else if (actualDocClass == 0.0 && predictedDocClass == 1.0) {
+        falsePositives++;
       }
     }
+    index++;
     return index;
+  }
+
+  private void PrintAverageErrorRate() {
+    System.out.println();
+    double averageAccuracy = 0.5*((double) truePositives /(truePositives + falseNegatives) +
+            (double) trueNegatives /(trueNegatives + falsePositives));
+    System.out.println(String.format("Average accuracy: %f", averageAccuracy));
+    System.out.println();
+  }
+
+  private void PrintConfusionMatrix() {
+    System.out.println();
+    System.out.println("Confusion matrix below:");
+    System.out.print(trueNegatives + " ");
+    System.out.print(falsePositives);
+    System.out.println();
+    System.out.print(falseNegatives + " ");
+    System.out.print(truePositives);
+    System.out.println();
   }
 }
