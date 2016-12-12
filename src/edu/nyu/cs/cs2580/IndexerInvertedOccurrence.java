@@ -4,6 +4,7 @@ import java.io.*;
 import java.util.*;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @CS2580: Implement this class for HW2.
@@ -20,6 +21,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   protected Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
 
   protected Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
+
+  private HashMap<String, Integer> _termsToIntRepresentationMap = new HashMap<String, Integer>();
+  private HashMap<String, Integer> _termsToNumDocsMap = new HashMap<String, Integer>();
 
   protected StopWords stopWords;
 
@@ -152,6 +156,15 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     catch (Exception e) {
       e.printStackTrace();
     }
+  }
+
+  protected void LoadModelData() throws IOException, ClassNotFoundException {
+    ObjectInputStream reader =
+            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.termToIntFile));
+    _termsToIntRepresentationMap = (HashMap<String, Integer>) reader.readObject();
+    reader =
+            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.termToNumDocsFile));
+    _termsToNumDocsMap = (HashMap<String, Integer>) reader.readObject();
   }
 
   private void MergeFiles(int fileNumber) throws IOException {
@@ -396,6 +409,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
     _pageRanks = (Vector<Double>) analyzer.load();
     _numViews = (Vector<Double>) miner.load();
+    LoadModelData();
   }
 
   public void loadIndex(Set<String> queryTokens) throws IOException{
@@ -692,6 +706,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
     throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
+  }
+
+  @Override
+  public Collection<String> getCategories(String file) throws IOException {
+    NewsClassifier newsClassifier = new NewsClassifier(file, _termsToIntRepresentationMap, _termsToNumDocsMap);
+    return newsClassifier.Classify();
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

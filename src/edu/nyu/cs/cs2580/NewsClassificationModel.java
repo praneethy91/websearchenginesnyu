@@ -28,24 +28,23 @@ public class NewsClassificationModel {
   private double[] predictOutputArray;
   private FeatureNode[][] trainingSet;
 
-  private final String modelDir = "data\\model";
-  private final String fileDirString =  "data\\HTMLDocs";
-
-  public static final String[] newsCategories = {"arts", "business", "food", "health", "politics", "science", "technology", "travel"};
-  public static final String[] newsCompanies = {"fox", "nytimes"};
   private static HashSet<String> newsCategoriesSet = new HashSet<String>();
 
   public NewsClassificationModel() {
-    for(String category: newsCategories) {
+    for(String category: NewsClassificationConstants.newsCategories) {
       newsCategoriesSet.add(category);
     }
   }
 
   public static void main(String[] args) throws Exception {
-    for(String category: newsCategories) {
-      NewsClassificationModel newsClassificationModel = new NewsClassificationModel();
-      newsClassificationModel.ComputeAndSaveMLModel(category);
-      newsClassificationModel.TestMLModelAndPrintStatistics(category);
+    boolean h = false;
+    for(String category: NewsClassificationConstants.newsCategories) {
+      if(!h) {
+        NewsClassificationModel newsClassificationModel = new NewsClassificationModel();
+        newsClassificationModel.ComputeAndSaveMLModel(category);
+        newsClassificationModel.TestMLModelAndPrintStatistics(category);
+      }
+      h = true;
     }
   }
 
@@ -53,10 +52,11 @@ public class NewsClassificationModel {
     _binaryClassifierCategory = binaryClassifierCategory;
 
     for(String category : newsCategoriesSet) {
-      for(String newsCompany: newsCompanies){
+      for(String newsCompany: NewsClassificationConstants.newsCompanies){
         TrainingSetProcessor(category, newsCompany);
       }
     }
+    termsToIntRepresentationMap.put(NewsClassificationConstants.totalDocsKey, totalDocs);
 
     //Start of building classification model
     //Add words as feature attributes with tf-idf feature values
@@ -68,7 +68,7 @@ public class NewsClassificationModel {
 
     int index = 0;
     for(String category : newsCategoriesSet) {
-      for(String newsCompany: newsCompanies){
+      for(String newsCompany: NewsClassificationConstants.newsCompanies){
         index = CreateModelData(category, newsCompany, binaryClassifierCategory, index);
       }
     }
@@ -85,19 +85,29 @@ public class NewsClassificationModel {
     double ratio1 = (totalBinaryclassifierCategoryArticles*1.0)/totalDocs;
     parameter.setWeights(new double[] {ratio1, 1 - ratio1},new int[] {0, 1});
     Model model = Linear.train(problem, parameter);
-    File modelSaveFile = new File(modelDir + "\\" + binaryClassifierCategory);
+    File modelSaveFile = new File(NewsClassificationConstants.modelDir + "\\" + binaryClassifierCategory);
     modelSaveFile.getParentFile().mkdirs();
     modelSaveFile.createNewFile();
     model.save(modelSaveFile);
+
+    ObjectOutputStream writer =
+            new ObjectOutputStream(new FileOutputStream(NewsClassificationConstants.termToIntFile, false));
+    writer.writeObject(this.termsToIntRepresentationMap);
+    writer.close();
+
+    writer =
+            new ObjectOutputStream(new FileOutputStream(NewsClassificationConstants.termToNumDocsFile, false));
+    writer.writeObject(this.termsToNumDocsMap);
+    writer.close();
   }
 
   public void TestMLModelAndPrintStatistics(String binaryClassifierCategory) throws Exception {
-    File modelLoadFile = new File(modelDir + "\\" + binaryClassifierCategory);
+    File modelLoadFile = new File(NewsClassificationConstants.modelDir + "\\" + binaryClassifierCategory);
     Model model = Model.load(modelLoadFile);
 
     int index = 0;
-    for(String category : newsCategories) {
-      for(String newsCompany : newsCompanies) {
+    for(String category : NewsClassificationConstants.newsCategories) {
+      for(String newsCompany : NewsClassificationConstants.newsCompanies) {
         index = TestingSetProcessor(category, newsCompany, binaryClassifierCategory, model, index);
       }
     }
@@ -107,7 +117,7 @@ public class NewsClassificationModel {
   }
 
   private int CreateModelData(String category, String newsCompany, String binaryClassifierCategory, int index) throws Exception {
-    Path corpusPathFox = Paths.get(fileDirString, category, newsCompany);
+    Path corpusPathFox = Paths.get(NewsClassificationConstants.filesToTrainModelDir, category, newsCompany);
     File[] foundFiles = corpusPathFox.toFile().listFiles();
     int begin = 0;
     int end = (int)Math.floor(foundFiles.length * trainingDocumentsRatio);
@@ -119,7 +129,7 @@ public class NewsClassificationModel {
   }
 
   private void TrainingSetProcessor(String category, String newsCompany) throws IOException {
-    Path corpusPathFox = Paths.get(fileDirString, category, newsCompany);
+    Path corpusPathFox = Paths.get(NewsClassificationConstants.filesToTrainModelDir, category, newsCompany);
     File[] foundFiles = corpusPathFox.toFile().listFiles();
     int begin = 0;
     int end = (int)Math.floor(foundFiles.length * trainingDocumentsRatio);
@@ -130,7 +140,7 @@ public class NewsClassificationModel {
   }
 
   private int TestingSetProcessor(String category, String newsCompany, String binaryClassifierCategory, Model model, int index) throws Exception {
-    Path corpusPathFox = Paths.get(fileDirString, category, newsCompany);
+    Path corpusPathFox = Paths.get(NewsClassificationConstants.filesToTrainModelDir, category, newsCompany);
     File[] foundFiles = corpusPathFox.toFile().listFiles();
     int begin = (int)Math.floor(foundFiles.length * trainingDocumentsRatio) + 1;
     int end = foundFiles.length - 1;

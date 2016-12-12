@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 import java.io.*;
 import java.util.*;
@@ -311,6 +312,11 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
   @Override
   public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
     throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
+  }
+
+  @Override
+  public Collection<String> getCategories(String file) throws IOException{
+    throw new NotImplementedException();
   }
 
   private void insertToken(int docID, String s) {
