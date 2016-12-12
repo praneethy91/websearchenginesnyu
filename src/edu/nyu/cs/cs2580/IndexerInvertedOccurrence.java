@@ -85,8 +85,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           if(wikiFile.isDirectory() == false) {
 
             //Parsing and extracting token;
-            htmlParser = new HtmlParser(wikiFile);
-            tokens = htmlParser.ParseTokens();
+            htmlParser = new HtmlParser(wikiFile, true);
+            tokens = htmlParser.ParseGeneralTokens();
 
             //TODO: Document Id
             // Populating and adding DocumentIndexed for this document.
@@ -243,7 +243,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     // This condition is for skipping stop words in corpus which appear in more than 50% of docs
-    if(((double)totalOccurences)/totalTokensInCorpus > 0.5 || stopWords.contains(word)) {
+    if(stopWords.contains(word)) {
       while (!occurenceListPQ.isEmpty()) {
         OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
         DataInputStream dis = disArr[occurenceListPointer._pointer];
