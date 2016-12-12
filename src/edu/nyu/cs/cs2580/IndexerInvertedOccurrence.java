@@ -3,6 +3,7 @@ package edu.nyu.cs.cs2580;
 import java.io.*;
 import java.util.*;
 
+import de.bwaldvogel.liblinear.Model;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
@@ -24,6 +25,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private HashMap<String, Integer> _termsToIntRepresentationMap = new HashMap<String, Integer>();
   private HashMap<String, Integer> _termsToNumDocsMap = new HashMap<String, Integer>();
+  private ArrayList<Model> _modelList = new ArrayList<Model>();
 
   protected StopWords stopWords;
 
@@ -165,6 +167,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     reader =
             new ObjectInputStream(new FileInputStream(NewsClassificationConstants.termToNumDocsFile));
     _termsToNumDocsMap = (HashMap<String, Integer>) reader.readObject();
+    for (String category : NewsClassificationConstants.newsCategories) {
+      File modelLoadFile = new File(NewsClassificationConstants.modelDir + "\\" + category);
+      Model model = Model.load(modelLoadFile);
+      _modelList.add(model);
+    }
   }
 
   private void MergeFiles(int fileNumber) throws IOException {
@@ -710,7 +717,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   @Override
   public Collection<String> getCategories(String file) throws IOException {
-    NewsClassifier newsClassifier = new NewsClassifier(file, _termsToIntRepresentationMap, _termsToNumDocsMap);
+    NewsClassifier newsClassifier = new NewsClassifier(file, _termsToIntRepresentationMap, _termsToNumDocsMap, _modelList);
     return newsClassifier.Classify();
   }
 
