@@ -1,3 +1,4 @@
+http://www.reuters.com/
 http://www.huffingtonpost.com/
 http://www.cnn.com/
 http://www.nytimes.com/
@@ -11,11 +12,9 @@ http://www.usatoday.com/
 http://www.latimes.com/
 http://www.bloomberg.com/
 http://www.msnbc.com/
-http://www.reuters.com/
 http://townhall.com/
 http://dailycaller.com/
 http://www.newsmax.com/
-http://townhall.com/
 http://rightwingnews.com/
 http://www.weeklystandard.com/
 http://www.theblaze.com/

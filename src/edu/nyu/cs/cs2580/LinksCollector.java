@@ -56,12 +56,17 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
         }
       }
       catch (Exception e){
-        System.out.print("Some null excemption when content type is null");
+        e.printStackTrace();
       }
   Elements linksOnPage = htmlDocument.select("a[href]");
   System.out.println("Found (" + linksOnPage.size() + ") links");
   for(Element link : linksOnPage) {
+    try {
       this.links.add(new URL(link.absUrl("href")));
+    }
+    catch(Exception e) {
+      //Ignore malformed URL's
+    }
   }
 
   return true;
