@@ -25,7 +25,7 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   public String asTextResult() {
     StringBuffer buf = new StringBuffer();
     buf.append(_doc._docid).append("\t");
-    buf.append("(").append(String.join(",", _categories)).append(")").append("\t");
+    buf.append("(").append(Join(",", _categories)).append(")").append("\t");
     buf.append(_doc.getTitle()).append("\t");
     buf.append(_score).append("\t");
     buf.append(_pageRank).append("\t");
@@ -87,5 +87,15 @@ class ScoredDocument implements Comparable<ScoredDocument> {
       return 0;
     }
     return (this._score > o._score) ? 1 : -1;
+  }
+
+  private String Join(String seperator, Collection<String> strings) {
+    StringBuilder sb = new StringBuilder();
+    for(String string: strings) {
+      sb.append(string);
+      sb.append(seperator);
+    }
+    sb.setLength(sb.length() -1);
+    return sb.toString();
   }
 }
