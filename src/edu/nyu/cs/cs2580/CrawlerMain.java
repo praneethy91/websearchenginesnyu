@@ -13,30 +13,23 @@ import java.util.StringTokenizer;
  * Created by mansivirani on 30/11/16.
  */
 public class CrawlerMain {
-
-
-        public static void main(String[] args) throws IOException
-        {
-            final String NewsLinks = "conf/newslinks.txt";
-            File websitesFile = new File(NewsLinks);
-            FileReader fr = new FileReader(websitesFile);
-            BufferedReader br = new BufferedReader(fr);
-            String newsWebsite;
-            Set<String> visitedURLs = new HashSet<String>();
-            int j = 1;
-            //For
-
-            try {
-                while ((newsWebsite = br.readLine()) != null) {
-                    Crawler craw = new Crawler();
-                    //visitedURLs.add(newsWebsite);
-                    if(!visitedURLs.contains((newsWebsite)))
-                        j = craw.search(new URL(newsWebsite), j, visitedURLs);
-                }
-            }catch (Exception e){
-                System.out.print("Some problem");
-            }
-            //end of loop
+  public static void main(String[] args) throws IOException
+  {
+    final String NewsLinks = "conf/newslinks.txt";
+    File websitesFile = new File(NewsLinks);
+    FileReader fr = new FileReader(websitesFile);
+    BufferedReader br = new BufferedReader(fr);
+    String newsWebsite;
+    Set<String> visitedURLs = new HashSet<String>();
+    int j = 1;
+    try {
+        while ((newsWebsite = br.readLine()) != null) {
+            Crawler craw = new Crawler();
+            if(!visitedURLs.contains((newsWebsite)))
+                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs);
         }
-
+    }catch (Exception e){
+        System.out.print("Some problem");
+    }
+  }
 }
