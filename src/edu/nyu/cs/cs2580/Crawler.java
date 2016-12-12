@@ -11,35 +11,44 @@ import java.util.Set;
 public class Crawler
 
     {
-        private static final int MAX_PAGES_TO_SEARCH = 10000;
+        private static final int MAX_PAGES_TO_SEARCH = 3;
         private Set<String> pagesVisited = new HashSet<String>();
         private LinkedList<String> pagesToVisit = new LinkedList<String>();
 
 
-    public int search(URL urlFormatted, int j) throws IOException {
+    public int search(URL urlFormatted, int j, Set<String> visitedURLs) throws IOException {
         String url = urlFormatted.toString();
         String hostName = urlFormatted.getHost();
         this.pagesToVisit.addFirst(url);
 
 
-        while (pagesVisited.size() < MAX_PAGES_TO_SEARCH) {
+        while (pagesVisited.size() < MAX_PAGES_TO_SEARCH ) {
             String currentUrl;
+            int flag = 0;
 
             try {
                 do {
-                    currentUrl = this.pagesToVisit.remove(0);
-                } while (this.pagesVisited.contains(currentUrl));
+
+                        currentUrl = this.pagesToVisit.remove(0);
 
 
-                LinksCollector leg = new LinksCollector();
-                boolean success = leg.crawl(currentUrl, j, hostName);
-                if (success) {
-                    j++;
-                    this.pagesToVisit.addAll(leg.getLinks());
-                    this.pagesVisited.add(currentUrl);
+                } while ((this.pagesVisited.contains(currentUrl)));
+
+
+                if (!visitedURLs.contains(currentUrl)) {
+
+                    LinksCollector leg = new LinksCollector();
+                    boolean success = leg.crawl(currentUrl, j, hostName);
+                    if (success) {
+                        j++;
+                        this.pagesToVisit.addAll(leg.getLinks());
+                        this.pagesVisited.add(currentUrl);
+                        visitedURLs.add(currentUrl);
+
+                    }
+
                 }
-
-            }catch (Exception e){
+                }catch(Exception e){
                 System.out.print("Some exception");
             }
         }

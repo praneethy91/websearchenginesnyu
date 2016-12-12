@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.net.URL;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.StringTokenizer;
 
 /**
  * Created by mansivirani on 30/11/16.
@@ -19,13 +22,16 @@ public class CrawlerMain {
             FileReader fr = new FileReader(websitesFile);
             BufferedReader br = new BufferedReader(fr);
             String newsWebsite;
+            Set<String> visitedURLs = new HashSet<String>();
             int j = 1;
             //For
 
             try {
                 while ((newsWebsite = br.readLine()) != null) {
                     Crawler craw = new Crawler();
-                    j = craw.search(new URL(newsWebsite), j);
+                    //visitedURLs.add(newsWebsite);
+                    if(!visitedURLs.contains((newsWebsite)))
+                        j = craw.search(new URL(newsWebsite), j, visitedURLs);
                 }
             }catch (Exception e){
                 System.out.print("Some problem");

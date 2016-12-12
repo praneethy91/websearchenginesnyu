@@ -13,6 +13,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -23,15 +24,7 @@ public class LinksCollector {
     private List<String> links = new LinkedList<String>();
     private Document htmlDocument;
 
-
-    /**
-     * This performs all the work. It makes an HTTP request, checks the response, and then gathers
-     * up all the links on the page. Perform a searchForWord after the successful crawl
-     *
-     * @param url
-     *            - The URL to visit
-     * @return whether or not the crawl was successful
-     */
+    
     public boolean crawl(String url, int j, String hostName) throws IOException
     {
 
@@ -43,13 +36,16 @@ public class LinksCollector {
             Connection.Response response = connection.response();
 
 
+
             if (response.statusCode() == 200) // 200 is the HTTP OK status code
-                // indicating that everything is great.
+
                 try {
 
                         String host = response.url().getHost();
 
-                        if (!connection.response().contentType().contains("text/html") || connection.response().contentType().equals(null)) {
+//
+
+                         if (!connection.response().contentType().contains("text/html") || connection.response().contentType().equals(null)) {
                             //System.out.print("This is not an HTML Doc");
                             return false;
                         }
@@ -59,15 +55,16 @@ public class LinksCollector {
                         }
                         else {
 
-
                             System.out.println("\nVisiting: " + url);
-                            String docBodyText = this.htmlDocument.html();
 
+
+                            String docBodyText = this.htmlDocument.html();
 
                             String pathToHTMLDocs = "data/HTMLDocs/";
                             File newFile = new File(pathToHTMLDocs+"File-" + j);
                             FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
                             BufferedWriter bw = new BufferedWriter(fw);
+
                             bw.write(docBodyText);
                             bw.close();
                         }
