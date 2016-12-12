@@ -11,18 +11,10 @@ import java.util.Set;
 public class Crawler
 
     {
-        private static final int MAX_PAGES_TO_SEARCH = 5;
+        private static final int MAX_PAGES_TO_SEARCH = 10000;
         private Set<String> pagesVisited = new HashSet<String>();
         private LinkedList<String> pagesToVisit = new LinkedList<String>();
 
-
-        /**
-         * Our main launching point for the Spider's functionality. Internally it creates spider legs
-         * that make an HTTP request and parse the response (the web page).
-         *
-         * @param
-         *            - The starting point of the spider
-         */
 
     public int search(URL urlFormatted, int j) throws IOException {
         String url = urlFormatted.toString();
@@ -40,7 +32,7 @@ public class Crawler
 
 
                 LinksCollector leg = new LinksCollector();
-                boolean success = leg.crawl(currentUrl, j, hostName); // Lots of stuff happening here. Look at the crawl method in
+                boolean success = leg.crawl(currentUrl, j, hostName);
                 if (success) {
                     j++;
                     this.pagesToVisit.addAll(leg.getLinks());

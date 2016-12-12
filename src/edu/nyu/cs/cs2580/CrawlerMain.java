@@ -12,12 +12,6 @@ import java.net.URL;
 public class CrawlerMain {
 
 
-        /**
-         * This is our test. It creates a spider (which creates spider legs) and crawls the web.
-         *
-         * @param args
-         *            - not used
-         */
         public static void main(String[] args) throws IOException
         {
             final String NewsLinks = "conf/newslinks.txt";
@@ -25,7 +19,7 @@ public class CrawlerMain {
             FileReader fr = new FileReader(websitesFile);
             BufferedReader br = new BufferedReader(fr);
             String newsWebsite;
-            int j = 10000000;
+            int j = 1;
             //For
 
             try {
