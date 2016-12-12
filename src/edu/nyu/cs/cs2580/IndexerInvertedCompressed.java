@@ -127,7 +127,7 @@ public class IndexerInvertedCompressed extends IndexerInvertedOccurrence {
     }
 
     // This condition is for skipping stop words in corpus which appear in more than 50% of docs
-    if(((double)totalOccurences)/numDocs() > 0.5 || stopWords.contains(word)) {
+    if(stopWords.contains(word)) {
       while (!occurenceListPQ.isEmpty()) {
         OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
         DataInputStream dis = disArr[occurenceListPointer._pointer];

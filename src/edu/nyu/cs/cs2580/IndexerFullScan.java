@@ -1,14 +1,10 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Scanner;
-import java.util.Set;
-import java.util.Vector;
+import java.util.*;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * Instructor's implementation of a simple full scan Indexer, used in HW1.
@@ -252,6 +248,11 @@ class IndexerFullScan extends Indexer implements Serializable {
   @Override
   public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
     throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
+  }
+
+  @Override
+  public Collection<String> getCategories(String file) throws IOException{
+    throw new NotImplementedException();
   }
 
   ///// Utility

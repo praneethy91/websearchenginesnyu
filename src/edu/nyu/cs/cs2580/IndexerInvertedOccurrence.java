@@ -1,10 +1,11 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.*;
-import java.lang.reflect.Array;
 import java.util.*;
 
+import de.bwaldvogel.liblinear.Model;
 import edu.nyu.cs.cs2580.SearchEngine.Options;
+import sun.reflect.generics.reflectiveObjects.NotImplementedException;
 
 /**
  * @CS2580: Implement this class for HW2.
@@ -21,6 +22,10 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   protected Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>> _index = new HashMap<>();
 
   protected Map<String,Map<String, LinkedHashMap<Integer,DocumentWordOccurrence>>> distributedIndex = new HashMap<>();
+
+  private HashMap<String, Integer> _termsToIntRepresentationMap = new HashMap<String, Integer>();
+  private HashMap<String, Integer> _termsToNumDocsMap = new HashMap<String, Integer>();
+  private ArrayList<Model> _modelList = new ArrayList<Model>();
 
   protected StopWords stopWords;
 
@@ -58,7 +63,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
     Arrays.sort(directoryListing, new FileComparator());
 
-    WikiParser wikiParser = null;
+    HtmlParser htmlParser = null;
     int docID = 0;
     Vector<String> tokens;
     int count = 0;
@@ -86,14 +91,14 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
           if(wikiFile.isDirectory() == false) {
 
             //Parsing and extracting token;
-            wikiParser = new WikiParser(wikiFile);
-            tokens = wikiParser.ParseTokens();
+            htmlParser = new HtmlParser(wikiFile, true);
+            tokens = htmlParser.ParseGeneralTokens();
 
             //TODO: Document Id
             // Populating and adding DocumentIndexed for this document.
             DocumentIndexed docIndexed = new DocumentIndexed(docID);
-            docIndexed.setTitle(wikiParser.getTitle());
-            docIndexed.setUrl(wikiParser.getUrl());
+            docIndexed.setTitle(htmlParser.getTitle());
+            docIndexed.setUrl(htmlParser.getUrl());
             _indexedDocs.add(docIndexed);
 
 
@@ -152,6 +157,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
     catch (Exception e) {
       e.printStackTrace();
+    }
+  }
+
+  protected void LoadModelData() throws IOException, ClassNotFoundException {
+    ObjectInputStream reader =
+            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.termToIntFile));
+    _termsToIntRepresentationMap = (HashMap<String, Integer>) reader.readObject();
+    reader =
+            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.termToNumDocsFile));
+    _termsToNumDocsMap = (HashMap<String, Integer>) reader.readObject();
+    for (String category : NewsClassificationConstants.newsCategories) {
+      File modelLoadFile = new File(NewsClassificationConstants.modelDir + "\\" + category);
+      Model model = Model.load(modelLoadFile);
+      _modelList.add(model);
     }
   }
 
@@ -244,7 +263,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     }
 
     // This condition is for skipping stop words in corpus which appear in more than 50% of docs
-    if(((double)totalOccurences)/totalTokensInCorpus > 0.5 || stopWords.contains(word)) {
+    if(stopWords.contains(word)) {
       while (!occurenceListPQ.isEmpty()) {
         OccurenceListPointer occurenceListPointer = occurenceListPQ.poll();
         DataInputStream dis = disArr[occurenceListPointer._pointer];
@@ -397,6 +416,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
     _pageRanks = (Vector<Double>) analyzer.load();
     _numViews = (Vector<Double>) miner.load();
+    LoadModelData();
   }
 
   public void loadIndex(Set<String> queryTokens) throws IOException{
@@ -693,6 +713,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   @Override
   public Vector<TermProbability> getHighestTermProbabilitiesForDocs(Vector<Integer> docIds, int numTerms) {
     throw new UnsupportedOperationException("This indexer does not support Query similarity computation");
+  }
+
+  @Override
+  public Collection<String> getCategories(String file) throws IOException {
+    NewsClassifier newsClassifier = new NewsClassifier(file, _termsToIntRepresentationMap, _termsToNumDocsMap, _modelList);
+    return newsClassifier.Classify();
   }
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {

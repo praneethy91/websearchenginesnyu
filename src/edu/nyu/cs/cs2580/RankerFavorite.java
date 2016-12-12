@@ -23,7 +23,7 @@ public class RankerFavorite extends Ranker {
   private HashMap<String, Double> tokenFrequencyCache = null;
 
   @Override
-  public Vector<ScoredDocument> runQuery(Query query, int numResults) {
+  public Vector<ScoredDocument> runQuery(Query query, int numResults) throws IOException {
     tokenFrequencyCache = new HashMap<>();
     Queue<ScoredDocument> rankQueue = new PriorityQueue<ScoredDocument>();
     Document doc = null;
@@ -48,6 +48,8 @@ public class RankerFavorite extends Ranker {
     Vector<ScoredDocument> results = new Vector<ScoredDocument>();
     ScoredDocument scoredDoc = null;
     while ((scoredDoc = rankQueue.poll()) != null) {
+      Collection<String> categories = _indexer.getCategories(scoredDoc.getUrl());
+      scoredDoc.setCategories(categories);
       results.add(scoredDoc);
     }
     Collections.sort(results, Collections.reverseOrder());
@@ -78,7 +80,7 @@ public class RankerFavorite extends Ranker {
   }
 
   @Override
-  public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) {
+  public Vector<TermProbability> querySimilarity(Query query, int numDocs, int numTerms) throws IOException {
     Vector<ScoredDocument> documents = runQuery(query, numDocs);
     Vector<Integer> docIds = new Vector<>();
     for(ScoredDocument document: documents) {

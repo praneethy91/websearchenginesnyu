@@ -2,7 +2,6 @@ package edu.nyu.cs.cs2580;
 
 import java.io.*;
 import java.util.*;
-import java.util.regex.Pattern;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -119,7 +118,7 @@ public class LogMinerNumviews extends LogMiner {
       //if(docNames.get(docname) != 0)
         //bw.write(docname + "\t" + docNames.get(docname).toString() + "\n");
       try {
-        new WikiParser(new File(_options._corpusPrefix, docname));
+        new HtmlParser(new File(_options._corpusPrefix, docname));
       }
       catch(Exception e) {
         continue;

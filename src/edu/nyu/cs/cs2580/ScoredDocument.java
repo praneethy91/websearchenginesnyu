@@ -1,5 +1,7 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.Collection;
+
 /**
  * Document with score.
  *
@@ -10,6 +12,7 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   private Document _doc;
   private double _score;
   private String _url;
+  private Collection<String> _categories;
   private double _pageRank = 0.0;
   private double _numViews = 0.0;
 
@@ -22,6 +25,7 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   public String asTextResult() {
     StringBuffer buf = new StringBuffer();
     buf.append(_doc._docid).append("\t");
+    buf.append("(").append(String.join(",", _categories)).append(")").append("\t");
     buf.append(_doc.getTitle()).append("\t");
     buf.append(_score).append("\t");
     buf.append(_pageRank).append("\t");
@@ -64,6 +68,10 @@ class ScoredDocument implements Comparable<ScoredDocument> {
 
   public String getUrl() {
     return _url;
+  }
+
+  public void setCategories(Collection<String> categories) {
+    _categories = categories;
   }
 
   /**

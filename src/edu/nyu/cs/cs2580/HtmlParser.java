@@ -11,30 +11,7 @@ import java.util.Vector;
 /**
  * Created by Praneeth on 10/25/2016.
  */
-public class WikiParser {
-
-  public static void main(String[] args) throws IOException {
-    /*File dir = new File("C:\\Users\\Praneeth\\Documents\\Git\\websearchenginesnyu\\data\\wiki");
-    File[] directoryListing = dir.listFiles();
-    System.out.println(directoryListing[0].getAbsolutePath());
-    WikiParser htmlParser = new WikiParser(directoryListing[0]);
-    Vector<String> tokens = htmlParser.ParseTokens();
-    for(String token: tokens) {
-      System.out.println(token);
-    }*/
-    // writing string to a file encoded as modified UTF-8
-    DataOutputStream dataOut = new DataOutputStream(new BufferedOutputStream(new FileOutputStream("C:\\Users\\Praneeth\\Desktop\\dos")));
-    dataOut.writeUTF("hello");
-    for(int i = 0; i < 1024*1024*1024; i++) {
-      dataOut.writeByte((byte)100);
-    }
-    dataOut.flush();
-    dataOut.close();
-
-    // Reading data from the same file
-    DataInputStream dataIn = new DataInputStream(new FileInputStream("C:\\Users\\Praneeth\\Desktop\\dos"));
-    dataIn.close();
-  }
+public class HtmlParser {
 
   private org.jsoup.nodes.Document _htmlDocument;
 
@@ -42,12 +19,12 @@ public class WikiParser {
 
   private String _title;
 
-  public WikiParser(File htmlDocument) throws IOException, IllegalArgumentException {
+  public HtmlParser(File htmlDocument) throws IOException, IllegalArgumentException {
     _htmlDocument = org.jsoup.Jsoup.parse(htmlDocument, "UTF-8");
     InitiateParser();
   }
 
-  public WikiParser(File url, boolean h) throws IOException {
+  public HtmlParser(File url, boolean h) throws IOException {
     _htmlDocument = org.jsoup.Jsoup.parse(url, "UTF-8");
     _title = _htmlDocument.title();
     _url = url.toString();
@@ -80,7 +57,9 @@ public class WikiParser {
   public Vector<String> ParseGeneralTokens() {
     Vector<String> tokens = new Vector<>();
     Element contentElement = _htmlDocument.body();
-    DFSGeneralParse(contentElement, tokens);
+    if(contentElement != null) {
+      DFSGeneralParse(contentElement, tokens);
+    }
     return tokens;
   }
 
