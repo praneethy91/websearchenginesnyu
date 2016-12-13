@@ -15,6 +15,9 @@ public class CrawlerMain {
   {
     HashMap<String, String> urlLocator = new HashMap<>();
     final String NewsLinks = "conf/newslinks.txt";
+      final String crawlStatistics = NewsClassificationConstants.modelDir + "/" + "crawlStatistics";
+      File crawlStatisticsFile = new File(crawlStatistics);
+      BufferedWriter bw = new BufferedWriter(new FileWriter(crawlStatisticsFile, false));
     File websitesFile = new File(NewsLinks);
     FileReader fr = new FileReader(websitesFile);
     BufferedReader br = new BufferedReader(fr);
@@ -25,23 +28,29 @@ public class CrawlerMain {
       int toCrawl = j;
     try {
         while ((newsWebsite = br.readLine()) != null) {
+            bw.write(newsWebsite + " ");
+            bw.write(NewsClassificationConstants._corpusFilePrefix + j + " to ");
             int debt = toCrawl - (j - prevJ);
             prevJ = j;
             toCrawl = debt + Crawler.MAX_PAGES_TO_SEARCH;
             Crawler craw = new Crawler();
-            System.out.println(newsWebsite + " started");
+            //System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))
                 j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, urlLocator);
-            System.out.println(newsWebsite + " ended");
+            bw.write(NewsClassificationConstants._corpusFilePrefix + (j - 1));
+            bw.write("\n");
+            //System.out.println(newsWebsite + " ended");
 
         }
     }catch (Exception e){
-        System.out.print("Some problem");
+        //System.out.print("Some problem");
     }
 
       ObjectOutputStream writer =
               new ObjectOutputStream(new FileOutputStream(NewsClassificationConstants.newsFileToURLFile, false));
       writer.writeObject(urlLocator);
       writer.close();
+      br.close();
+      bw.close();
   }
 }

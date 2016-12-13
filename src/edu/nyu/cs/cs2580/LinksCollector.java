@@ -45,7 +45,7 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
           return false;
         }
         else {
-          System.out.println("\nVisiting: " + url);
+          //System.out.println("\nVisiting: " + url);
           String docBodyText = this.htmlDocument.html();
           File newFile = new File(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
           FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
@@ -58,7 +58,7 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
         e.printStackTrace();
       }
   Elements linksOnPage = htmlDocument.select("a[href]");
-  System.out.println("Found (" + linksOnPage.size() + ") links");
+  //System.out.println("Found (" + linksOnPage.size() + ") links");
   for(Element link : linksOnPage) {
     try {
       this.links.add(new URL(link.absUrl("href")));
