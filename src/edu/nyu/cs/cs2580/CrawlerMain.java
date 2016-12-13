@@ -21,12 +21,17 @@ public class CrawlerMain {
     BufferedReader br = new BufferedReader(fr);
     String newsWebsite;
     Set<String> visitedURLs = new HashSet<String>();
-    int j = 1;
+    int j = 0;
+      int toCrawl = j;
     try {
         while ((newsWebsite = br.readLine()) != null) {
+            toCrawl += (toCrawl - j) + Crawler.MAX_PAGES_TO_SEARCH;
             Crawler craw = new Crawler();
+            System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))
-                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs);
+                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl);
+            System.out.println(newsWebsite + " ended");
+
         }
     }catch (Exception e){
         System.out.print("Some problem");

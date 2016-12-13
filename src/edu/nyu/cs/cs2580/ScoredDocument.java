@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580;
 
 import java.util.Collection;
+import java.util.List;
 
 /**
  * Document with score.
@@ -15,6 +16,8 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   private Collection<String> _categories;
   private double _pageRank = 0.0;
   private double _numViews = 0.0;
+
+  public List<String> topics;
 
   public ScoredDocument(Document doc, double score) {
     _doc = doc;
@@ -73,6 +76,15 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   public void setCategories(Collection<String> categories) {
     _categories = categories;
   }
+
+  public Collection<String> getCategories() {
+    return _categories;
+  }
+
+  public List<String> getTopics(){
+    return topics;
+  }
+
 
   /**
    * @CS2580: Student should implement {@code asHtmlResult} for final project.

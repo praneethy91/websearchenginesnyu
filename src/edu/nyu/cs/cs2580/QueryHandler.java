@@ -341,7 +341,7 @@ class QueryHandler implements HttpHandler {
         for(Query query : processedQueries) {
           Vector<ScoredDocument> scoredDocs =
                   ranker.runQuery(query, cgiArgs._numResults);
-          formatter.AddTable(query, scoredDocs, cgiArgs._rankerType);
+          formatter.AddTable(scoredDocs, cgiArgs._rankerType);
         }
         response.append(formatter.asHtmlString());
         break;

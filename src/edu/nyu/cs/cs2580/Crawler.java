@@ -9,15 +9,15 @@ import java.util.Set;
 
 public class Crawler
 {
-  private static final int MAX_PAGES_TO_SEARCH = 3;
+  public static final int MAX_PAGES_TO_SEARCH = 1000;
   private Set<String> pagesVisited = new HashSet<String>();
   private LinkedList<ch.sentric.URL> pagesToVisit = new LinkedList<ch.sentric.URL>();
 
-  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs) throws IOException {
+  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl) throws IOException {
   String hostName = urlFormatted.getAuthority().getHostName().getAsString();
   this.pagesToVisit.addFirst(urlFormatted);
 
-  while (pagesVisited.size() < MAX_PAGES_TO_SEARCH ) {
+  while (pagesVisited.size() < toCrawl ) {
     ch.sentric.URL currentUrl;
 
     try {
@@ -36,11 +36,14 @@ public class Crawler
         }
       }
       }catch(Exception e){
+      if(pagesToVisit.isEmpty()) {
+        break;
+      }
       e.printStackTrace();
     }
   }
 
-  System.out.println("\nDone: Visited " + this.pagesVisited.size() + " web page(s) per website.");
+  System.out.println("\nDone: Visited " + visitedURLs.size() + " web page(s) per website.");
   return j;
   }
 }

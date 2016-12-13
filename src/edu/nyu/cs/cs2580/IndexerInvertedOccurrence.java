@@ -168,7 +168,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
             new ObjectInputStream(new FileInputStream(NewsClassificationConstants.termToNumDocsFile));
     _termsToNumDocsMap = (HashMap<String, Integer>) reader.readObject();
     for (String category : NewsClassificationConstants.newsCategories) {
-      File modelLoadFile = new File(NewsClassificationConstants.modelDir + "\\" + category);
+      File modelLoadFile = new File(NewsClassificationConstants.modelDir + "/" + category);
       Model model = Model.load(modelLoadFile);
       _modelList.add(model);
     }

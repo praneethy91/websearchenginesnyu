@@ -4,49 +4,69 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Vector;
 
 /**
  * Created by Praneeth on 10/16/2016.
  */
 public class HtmlFormatter {
-  String _htmltemplate = "<table id=\"%s\" border=\"1\" cellpadding=\"5\" cellspacing=\"5\">" +
-                          "<tr>" +
-                            "<th>Rank</th>" +
-                            "<th>Query</th>" +
-                            "<th>Doc ID</th>" +
-                            "<th>Doc Title</th>" +
-                            "<th>Doc Score</th>" +
-                            "<th>PageRank</th>" +
-                            "<th>NumViews</th>" +
-                            "<th>Doc URL</th>" +
-                          "</tr>" +
-                        "</table>";
+
+  private String _docTemplate = "<div id=\"%s\"><a href=\"%s\">%s</a></div>";
+  private String _categoryTemplate = "<div id=\"%s\"><h2>%s</h2><hr></div>";
   private Document _htmlDocument = null;
-  private int _tableCount = 1;
+  private int _docCount = 0;
+  private HashMap<String, Vector<ScoredDocument>> categoryMap = new HashMap<String, Vector<ScoredDocument>>();
   public HtmlFormatter(){
     _htmlDocument = Document.createShell("");
   }
 
-  public void AddTable(Query query, Vector<ScoredDocument> scoredDocumentVector, QueryHandler.CgiArguments.RankerType rankerType) {
-    _htmlDocument.body().appendElement("h1").text(rankerType.getDesc());
-    _htmlDocument.body().append(getHtmlTemplate());
-    Elements table = _htmlDocument.select("#" + _tableCount);
-    int rank = 1;
+  public void AddTable(Vector<ScoredDocument> scoredDocumentVector, QueryHandler.CgiArguments.RankerType rankerType) {
+    _htmlDocument.body().appendElement("h1").text("Top results..");
+
     for(ScoredDocument scoredDocument : scoredDocumentVector) {
-      table.append("<tr><td>" + rank + "</td><td>" + query._query + "</td><td>" + scoredDocument.getID() + "</td><td>" + scoredDocument.getTitle() + "</td><td>" + scoredDocument.getScore() + "</td><td>" + scoredDocument.getPageRank() + "</td><td>" + scoredDocument.getNumViews() + "</td><td>" + scoredDocument.getUrl() + "</td></tr>");
-      rank++;
+      for(String category : scoredDocument.getCategories()) {
+        Vector<ScoredDocument> scoredDocuments;
+        if(!categoryMap.containsKey(category)) {
+           scoredDocuments = new Vector<ScoredDocument>();
+        }
+        else {
+          scoredDocuments = categoryMap.get(category);
+        }
+
+        scoredDocuments.add(scoredDocument);
+        categoryMap.put(category, scoredDocuments);
+      }
     }
-    _tableCount++;
-    _htmlDocument.body().append("<hr>");
-    _htmlDocument.body().append("<br>");
+
+    for(Map.Entry<String, Vector<ScoredDocument>> entry : categoryMap.entrySet()){
+      String category = entry.getKey();
+      String categoryTemplateInstance =  getCategoryTemplate(category);
+      _htmlDocument.body().append(categoryTemplateInstance);
+      Element categoryDiv = _htmlDocument.select("#" + category).first();
+      for(ScoredDocument scoredDocument: entry.getValue()) {
+        categoryDiv.append(getDocTemplate(scoredDocument));
+        _docCount++;
+      }
+
+      _htmlDocument.body().append("<hr style=height:2px;>");
+      _htmlDocument.body().append("<br>");
+    }
+
   }
 
   public String asHtmlString() {
     return _htmlDocument.html();
   }
 
-  private String getHtmlTemplate() {
-    return String.format(_htmltemplate, _tableCount);
+  private String getDocTemplate(ScoredDocument scoredDocument) {
+    return String.format(_docTemplate, _docCount, scoredDocument.getUrl(), scoredDocument.getTitle());
   }
+
+  private String getCategoryTemplate(String category) {
+    return String.format(_categoryTemplate, category, category);
+  }
+
 }
