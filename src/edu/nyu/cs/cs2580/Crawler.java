@@ -27,15 +27,19 @@ public class Crawler
 
       if(!visitedURLs.contains(currentUrl.getNormalizedUrl())) {
         LinksCollector leg = new LinksCollector();
-        boolean success = leg.crawl(currentUrl, j, hostName, category, website, folderName);
-        if (success) {
-          j++;
-          this.pagesToVisit.addAll(leg.getLinks());
-          this.pagesVisited.add(currentUrl.getNormalizedUrl());
-          visitedURLs.add(currentUrl.getNormalizedUrl());
-          urlLocator.put(
-                  NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j
-                  , currentUrl.toString());
+        if (!currentUrl.getNormalizedUrl().contains("/video")) {
+          if (currentUrl.getNormalizedUrl().contains(contains)) {
+            boolean success = leg.crawl(currentUrl, j, hostName, category, website, folderName);
+            if (success) {
+              j++;
+              this.pagesToVisit.addAll(leg.getLinks());
+              this.pagesVisited.add(currentUrl.getNormalizedUrl());
+              visitedURLs.add(currentUrl.getNormalizedUrl());
+              urlLocator.put(
+                      NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j
+                      , currentUrl.toString());
+            }
+          }
         }
       }
       }catch(Exception e){
