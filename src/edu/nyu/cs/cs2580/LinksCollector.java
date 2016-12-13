@@ -47,8 +47,7 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
         else {
           System.out.println("\nVisiting: " + url);
           String docBodyText = this.htmlDocument.html();
-          String pathToHTMLDocs = "data/HTMLDocs/";
-          File newFile = new File(pathToHTMLDocs+"File-" + j);
+          File newFile = new File(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
           FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
           BufferedWriter bw = new BufferedWriter(fw);
           bw.write(docBodyText);

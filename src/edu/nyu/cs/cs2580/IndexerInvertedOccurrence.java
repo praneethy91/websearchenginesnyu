@@ -25,6 +25,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private HashMap<String, Integer> _termsToIntRepresentationMap = new HashMap<String, Integer>();
   private HashMap<String, Integer> _termsToNumDocsMap = new HashMap<String, Integer>();
+  private HashMap<String, String> _newsFileToURLMap;
+
   private ArrayList<Model> _modelList = new ArrayList<Model>();
 
   protected StopWords stopWords;
@@ -172,6 +174,12 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
       Model model = Model.load(modelLoadFile);
       _modelList.add(model);
     }
+  }
+
+  protected void LoadNewsFileToURLData() throws IOException, ClassNotFoundException {
+    ObjectInputStream reader =
+            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.newsFileToURLFile));
+    _newsFileToURLMap = (HashMap<String, String>) reader.readObject();
   }
 
   private void MergeFiles(int fileNumber) throws IOException {
@@ -720,6 +728,11 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     NewsClassifier newsClassifier = new NewsClassifier(file, _termsToIntRepresentationMap, _termsToNumDocsMap, _modelList);
     return newsClassifier.Classify();
   }
+  @Override
+  public String getURL(String file) throws IOException {
+    return _newsFileToURLMap.get(file);
+  }
+
 
   private void WriteToIndexFile(Integer fileNumber) throws IOException {
     String indexFileName = _indexFile + fileNumber.toString();

@@ -50,6 +50,7 @@ public class RankerFavorite extends Ranker {
     while ((scoredDoc = rankQueue.poll()) != null) {
       Collection<String> categories = _indexer.getCategories(scoredDoc.getUrl());
       scoredDoc.setCategories(categories);
+      scoredDoc.setInternetUrl(_indexer.getURL(scoredDoc.getUrl()));
       results.add(scoredDoc);
     }
     Collections.sort(results, Collections.reverseOrder());

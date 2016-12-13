@@ -13,6 +13,7 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   private Document _doc;
   private double _score;
   private String _url;
+  private String _internetURL;
   private Collection<String> _categories;
   private double _pageRank = 0.0;
   private double _numViews = 0.0;
@@ -71,6 +72,14 @@ class ScoredDocument implements Comparable<ScoredDocument> {
 
   public String getUrl() {
     return _url;
+  }
+
+  public void setInternetUrl(String internetURL) {
+     _internetURL = internetURL;
+  }
+
+  public String getInternetUrl() {
+    return _internetURL;
   }
 
   public void setCategories(Collection<String> categories) {

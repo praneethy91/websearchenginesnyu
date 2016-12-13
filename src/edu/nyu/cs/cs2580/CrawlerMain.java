@@ -1,10 +1,8 @@
 package edu.nyu.cs.cs2580;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.net.URL;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.StringTokenizer;
@@ -15,6 +13,7 @@ import java.util.StringTokenizer;
 public class CrawlerMain {
   public static void main(String[] args) throws IOException
   {
+    HashMap<String, String> urlLocator = new HashMap<>();
     final String NewsLinks = "conf/newslinks.txt";
     File websitesFile = new File(NewsLinks);
     FileReader fr = new FileReader(websitesFile);
@@ -29,12 +28,17 @@ public class CrawlerMain {
             Crawler craw = new Crawler();
             System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))
-                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl);
+                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, urlLocator);
             System.out.println(newsWebsite + " ended");
 
         }
     }catch (Exception e){
         System.out.print("Some problem");
     }
+
+      ObjectOutputStream writer =
+              new ObjectOutputStream(new FileOutputStream(NewsClassificationConstants.newsFileToURLFile, false));
+      writer.writeObject(urlLocator);
+      writer.close();
   }
 }

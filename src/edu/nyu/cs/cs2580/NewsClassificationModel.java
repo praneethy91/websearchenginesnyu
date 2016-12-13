@@ -102,7 +102,7 @@ public class NewsClassificationModel {
   }
 
   public void TestMLModelAndPrintStatistics(String binaryClassifierCategory) throws Exception {
-    File modelLoadFile = new File(NewsClassificationConstants.modelDir + "\\" + binaryClassifierCategory);
+    File modelLoadFile = new File(NewsClassificationConstants.modelDir + "/" + binaryClassifierCategory);
     Model model = Model.load(modelLoadFile);
 
     int index = 0;

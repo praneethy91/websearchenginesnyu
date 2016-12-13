@@ -319,6 +319,11 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
     throw new NotImplementedException();
   }
 
+  @Override
+  public String getURL(String file) throws IOException {
+    throw new NotImplementedException();
+  }
+
   private void insertToken(int docID, String s) {
 
     if (!distributedIndex.containsKey(s)) {

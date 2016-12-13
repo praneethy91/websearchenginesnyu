@@ -255,6 +255,11 @@ class IndexerFullScan extends Indexer implements Serializable {
     throw new NotImplementedException();
   }
 
+  @Override
+  public String getURL(String file) throws IOException {
+    throw new NotImplementedException();
+  }
+
   ///// Utility
 
   public Vector<String> getTermVector(Vector<Integer> tokens) {

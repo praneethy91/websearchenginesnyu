@@ -14,7 +14,7 @@ import java.util.Vector;
  */
 public class HtmlFormatter {
 
-  private String _docTemplate = "<div id=\"%s\"><a href=\"%s\">%s</a></div>";
+  private String _docTemplate = "<div style = \"color:lightgrey\"id=\"%s\"><a href=\"%s\">%s</a></div>";
   private String _categoryTemplate = "<div id=\"%s\"><h2>%s</h2><hr></div>";
   private Document _htmlDocument = null;
   private int _docCount = 0;
@@ -62,7 +62,7 @@ public class HtmlFormatter {
   }
 
   private String getDocTemplate(ScoredDocument scoredDocument) {
-    return String.format(_docTemplate, _docCount, scoredDocument.getUrl(), scoredDocument.getTitle());
+    return String.format(_docTemplate, _docCount, scoredDocument.getInternetUrl(), scoredDocument.getTitle());
   }
 
   private String getCategoryTemplate(String category) {

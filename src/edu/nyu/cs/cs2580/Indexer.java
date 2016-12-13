@@ -158,6 +158,8 @@ public abstract class Indexer {
 
   public abstract Collection<String> getCategories(String file) throws IOException;
 
+  public abstract String getURL(String file) throws IOException;
+
   /**
    * All Indexers must be created through this factory class based on the
    * provided {@code options}.
