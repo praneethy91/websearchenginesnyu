@@ -425,6 +425,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     _pageRanks = (Vector<Double>) analyzer.load();
     _numViews = (Vector<Double>) miner.load();
     LoadModelData();
+    LoadNewsFileToURLData();
   }
 
   public void loadIndex(Set<String> queryTokens) throws IOException{

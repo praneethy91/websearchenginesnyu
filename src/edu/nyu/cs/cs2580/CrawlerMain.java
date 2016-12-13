@@ -21,10 +21,13 @@ public class CrawlerMain {
     String newsWebsite;
     Set<String> visitedURLs = new HashSet<String>();
     int j = 0;
+      int prevJ = j;
       int toCrawl = j;
     try {
         while ((newsWebsite = br.readLine()) != null) {
-            toCrawl += (toCrawl - j) + Crawler.MAX_PAGES_TO_SEARCH;
+            int debt = toCrawl - (j - prevJ);
+            prevJ = j;
+            toCrawl = debt + Crawler.MAX_PAGES_TO_SEARCH;
             Crawler craw = new Crawler();
             System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))

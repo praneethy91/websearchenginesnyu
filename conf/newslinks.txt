@@ -1,5 +1,4 @@
 http://www.reuters.com/
-http://www.huffingtonpost.com/
 http://www.cnn.com/
 http://www.nytimes.com/
 http://www.foxnews.com/
@@ -20,3 +19,4 @@ http://www.weeklystandard.com/
 http://www.theblaze.com/
 http://www.politico.com/
 http://mashable.com/
+http://www.huffingtonpost.com/
