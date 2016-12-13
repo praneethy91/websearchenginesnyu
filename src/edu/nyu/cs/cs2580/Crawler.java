@@ -13,7 +13,7 @@ public class Crawler
   private Set<String> pagesVisited = new HashSet<String>();
   private LinkedList<ch.sentric.URL> pagesToVisit = new LinkedList<ch.sentric.URL>();
 
-  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl, HashMap<String, String> urlLocator) throws IOException {
+  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl, HashMap<String, String> urlLocator, String contains,  String category, String website, String folderName) throws IOException {
   String hostName = urlFormatted.getAuthority().getHostName().getAsString();
   this.pagesToVisit.addFirst(urlFormatted);
 
@@ -27,7 +27,7 @@ public class Crawler
 
       if(!visitedURLs.contains(currentUrl.getNormalizedUrl())) {
         LinksCollector leg = new LinksCollector();
-        boolean success = leg.crawl(currentUrl, j, hostName);
+        boolean success = leg.crawl(currentUrl, j, hostName, category, website, folderName);
         if (success) {
           j++;
           this.pagesToVisit.addAll(leg.getLinks());

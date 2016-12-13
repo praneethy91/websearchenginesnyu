@@ -25,7 +25,7 @@ private static final String USER_AGENT =
 private List<URL> links = new LinkedList<URL>();
 private Document htmlDocument;
 
-public boolean crawl(URL url, int j, String hostName) throws IOException
+public boolean crawl(URL url, int j, String hostName, String category, String website, String folderName) throws IOException
 {
   try {
     Connection connection = Jsoup.connect(url.toString()).userAgent(USER_AGENT);
@@ -47,7 +47,8 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
         else {
           System.out.println("\nVisiting: " + url);
           String docBodyText = this.htmlDocument.html();
-          File newFile = new File(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
+          String pathToHTMLDocs = "data/HTMLDocs/"+category+"/"+folderName+"/";
+          File newFile = new File(pathToHTMLDocs + "/" + NewsClassificationConstants._corpusFilePrefix + j);
           FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
           BufferedWriter bw = new BufferedWriter(fw);
           bw.write(docBodyText);
@@ -65,6 +66,7 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
     }
     catch(Exception e) {
       //Ignore malformed URL's
+
     }
   }
 

@@ -30,9 +30,11 @@ public class CrawlerMain {
             toCrawl = debt + Crawler.MAX_PAGES_TO_SEARCH;
             Crawler craw = new Crawler();
             System.out.println(newsWebsite + " started");
-            if(!visitedURLs.contains((newsWebsite)))
-                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, urlLocator);
+            String[] tokens = newsWebsite.split("#");
+            if(!visitedURLs.contains((tokens[2])))
+                j = craw.search(new ch.sentric.URL(tokens[2]), j, visitedURLs, toCrawl, urlLocator, tokens[0],tokens[1],  tokens[2],tokens[3]);
             System.out.println(newsWebsite + " ended");
+
 
         }
     }catch (Exception e){
