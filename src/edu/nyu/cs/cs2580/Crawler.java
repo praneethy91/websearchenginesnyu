@@ -10,7 +10,7 @@ import java.util.Set;
 
 public class Crawler
 {
-  public static final int MAX_PAGES_TO_SEARCH = 5000;
+  public static final int MAX_PAGES_TO_SEARCH = 3000;
   private Set<String> pagesVisited = new HashSet<String>();
   private LinkedList<ch.sentric.URL> pagesToVisit = new LinkedList<ch.sentric.URL>();
 
@@ -33,13 +33,16 @@ public class Crawler
           boolean success = leg.crawl(currentUrl, j, hostName);
           if (success) {
             j++;
-            this.pagesToVisit.addAll(leg.getLinks());
+            if(pagesToVisit.size() < 2*MAX_PAGES_TO_SEARCH) {
+              this.pagesToVisit.addAll(leg.getLinks());
+            }
             this.pagesVisited.add(currentUrl.getNormalizedUrl());
             visitedURLs.add(currentUrl.getNormalizedUrl());
             writer.write(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
             writer.write(" ");
             writer.write(currentUrl.toString());
             writer.write("\n");
+            writer.flush();
           }
         }
       }
