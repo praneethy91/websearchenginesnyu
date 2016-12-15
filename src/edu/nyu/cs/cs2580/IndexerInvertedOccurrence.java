@@ -177,9 +177,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
   }
 
   protected void LoadNewsFileToURLData() throws IOException, ClassNotFoundException {
-    ObjectInputStream reader =
-            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.newsFileToURLFile));
-    _newsFileToURLMap = (HashMap<String, String>) reader.readObject();
+    BufferedReader reader =
+            new BufferedReader(new FileReader(NewsClassificationConstants.newsFileToURLFile));
+    String line;
+    while((line = reader.readLine()) != null && !line.isEmpty()) {
+      String[] split = line.split("\t");
+      _newsFileToURLMap.put(split[0], split[1]);
+    }
   }
 
   private void MergeFiles(int fileNumber) throws IOException {

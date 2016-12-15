@@ -13,6 +13,8 @@ import java.util.StringTokenizer;
 public class CrawlerMain {
   public static void main(String[] args) throws IOException
   {
+    BufferedWriter writerURL =
+            new BufferedWriter(new FileWriter(NewsClassificationConstants.newsFileToURLFile, true));
     HashMap<String, String> urlLocator = new HashMap<>();
     final String NewsLinks = "conf/newslinks.txt";
       final String crawlStatistics = NewsClassificationConstants.modelDir + "/" + "crawlStatistics";
@@ -36,7 +38,7 @@ public class CrawlerMain {
             Crawler craw = new Crawler();
             //System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))
-                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, urlLocator);
+                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, writerURL);
             bw.write(NewsClassificationConstants._corpusFilePrefix + (j - 1));
             bw.write("\n");
             //System.out.println(newsWebsite + " ended");
@@ -46,10 +48,7 @@ public class CrawlerMain {
         //System.out.print("Some problem");
     }
 
-      ObjectOutputStream writer =
-              new ObjectOutputStream(new FileOutputStream(NewsClassificationConstants.newsFileToURLFile, false));
-      writer.writeObject(urlLocator);
-      writer.close();
+      writerURL.close();
       br.close();
       bw.close();
   }
