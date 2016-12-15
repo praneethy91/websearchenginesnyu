@@ -181,9 +181,13 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
             new BufferedReader(new FileReader(NewsClassificationConstants.newsFileToURLFile));
     String line;
     while((line = reader.readLine()) != null && !line.isEmpty()) {
-      String[] split = line.split("\t");
+      String[] split = line.split("\\t");
       _newsFileToURLMap.put(split[0], split[1]);
     }
+
+    /*ObjectInputStream reader =
+            new ObjectInputStream(new FileInputStream(NewsClassificationConstants.newsFileToURLFile));
+    _newsFileToURLMap = (HashMap<String, String>) reader.readObject();*/
   }
 
   private void MergeFiles(int fileNumber) throws IOException {

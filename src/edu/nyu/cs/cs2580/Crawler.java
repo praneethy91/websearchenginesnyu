@@ -36,9 +36,9 @@ public class Crawler
             this.pagesVisited.add(currentUrl.getNormalizedUrl());
             visitedURLs.add(currentUrl.getNormalizedUrl());
             writer.write(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
-            writer.write("\t");
+            writer.write('\t');
             writer.write(currentUrl.toString());
-            writer.write("\n");
+            writer.write('\n');
           }
         }
       }
