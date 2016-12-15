@@ -13,8 +13,6 @@ import java.util.StringTokenizer;
 public class CrawlerMain {
   public static void main(String[] args) throws IOException
   {
-    BufferedWriter writerURL =
-            new BufferedWriter(new FileWriter(NewsClassificationConstants.newsFileToURLFile, true));
     HashMap<String, String> urlLocator = new HashMap<>();
     final String NewsLinks = "conf/newslinks.txt";
       final String crawlStatistics = NewsClassificationConstants.modelDir + "/" + "crawlStatistics";
@@ -27,20 +25,21 @@ public class CrawlerMain {
     Set<String> visitedURLs = new HashSet<String>();
     int j = 0;
       int prevJ = j;
-      int toCrawl = j;
+      int toCrawl = 0;
     try {
         while ((newsWebsite = br.readLine()) != null) {
-            bw.write(newsWebsite + " ");
-            bw.write(NewsClassificationConstants._corpusFilePrefix + j + " to ");
+            bw.append(newsWebsite + " ");
+            bw.append(NewsClassificationConstants._corpusFilePrefix + j + " to ");
             int debt = toCrawl - (j - prevJ);
             prevJ = j;
             toCrawl = debt + Crawler.MAX_PAGES_TO_SEARCH;
             Crawler craw = new Crawler();
             //System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))
-                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, writerURL);
-            bw.write(NewsClassificationConstants._corpusFilePrefix + (j - 1));
-            bw.write("\n");
+                j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, urlLocator);
+            bw.append(NewsClassificationConstants._corpusFilePrefix + (j - 1));
+            bw.append("\n");
+            bw.flush();
             //System.out.println(newsWebsite + " ended");
 
         }
@@ -48,7 +47,10 @@ public class CrawlerMain {
         //System.out.print("Some problem");
     }
 
-      writerURL.close();
+      ObjectOutputStream writer =
+              new ObjectOutputStream(new FileOutputStream(NewsClassificationConstants.newsFileToURLFile, false));
+      writer.writeObject(urlLocator);
+      writer.close();
       br.close();
       bw.close();
   }

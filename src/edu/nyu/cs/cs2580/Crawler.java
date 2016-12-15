@@ -1,7 +1,6 @@
 package edu.nyu.cs.cs2580; /**
  * Created by mansivirani on 30/11/16.
  */
-import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +13,7 @@ public class Crawler
   private Set<String> pagesVisited = new HashSet<String>();
   private LinkedList<ch.sentric.URL> pagesToVisit = new LinkedList<ch.sentric.URL>();
 
-  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl, BufferedWriter bw) throws IOException {
+  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl, HashMap<String, String> urlLocator) throws IOException {
   String hostName = urlFormatted.getAuthority().getHostName().getAsString();
   this.pagesToVisit.addFirst(urlFormatted);
 
@@ -26,18 +25,19 @@ public class Crawler
         currentUrl = this.pagesToVisit.remove(0);
       }while((visitedURLs.contains(currentUrl.getNormalizedUrl())));
 
-      if(!visitedURLs.contains(currentUrl.getNormalizedUrl())) {
-        LinksCollector leg = new LinksCollector();
-        boolean success = leg.crawl(currentUrl, j, hostName);
-        if (success) {
-          j++;
-          this.pagesToVisit.addAll(leg.getLinks());
-          this.pagesVisited.add(currentUrl.getNormalizedUrl());
-          visitedURLs.add(currentUrl.getNormalizedUrl());
-          bw.write(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
-          bw.write("\t");
-          bw.write(currentUrl.toString());
-          bw.write("\n");
+      if (!currentUrl.getNormalizedUrl().contains("/video")) {
+        if (!visitedURLs.contains(currentUrl.getNormalizedUrl())) {
+          LinksCollector leg = new LinksCollector();
+          boolean success = leg.crawl(currentUrl, j, hostName);
+          if (success) {
+            j++;
+            this.pagesToVisit.addAll(leg.getLinks());
+            this.pagesVisited.add(currentUrl.getNormalizedUrl());
+            visitedURLs.add(currentUrl.getNormalizedUrl());
+            urlLocator.put(
+                    NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j
+                    , currentUrl.toString());
+          }
         }
       }
       }catch(Exception e){
