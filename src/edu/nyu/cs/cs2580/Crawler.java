@@ -1,6 +1,7 @@
 package edu.nyu.cs.cs2580; /**
  * Created by mansivirani on 30/11/16.
  */
+import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -13,7 +14,7 @@ public class Crawler
   private Set<String> pagesVisited = new HashSet<String>();
   private LinkedList<ch.sentric.URL> pagesToVisit = new LinkedList<ch.sentric.URL>();
 
-  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl, HashMap<String, String> urlLocator) throws IOException {
+  public int search(ch.sentric.URL urlFormatted, int j, Set<String> visitedURLs, int toCrawl, BufferedWriter writer) throws IOException {
   String hostName = urlFormatted.getAuthority().getHostName().getAsString();
   this.pagesToVisit.addFirst(urlFormatted);
 
@@ -34,9 +35,10 @@ public class Crawler
             this.pagesToVisit.addAll(leg.getLinks());
             this.pagesVisited.add(currentUrl.getNormalizedUrl());
             visitedURLs.add(currentUrl.getNormalizedUrl());
-            urlLocator.put(
-                    NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j
-                    , currentUrl.toString());
+            writer.write(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
+            writer.write("\t");
+            writer.write(currentUrl.toString());
+            writer.write("\n");
           }
         }
       }
