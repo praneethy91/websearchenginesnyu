@@ -21,6 +21,28 @@ public class HtmlFormatter {
   private HashMap<String, Vector<ScoredDocument>> categoryMap = new HashMap<String, Vector<ScoredDocument>>();
   public HtmlFormatter(){
     _htmlDocument = Document.createShell("");
+
+    //Google fonts
+    _htmlDocument.head().append("<link href=\"https://fonts.googleapis.com/css?family=Lato:100,300\" rel=\"stylesheet\">");
+
+    //Viewport setting
+    _htmlDocument.head().append("<meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">");
+
+    //Adding overall font-style and horizontal rule styles
+    _htmlDocument.head().append("<style>" +
+            "body {" +
+            "    font-family: 'Lato', sans-serif;\n" +
+            "    color: #676658;\n" +
+            "    font-weight: 300;}" +
+            ".text-thin {\n" +
+            "    font-weight: 100;\n" +
+            "}" +
+            "hr {\n" +
+            "    height: 1px;\n" +
+            "    color: #676658;\n" +
+            "    background-color: #676658;\n" +
+            "}" +
+            "</style>");
   }
 
   public void AddTable(Vector<ScoredDocument> scoredDocumentVector, QueryHandler.CgiArguments.RankerType rankerType) {

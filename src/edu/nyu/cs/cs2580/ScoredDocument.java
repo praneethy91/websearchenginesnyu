@@ -1,5 +1,6 @@
 package edu.nyu.cs.cs2580;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
@@ -18,7 +19,7 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   private double _pageRank = 0.0;
   private double _numViews = 0.0;
 
-  public List<String> topics;
+  public Collection<TopicInfo> _topics;
 
   public ScoredDocument(Document doc, double score) {
     _doc = doc;
@@ -90,10 +91,32 @@ class ScoredDocument implements Comparable<ScoredDocument> {
     return _categories;
   }
 
-  public List<String> getTopics(){
-    return topics;
+  public Collection<TopicInfo> getTopics(){
+    TopicInfo topicInfo1 = new TopicInfo();
+    topicInfo1.setPolarity(0.3);
+    topicInfo1.setTopic("Topic1");
+
+    TopicInfo topicInfo2 = new TopicInfo();
+    topicInfo2.setPolarity(-0.3);
+    topicInfo2.setTopic("Topic2");
+
+    TopicInfo topicInfo3 = new TopicInfo();
+    topicInfo3.setPolarity(0.05);
+    topicInfo3.setTopic("Topic3");
+
+    List<TopicInfo> topicInfos = new ArrayList<TopicInfo>();
+    topicInfos.add(topicInfo1);
+    topicInfos.add(topicInfo2);
+    topicInfos.add(topicInfo3);
+
+    return topicInfos;
+    // TODO: add the below code back
+    // return _topics;
   }
 
+  public void setTopics(Collection<TopicInfo> topics) {
+    _topics = topics;
+  }
 
   /**
    * @CS2580: Student should implement {@code asHtmlResult} for final project.
