@@ -13,7 +13,7 @@ import java.util.StringTokenizer;
 public class CrawlerMain {
   public static void main(String[] args) throws IOException
   {
-    BufferedWriter writer = new BufferedWriter(new FileWriter(NewsClassificationConstants.newsFileToURLFile, true));
+    BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(NewsClassificationConstants.newsFileToURLFile, true)));
     final String NewsLinks = "conf/newslinks.txt";
       final String crawlStatistics = NewsClassificationConstants.modelDir + "/" + "crawlStatistics";
       File crawlStatisticsFile = new File(crawlStatistics);
