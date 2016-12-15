@@ -2,6 +2,7 @@ package edu.nyu.cs.cs2580;
 
 import java.io.*;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -10,10 +11,10 @@ import java.util.List;
 public class TopicReader {
 
     String topicIndexFile = "/file_topics_sentiment";
+    HashMap<String, List<TopicInfo>> sentiment_index = new HashMap<>();
 
-    List<TopicInfo> getTopicInfo(String filename) {
-        List<TopicInfo> topics = new ArrayList<>();
-        boolean found = false;
+    TopicReader(){
+
 
         // Open the file
         FileInputStream fstream = null;
@@ -27,10 +28,11 @@ public class TopicReader {
         String strLine;
 
         try {
-            while ((strLine = br.readLine()) != null && !found) {
+            while ((strLine = br.readLine()) != null ) {
                 String[] tokens = strLine.split(";");
-                if(tokens.length > 0 && tokens[0].equalsIgnoreCase(filename)){
-                    found = true;
+                if(tokens.length > 0){
+                    List<TopicInfo> topics = new ArrayList<>();
+
                     int i = 1;
                     while(i < tokens.length){
                         String[] polarity = tokens[i].split(":");
@@ -42,19 +44,21 @@ public class TopicReader {
                         }
                         i++;
                     }
+                    sentiment_index.put(tokens[0], topics);
                 }
             }
         } catch (IOException e) {
             e.printStackTrace();
         }
-
-        //Close the input stream
         try {
             br.close();
         } catch (IOException e) {
             e.printStackTrace();
         }
 
-        return topics;
+    }
+
+    List<TopicInfo> getTopicInfo(String filename) {
+        return sentiment_index.get(filename);
     }
 }
