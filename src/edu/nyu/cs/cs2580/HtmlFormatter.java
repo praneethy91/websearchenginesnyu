@@ -7,10 +7,7 @@ import org.jsoup.select.Elements;
 
 import java.io.File;
 import java.net.MalformedURLException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Vector;
+import java.util.*;
 
 /**
  * Created by Praneeth on 10/16/2016.
@@ -18,7 +15,12 @@ import java.util.Vector;
 public class HtmlFormatter {
 
   private static final String ContainerID = "containerID";
-  private String _docTemplate = "<div class=\"row\"style = \"color:lightgrey\"id=\"%s\"><div class=\"col-md-offset-2 col-md-8\"><a href=\"%s\">%s</a></div></div>";
+  private String _docTemplate = "<div class=\"row\"style = \"color:black\"id=\"%s\"><div class=\"col-md-offset-2 col-md-8\">" +
+          "<a href=\"%s\">%s</a></div>" +
+          "<div class=\"col-md-offset-2 col-md-2\" style=\"background-color:%s;\">%s</div>" +
+          "<div class=\"col-md-offset-1 col-md-2\" style=\"background-color:%s;\">%s</div>" +
+          "<div class=\"col-md-offset-1 col-md-2\" style=\"background-color:%s;\">%s</div></div>" +
+          "<div class=\"row\"><br class=\"col-md-offset-2 col-md-8\"></div>";
   private String _categoryTemplate = "<div class=\"row\" id=\"%s\"><h2 class=\"col-md-offset-2 col-md-8\">%s</h2><hr class=\"col-md-offset-2 col-md-8\"></div>";
   private Document _htmlDocument = null;
   private int _docCount = 0;
@@ -84,6 +86,7 @@ public class HtmlFormatter {
 
     for(Map.Entry<String, Vector<ScoredDocument>> entry : categoryMap.entrySet()){
       String category = entry.getKey();
+      category = category.substring(0, 1).toUpperCase() + category.substring(1);
       String categoryTemplateInstance =  getCategoryTemplate(category);
       _htmlDocument.body().select("#" + ContainerID).append(categoryTemplateInstance);
       Element categoryDiv = _htmlDocument.select("#" + category).first();
@@ -104,12 +107,15 @@ public class HtmlFormatter {
 
   private String getDocTemplate(ScoredDocument scoredDocument) throws MalformedURLException {
 
+    List<TopicInfo> topics = scoredDocument.getTopics();
     //TODO: Add the actual link
-    return String.format(_docTemplate, _docCount, new File(scoredDocument.getUrl()).toURI().toURL().toString(), scoredDocument.getTitle());
+    TopicInfo topicInfo1 = topics.get(0);
+    TopicInfo topicInfo2 = topics.get(1);
+    TopicInfo topicInfo3 = topics.get(2);
+    return String.format(_docTemplate, _docCount, "http://www.google.com", scoredDocument.getTitle(), topicInfo1.getRGB(), topicInfo1, topicInfo2.getRGB(), topicInfo2, topicInfo3.getRGB(), topicInfo3);
   }
 
   private String getCategoryTemplate(String category) {
     return String.format(_categoryTemplate, category, category);
   }
-
 }

@@ -91,13 +91,13 @@ class ScoredDocument implements Comparable<ScoredDocument> {
     return _categories;
   }
 
-  public Collection<TopicInfo> getTopics(){
+  public List<TopicInfo> getTopics(){
     TopicInfo topicInfo1 = new TopicInfo();
     topicInfo1.setPolarity(0.3);
     topicInfo1.setTopic("Topic1");
 
     TopicInfo topicInfo2 = new TopicInfo();
-    topicInfo2.setPolarity(-0.3);
+    topicInfo2.setPolarity(0.4);
     topicInfo2.setTopic("Topic2");
 
     TopicInfo topicInfo3 = new TopicInfo();

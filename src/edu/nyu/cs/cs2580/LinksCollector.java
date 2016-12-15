@@ -49,12 +49,12 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
           String attr = htmlDocument.select("html").first().attr("lang");
           if(attr.isEmpty() || attr.equalsIgnoreCase("en-US") || attr.equalsIgnoreCase("en")) {
             //System.out.println("\nVisiting: " + url);
-            String docBodyText = this.htmlDocument.html();
+            String docBodyText = this.htmlDocument.body().text();
             File newFile = new File(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
             FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
             BufferedWriter bw = new BufferedWriter(fw);
             bw.write(docBodyText);
-            bw.close();
+            bw.close() ;
           }
           else {
             return false;
