@@ -9,16 +9,16 @@ import java.util.List;
  */
 public class TopicReader {
 
-    String topicIndexFile = "/file_topics";
+    String topicIndexFile = "/file_topics_sentiment";
 
-    List<TopicInfo> getTopicInfo(SearchEngine.Options options, String filename) {
+    List<TopicInfo> getTopicInfo(String filename) {
         List<TopicInfo> topics = new ArrayList<>();
-
+        boolean found = false;
 
         // Open the file
         FileInputStream fstream = null;
         try {
-            fstream = new FileInputStream(options._indexPrefix + topicIndexFile);
+            fstream = new FileInputStream("data" + topicIndexFile);
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         }
@@ -27,9 +27,10 @@ public class TopicReader {
         String strLine;
 
         try {
-            while ((strLine = br.readLine()) != null) {
+            while ((strLine = br.readLine()) != null && !found) {
                 String[] tokens = strLine.split(";");
                 if(tokens.length > 0 && tokens[0].equalsIgnoreCase(filename)){
+                    found = true;
                     int i = 1;
                     while(i < tokens.length){
                         String[] polarity = tokens[i].split(":");
