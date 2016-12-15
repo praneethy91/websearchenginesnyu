@@ -20,9 +20,9 @@ public class CrawlerMain {
     BufferedReader br = new BufferedReader(fr);
     String newsWebsite;
     Set<String> visitedURLs = new HashSet<String>();
-    int j = 0;
+    int j = 22800;
       int prevJ = j;
-      int toCrawl = j;
+      int toCrawl = 0;
     try {
         while ((newsWebsite = br.readLine()) != null) {
             int debt = toCrawl - (j - prevJ);
