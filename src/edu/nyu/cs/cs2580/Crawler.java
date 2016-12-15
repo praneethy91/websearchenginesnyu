@@ -27,6 +27,7 @@ public class Crawler
       }while((visitedURLs.contains(currentUrl.getNormalizedUrl())));
 
       if (!currentUrl.getNormalizedUrl().contains("/video")) {
+
         if (!visitedURLs.contains(currentUrl.getNormalizedUrl())) {
           LinksCollector leg = new LinksCollector();
           boolean success = leg.crawl(currentUrl, j, hostName);
@@ -36,9 +37,9 @@ public class Crawler
             this.pagesVisited.add(currentUrl.getNormalizedUrl());
             visitedURLs.add(currentUrl.getNormalizedUrl());
             writer.write(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
-            writer.write('\t');
+            writer.write(" ");
             writer.write(currentUrl.toString());
-            writer.write('\n');
+            writer.write("\n");
           }
         }
       }

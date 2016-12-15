@@ -40,18 +40,25 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
           //System.out.print("This is not an HTML Doc");
           return false;
         }
+
         else if (!host.equals(hostName)) {
           //System.out.println("Failure: Retrieved irrelevant URL " + url);
           return false;
         }
         else {
-          //System.out.println("\nVisiting: " + url);
-          String docBodyText = this.htmlDocument.html();
-          File newFile = new File(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
-          FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
-          BufferedWriter bw = new BufferedWriter(fw);
-          bw.write(docBodyText);
-          bw.close();
+          String attr = htmlDocument.select("html").first().attr("lang");
+          if(attr.isEmpty() || attr.equalsIgnoreCase("en-US") || attr.equalsIgnoreCase("en")) {
+            //System.out.println("\nVisiting: " + url);
+            String docBodyText = this.htmlDocument.html();
+            File newFile = new File(NewsClassificationConstants.filesToRankDir + "/" + NewsClassificationConstants._corpusFilePrefix + j);
+            FileWriter fw = new FileWriter(newFile.getAbsoluteFile(), false);
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(docBodyText);
+            bw.close();
+          }
+          else {
+            return false;
+          }
         }
       }
       catch (Exception e){

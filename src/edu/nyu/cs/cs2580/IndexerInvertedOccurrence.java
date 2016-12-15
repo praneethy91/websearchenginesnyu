@@ -25,7 +25,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private HashMap<String, Integer> _termsToIntRepresentationMap = new HashMap<String, Integer>();
   private HashMap<String, Integer> _termsToNumDocsMap = new HashMap<String, Integer>();
-  private HashMap<String, String> _newsFileToURLMap;
+  private HashMap<String, String> _newsFileToURLMap = new HashMap<String, String>();
 
   private ArrayList<Model> _modelList = new ArrayList<Model>();
 
@@ -181,7 +181,7 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
             new BufferedReader(new FileReader(NewsClassificationConstants.newsFileToURLFile));
     String line;
     while((line = reader.readLine()) != null && !line.isEmpty()) {
-      String[] split = line.split("\\t");
+      String[] split = line.split(" ");
       _newsFileToURLMap.put(split[0], split[1]);
     }
 
