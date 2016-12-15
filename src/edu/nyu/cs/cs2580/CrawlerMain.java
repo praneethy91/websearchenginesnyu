@@ -25,11 +25,11 @@ public class CrawlerMain {
     Set<String> visitedURLs = new HashSet<String>();
     int j = 0;
       int prevJ = j;
-      int toCrawl = j;
+      int toCrawl = 0;
     try {
         while ((newsWebsite = br.readLine()) != null) {
-            bw.write(newsWebsite + " ");
-            bw.write(NewsClassificationConstants._corpusFilePrefix + j + " to ");
+            bw.append(newsWebsite + " ");
+            bw.append(NewsClassificationConstants._corpusFilePrefix + j + " to ");
             int debt = toCrawl - (j - prevJ);
             prevJ = j;
             toCrawl = debt + Crawler.MAX_PAGES_TO_SEARCH;
@@ -37,8 +37,9 @@ public class CrawlerMain {
             //System.out.println(newsWebsite + " started");
             if(!visitedURLs.contains((newsWebsite)))
                 j = craw.search(new ch.sentric.URL(newsWebsite), j, visitedURLs, toCrawl, urlLocator);
-            bw.write(NewsClassificationConstants._corpusFilePrefix + (j - 1));
-            bw.write("\n");
+            bw.append(NewsClassificationConstants._corpusFilePrefix + (j - 1));
+            bw.append("\n");
+            bw.flush();
             //System.out.println(newsWebsite + " ended");
 
         }

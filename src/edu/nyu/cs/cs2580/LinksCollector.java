@@ -70,10 +70,10 @@ public boolean crawl(URL url, int j, String hostName) throws IOException
 
   return true;
   } catch(IOException ioe) {
-    // We were not successful in our HTTP request
+    // unsuccessful HTTP request
     return false;
   } catch(IllegalArgumentException iae) {
-    // We were not successful in our HTTP request
+    // unsuccessful HTTP request
     return false;
   }
 }
