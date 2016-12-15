@@ -2,8 +2,11 @@ package edu.nyu.cs.cs2580;
 
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
+import org.jsoup.parser.Tag;
 import org.jsoup.select.Elements;
 
+import java.io.File;
+import java.net.MalformedURLException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -14,8 +17,9 @@ import java.util.Vector;
  */
 public class HtmlFormatter {
 
-  private String _docTemplate = "<div style = \"color:lightgrey\"id=\"%s\"><a href=\"%s\">%s</a></div>";
-  private String _categoryTemplate = "<div id=\"%s\"><h2>%s</h2><hr></div>";
+  private static final String ContainerID = "containerID";
+  private String _docTemplate = "<div class=\"row\"style = \"color:lightgrey\"id=\"%s\"><div class=\"col-md-offset-2 col-md-8\"><a href=\"%s\">%s</a></div></div>";
+  private String _categoryTemplate = "<div class=\"row\" id=\"%s\"><h2 class=\"col-md-offset-2 col-md-8\">%s</h2><hr class=\"col-md-offset-2 col-md-8\"></div>";
   private Document _htmlDocument = null;
   private int _docCount = 0;
   private HashMap<String, Vector<ScoredDocument>> categoryMap = new HashMap<String, Vector<ScoredDocument>>();
@@ -41,12 +45,27 @@ public class HtmlFormatter {
             "    height: 1px;\n" +
             "    color: #676658;\n" +
             "    background-color: #676658;\n" +
-            "}" +
             "</style>");
+
+    //Bootstrap minified CSS
+    _htmlDocument.head().append("<link rel=\"stylesheet\" href=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css\" integrity=\"sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u\" crossorigin=\"anonymous\">");
+
+    //Jquery 1.9.1
+    _htmlDocument.head().append("<script\n" +
+            "  src=\"https://code.jquery.com/jquery-1.9.1.min.js\"\n" +
+            "  integrity=\"sha256-wS9gmOZBqsqWxgIVgA8Y9WcQOa7PgSIX+rPA0VL2rbQ=\"\n" +
+            "  crossorigin=\"anonymous\"></script>");
+
+    //Bootstrap minified JS
+    _htmlDocument.head().append("<script src=\"https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js\" integrity=\"sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa\" crossorigin=\"anonymous\"></script>\n");
   }
 
-  public void AddTable(Vector<ScoredDocument> scoredDocumentVector, QueryHandler.CgiArguments.RankerType rankerType) {
-    _htmlDocument.body().appendElement("h1").text("Top results..");
+  public void AddTable(Vector<ScoredDocument> scoredDocumentVector, QueryHandler.CgiArguments.RankerType rankerType) throws MalformedURLException {
+
+    Element el = new Element(Tag.valueOf("div"), "");
+    el.attr("class", "container");
+    el.attr("id", ContainerID);
+    _htmlDocument.body().appendChild(el);
 
     for(ScoredDocument scoredDocument : scoredDocumentVector) {
       for(String category : scoredDocument.getCategories()) {
@@ -66,15 +85,15 @@ public class HtmlFormatter {
     for(Map.Entry<String, Vector<ScoredDocument>> entry : categoryMap.entrySet()){
       String category = entry.getKey();
       String categoryTemplateInstance =  getCategoryTemplate(category);
-      _htmlDocument.body().append(categoryTemplateInstance);
+      _htmlDocument.body().select("#" + ContainerID).append(categoryTemplateInstance);
       Element categoryDiv = _htmlDocument.select("#" + category).first();
       for(ScoredDocument scoredDocument: entry.getValue()) {
         categoryDiv.append(getDocTemplate(scoredDocument));
         _docCount++;
       }
 
-      _htmlDocument.body().append("<hr style=height:2px;>");
-      _htmlDocument.body().append("<br>");
+      _htmlDocument.body().append("<div class=\"row\"><br class=\"col-md-offset-2 col-md-8\"></div>");
+      _htmlDocument.body().append("<div class=\"row\"><br class=\"col-md-offset-2 col-md-8\"></div>");
     }
 
   }
@@ -83,8 +102,10 @@ public class HtmlFormatter {
     return _htmlDocument.html();
   }
 
-  private String getDocTemplate(ScoredDocument scoredDocument) {
-    return String.format(_docTemplate, _docCount, scoredDocument.getInternetUrl(), scoredDocument.getTitle());
+  private String getDocTemplate(ScoredDocument scoredDocument) throws MalformedURLException {
+
+    //TODO: Add the actual link
+    return String.format(_docTemplate, _docCount, new File(scoredDocument.getUrl()).toURI().toURL().toString(), scoredDocument.getTitle());
   }
 
   private String getCategoryTemplate(String category) {
