@@ -39,7 +39,7 @@ public class TopicReader {
                         if(polarity.length > 0) {
                             TopicInfo topicInfo = new TopicInfo();
                             topicInfo.setTopic(polarity[0]);
-                            topicInfo.setPolarity(new Double(polarity[1]));
+                            topicInfo.setPolarity((new Double(polarity[1] ) * 2.5 + 1)/2);
                             topics.add(topicInfo);
                         }
                         i++;

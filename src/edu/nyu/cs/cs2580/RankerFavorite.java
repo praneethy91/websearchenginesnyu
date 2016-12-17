@@ -25,7 +25,6 @@ public class RankerFavorite extends Ranker {
   @Override
   public Vector<ScoredDocument> runQuery(Query query, int numResults) throws IOException {
     tokenFrequencyCache = new HashMap<>();
-    HashSet<String> titleHashSet = new HashSet<String>();
     Queue<ScoredDocument> rankQueue = new PriorityQueue<ScoredDocument>();
     Document doc = null;
     int docid = -1;
@@ -38,12 +37,10 @@ public class RankerFavorite extends Ranker {
       e.printStackTrace();
     }
 
-    while ((doc = _indexer.nextDoc(query, docid)) != null && !titleHashSet.contains(doc.getTitle())) {
-      titleHashSet.add(doc.getTitle());
+    while ((doc = _indexer.nextDoc(query, docid)) != null) {
       rankQueue.add(scoreDocument(query, doc));
       if (rankQueue.size() > numResults) {
-        ScoredDocument docRemoved = rankQueue.poll();
-        titleHashSet.remove(docRemoved.getTitle());
+        rankQueue.poll();
       }
       docid = doc._docid;
     }
@@ -53,7 +50,7 @@ public class RankerFavorite extends Ranker {
     while ((scoredDoc = rankQueue.poll()) != null) {
       Collection<String> categories = _indexer.getCategories(scoredDoc.getUrl());
       scoredDoc.setCategories(categories);
-
+      scoredDoc.setTopics(_indexer.getTopics(scoredDoc.getUrl()));
       scoredDoc.setInternetUrl(_indexer.getURL(scoredDoc.getUrl()));
       results.add(scoredDoc);
     }

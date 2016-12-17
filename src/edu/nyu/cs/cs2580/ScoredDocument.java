@@ -19,7 +19,7 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   private double _pageRank = 0.0;
   private double _numViews = 0.0;
 
-  public Collection<TopicInfo> _topics;
+  public List<TopicInfo> _topics;
 
   public ScoredDocument(Document doc, double score) {
     _doc = doc;
@@ -63,6 +63,10 @@ class ScoredDocument implements Comparable<ScoredDocument> {
     _numViews = numViews;
   }
 
+  public void setTitle(String title) {
+    _doc.setTitle(title);
+  }
+
   public String getTitle() {
     return _doc.getTitle();
   }
@@ -92,29 +96,10 @@ class ScoredDocument implements Comparable<ScoredDocument> {
   }
 
   public List<TopicInfo> getTopics(){
-    TopicInfo topicInfo1 = new TopicInfo();
-    topicInfo1.setPolarity(0.3);
-    topicInfo1.setTopic("Topic1");
-
-    TopicInfo topicInfo2 = new TopicInfo();
-    topicInfo2.setPolarity(0.4);
-    topicInfo2.setTopic("Topic2");
-
-    TopicInfo topicInfo3 = new TopicInfo();
-    topicInfo3.setPolarity(0.05);
-    topicInfo3.setTopic("Topic3");
-
-    List<TopicInfo> topicInfos = new ArrayList<TopicInfo>();
-    topicInfos.add(topicInfo1);
-    topicInfos.add(topicInfo2);
-    topicInfos.add(topicInfo3);
-
-    return topicInfos;
-    // TODO: add the below code back
-    // return _topics;
+    return _topics;
   }
 
-  public void setTopics(Collection<TopicInfo> topics) {
+  public void setTopics(List<TopicInfo> topics) {
     _topics = topics;
   }
 

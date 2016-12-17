@@ -30,11 +30,15 @@ public class TopicInfo {
 
   @Override
   public String toString() {
-    return getTopic() + ": " + getPolarity();
+    if(_topic.equals("")) {
+      return "";
+    }
+
+    return String.format("%s: %.2f", getTopic(), getPolarity());
   }
 
   private RedGreenBlue getColor() {
-    RedGreenBlue rgb = new RedGreenBlue();
+    /*RedGreenBlue rgb = new RedGreenBlue();
     rgb.red = 255;
     rgb.green = 255;
     rgb.blue = 0;
@@ -47,6 +51,33 @@ public class TopicInfo {
       rgb.green = rgb.green - greenToDecrease;
     }
     else if(_polarity > 0.5) {
+      rgb = new RedGreenBlue();
+      rgb.red = 0;
+      rgb.green = 255;
+      rgb.blue = 0;
+    }
+    else {
+      rgb = new RedGreenBlue();
+      rgb.red = 255;
+      rgb.green = 0;
+      rgb.blue = 0;
+    }
+
+    return rgb;*/
+
+    RedGreenBlue rgb = new RedGreenBlue();
+    rgb.red = 255;
+    rgb.green = 255;
+    rgb.blue = 0;
+    if(_polarity >= 0.5 && _polarity <= 1) {
+      int redToDecrease = (int)Math.floor((_polarity - 0.5)/0.5*255);
+      rgb.red = rgb.red - redToDecrease;
+    }
+    else if(_polarity < 0.5 && _polarity >=0) {
+      int greenToDecrease = (int)Math.floor((0.5-_polarity)/0.5*255);
+      rgb.green = rgb.green - greenToDecrease;
+    }
+    else if(_polarity > 1) {
       rgb = new RedGreenBlue();
       rgb.red = 0;
       rgb.green = 255;

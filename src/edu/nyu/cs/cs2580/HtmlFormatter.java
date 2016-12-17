@@ -108,11 +108,40 @@ public class HtmlFormatter {
   private String getDocTemplate(ScoredDocument scoredDocument) throws MalformedURLException {
 
     List<TopicInfo> topics = scoredDocument.getTopics();
-    //TODO: Add the actual link
-    TopicInfo topicInfo1 = topics.get(0);
-    TopicInfo topicInfo2 = topics.get(1);
-    TopicInfo topicInfo3 = topics.get(2);
-    return String.format(_docTemplate, _docCount, "http://www.google.com", scoredDocument.getTitle(), topicInfo1.getRGB(), topicInfo1, topicInfo2.getRGB(), topicInfo2, topicInfo3.getRGB(), topicInfo3);
+    TopicInfo topicInfo1;
+    TopicInfo topicInfo2;
+    TopicInfo topicInfo3;
+    if(topics.size() < 3) {
+      topicInfo3 = new TopicInfo();
+      topicInfo3.setPolarity(0.0);
+      topicInfo3.setTopic("");
+    }
+    else {
+      topicInfo3 = topics.get(2);
+    }
+
+    if(topics.size() < 2){
+      topicInfo2 = new TopicInfo();
+      topicInfo2.setPolarity(0.0);
+      topicInfo2.setTopic("");
+    }
+    else {
+      topicInfo2 = topics.get(1);
+    }
+    if(topics.size() < 1) {
+      topicInfo1 = new TopicInfo();
+      topicInfo1.setPolarity(0.0);
+      topicInfo1.setTopic("");
+    }
+    else {
+      topicInfo1 = topics.get(0);
+    }
+
+    if(scoredDocument.getTitle().equals("")) {
+      scoredDocument.setTitle(scoredDocument.getInternetUrl());
+    }
+
+    return String.format(_docTemplate, _docCount, scoredDocument.getInternetUrl(), scoredDocument.getTitle(), topicInfo1.getRGB(), topicInfo1, topicInfo2.getRGB(), topicInfo2, topicInfo3.getRGB(), topicInfo3);
   }
 
   private String getCategoryTemplate(String category) {

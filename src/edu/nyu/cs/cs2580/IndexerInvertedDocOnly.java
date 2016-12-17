@@ -320,6 +320,11 @@ public class IndexerInvertedDocOnly extends Indexer implements Serializable {
   }
 
   @Override
+  public List<TopicInfo> getTopics(String file) {
+    return null;
+  }
+
+  @Override
   public String getURL(String file) throws IOException {
     throw new NotImplementedException();
   }

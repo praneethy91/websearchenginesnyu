@@ -12,7 +12,7 @@ public class NewsClassificationConstants {
   public static final String termToNumDocsFile = modelDir + "/termToNumDocs";
   public static final String newsFileToURLFile = modelDir + "/newsFileToURL";
 
-  public static final String[] newsCategories = { "technology", "sports", "science", "politics", "health", "food", "business", "entertainment", "travel"};
+  public static final String[] newsCategories = {"travel", "entertainment", "business", "food", "health", "politics", "science", "sports", "technology"};
   public static final String[] newsCompanies = {"fox", "nytimes"};
 
   public static final String _corpusFilePrefix = "File-";

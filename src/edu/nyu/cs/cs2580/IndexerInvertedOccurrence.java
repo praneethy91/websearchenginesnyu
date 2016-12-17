@@ -29,6 +29,8 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
 
   private ArrayList<Model> _modelList = new ArrayList<Model>();
 
+  private TopicReader _topicReader;
+
   protected StopWords stopWords;
 
   //Corpus statistics
@@ -182,12 +184,20 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     String line;
     while((line = reader.readLine()) != null && !line.isEmpty()) {
       String[] split = line.split(" ");
-      _newsFileToURLMap.put(split[0], split[1]);
+      _newsFileToURLMap.put(fileNameNormalize(split[0]), split[1]);
     }
 
     /*ObjectInputStream reader =
             new ObjectInputStream(new FileInputStream(NewsClassificationConstants.newsFileToURLFile));
     _newsFileToURLMap = (HashMap<String, String>) reader.readObject();*/
+  }
+
+  private String fileNameNormalize(String fileName) {
+    int i = fileName.indexOf('-');
+    String value = fileName.substring(i + 1);
+    int finalValue = Integer.parseInt(value) - 1;
+    String prefix = fileName.substring(0, i + 1);
+    return prefix + finalValue;
   }
 
   private void MergeFiles(int fileNumber) throws IOException {
@@ -430,10 +440,9 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     CorpusAnalyzer analyzer = CorpusAnalyzer.Factory.getCorpusAnalyzerByOption(
             _options);
     LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
-    _pageRanks = (Vector<Double>) analyzer.load();
-    _numViews = (Vector<Double>) miner.load();
     LoadModelData();
     LoadNewsFileToURLData();
+    _topicReader = new TopicReader();
   }
 
   public void loadIndex(Set<String> queryTokens) throws IOException{
@@ -737,9 +746,18 @@ public class IndexerInvertedOccurrence extends Indexer implements Serializable{
     NewsClassifier newsClassifier = new NewsClassifier(file, _termsToIntRepresentationMap, _termsToNumDocsMap, _modelList);
     return newsClassifier.Classify();
   }
+
+  @Override
+  public List<TopicInfo> getTopics(String file) {
+    String name = new File(file).getName();
+    return _topicReader.getTopicInfo(name);
+  }
+
   @Override
   public String getURL(String file) throws IOException {
-    return _newsFileToURLMap.get(file);
+    file = file.replace('\\', '/');
+    String s = _newsFileToURLMap.get(file);
+    return s;
   }
 
 
